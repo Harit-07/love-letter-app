@@ -1,125 +1,125 @@
 <!DOCTYPE html>
 <html lang="th">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>A Secret Love Letter 💖</title>
-    <link rel="stylesheet" href="/styles.css" />
-  </head>
-  <body class="theme-pink">
-    <div id="floatingHeartsContainer" class="floating-hearts-bg"></div>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Love Letter Surprise 💖</title>
+  <link rel="stylesheet" href="/styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="theme-pink">
 
-    <main class="app-shell" id="appShell">
-      <section class="editor-panel" id="editorPanel">
-        <div class="hero">
-          <p class="eyebrow">✨ Create a romantic surprise for your favorite person</p>
-          <h1>สร้างการ์ดจดหมายรักสุดพิเศษ</h1>
-          <p class="intro">
-            แต่งเติมคำหวาน เลือกแม่แบบ เพิ่มรูปภาพสวีทๆ แล้วส่งลิงก์เซอร์ไพรส์แฟนได้ทันที!
-          </p>
+  <div id="floatingHeartsContainer" class="floating-hearts-bg"></div>
+
+  <main id="mainApp" class="app-shell">
+    
+    <section class="editor-panel">
+      <div class="hero">
+        <span class="eyebrow">✨ CREATE A ROMANTIC SURPRISE</span>
+        <h1>สร้างการ์ดจดหมายรักสุดพิเศษ 💌</h1>
+        <p class="intro">แต่งเติมคำหวาน เลือกรูปแบบกล่อง/ซอง เพิ่มสติกเกอร์ แล้วส่งลิงก์เซอร์ไพรส์แฟนได้ทันที!</p>
+      </div>
+
+      <form id="letterForm" class="letter-form" onsubmit="return false;">
+        <div class="field-group">
+          <label for="greetingInput">คำขึ้นต้น (Greeting)</label>
+          <input type="text" id="greetingInput" placeholder="ถึงคนเก่งของเค้า~ 💖" value="ถึงคนเก่งของเค้า~ 💖">
         </div>
 
-        <form id="letterForm" class="letter-form" onsubmit="return false;">
-          <label>
-            คำขึ้นต้น (Greeting)
-            <input id="greetingInput" name="greeting" type="text" maxlength="40" value="ถึงคนเก่งของเค้า~ 💖" />
-          </label>
+        <div class="field-group">
+          <label for="messageInput">ข้อความบอกรัก (Message)</label>
+          <textarea id="messageInput" rows="4" placeholder="พิมพ์ข้อความบอกรักตรงนี้...">ขอบคุณที่เข้ามาเป็นความสุขในทุกๆ วันนะ ตั้งแต่เธอเข้ามา โลกนี้น่าอยู่ขึ้นเยอะเลย วันนี้อยากบอกว่ารักเธอที่สุดในโลกเลยนะ!</textarea>
+        </div>
 
-          <label>
-            ข้อความบอกรัก (Message)
-            <textarea id="messageInput" name="message" rows="5" maxlength="500">ขอบคุณที่เข้ามาเป็นความสุขในทุกๆ วันนะ ตั้งแต่มีเธอเข้ามา โลกก็น่าอยู่ขึ้นเยอะเลย วันนี้อยากบอกว่ารักเธอที่สุดในโลกเลยนะ!</textarea>
-          </label>
+        <div class="field-group">
+          <label for="signatureInput">คำลงท้าย (Signature)</label>
+          <input type="text" id="signatureInput" placeholder="ด้วยรักและคิดถึงเสมอ" value="ด้วยรักและคิดถึงเสมอ">
+        </div>
 
-          <label>
-            คำลงท้าย (Signature)
-            <input id="signatureInput" name="signature" type="text" maxlength="40" value="ด้วยรักและคิดถึงเสมอ" />
-          </label>
-
-          <div class="field-group">
-            <span class="field-label">🎨 เลือกรูปแบบ/ธีม (Templates)</span>
-            <div class="theme-picker" id="themePicker">
-              <button type="button" class="theme-chip active" data-theme="pink">💖 Sweet Pink</button>
-              <button type="button" class="theme-chip" data-theme="gift">🎁 Gift Box</button>
-              <button type="button" class="theme-chip" data-theme="lavender">💜 Lavender Dream</button>
-              <button type="button" class="theme-chip" data-theme="night">🌌 Starry Night</button>
-            </div>
+        <div class="field-group">
+          <span class="field-label">🎨 เลือกระบบธีม & รูปแบบการเปิด</span>
+          <div class="theme-picker">
+            <button type="button" class="theme-chip active" data-theme="pink" data-template="envelope">💖 Sweet Envelope</button>
+            <button type="button" class="theme-chip" data-theme="gift" data-template="giftbox">🎁 Gift Box Surprise</button>
+            <button type="button" class="theme-chip" data-theme="lavender" data-template="teddy">🧸 Cute Teddy Bear</button>
+            <button type="button" class="theme-chip" data-theme="night" data-template="starry">✨ Starry Night</button>
           </div>
+        </div>
 
-          <div class="field-group">
-            <span class="field-label">✨ เพิ่มสติกเกอร์น่ารักๆ</span>
-            <div class="sticker-picker" id="stickerPicker">
-              <button type="button" class="sticker-chip" data-sticker="💗">💗</button>
-              <button type="button" class="sticker-chip" data-sticker="🎁">🎁</button>
-              <button type="button" class="sticker-chip" data-sticker="🌸">🌸</button>
-              <button type="button" class="sticker-chip" data-sticker="🧸">🧸</button>
-              <button type="button" class="sticker-chip" data-sticker="💌">💌</button>
-              <button type="button" class="sticker-chip" data-sticker="✨">✨</button>
-              <button type="button" class="sticker-chip" data-sticker="🎂">🎂</button>
-            </div>
+        <div class="field-group">
+          <span class="field-label">✨ เพิ่มสติกเกอร์ตกแต่ง (คลิกเพื่อเลือก)</span>
+          <div class="sticker-picker">
+            <button type="button" class="sticker-chip" data-sticker="💖">💖</button>
+            <button type="button" class="sticker-chip" data-sticker="🎁">🎁</button>
+            <button type="button" class="sticker-chip" data-sticker="🌸">🌸</button>
+            <button type="button" class="sticker-chip" data-sticker="🧸">🧸</button>
+            <button type="button" class="sticker-chip" data-sticker="💌">💌</button>
+            <button type="button" class="sticker-chip" data-sticker="✨">✨</button>
+            <button type="button" class="sticker-chip" data-sticker="🎂">🎂</button>
+            <button type="button" class="sticker-chip" data-sticker="🌹">🌹</button>
           </div>
+        </div>
 
-          <div class="field-group">
-            <span class="field-label">📸 ใส่รูปคู่ความทรงจำ (Photo Memory)</span>
-            <label class="upload-box" for="photoInput">
-              <span>แตะเพื่อเลือกรูปภาพน่ารักๆ 🖼️</span>
-              <input id="photoInput" name="photo" type="file" accept="image/*" />
-            </label>
-            <div class="photo-preview" id="photoPreview"></div>
-          </div>
-        </form>
+        <div class="field-group">
+          <span class="field-label">📸 ใส่รูปคู่ความทรงจำ (Photo Memory)</span>
+          <label class="upload-box">
+            <input type="file" id="photoInput" accept="image/*">
+            <span id="uploadText">แตะเพื่อเลือกรูปภาพน่ารักๆ 🖼️</span>
+          </label>
+        </div>
 
         <div class="actions">
-          <button type="button" class="primary-btn" id="saveButton">💌 สร้างจดหมาย & รับลิงก์ส่งแฟน</button>
-          <button type="button" class="secondary-btn" id="copyLinkButton" style="display:none;">🔗 คัดลอกลิงก์ส่งแชท</button>
+          <button type="button" id="saveButton" class="primary-btn">💖 สร้างจดหมาย & รับลิงก์ส่งแฟน</button>
+          <button type="button" id="copyLinkButton" class="secondary-btn" style="display:none;">📋 คัดลอกลิงก์</button>
         </div>
-        <div class="status-box" id="statusBox"></div>
-      </section>
+        <div id="statusBox"></div>
+      </form>
+    </section>
 
-      <section class="preview-panel" id="previewPanel">
-        <div class="preview-header">
-          <p class="eyebrow">ตัวอย่างการ์ดที่จะแสดงบนจอแฟน</p>
+    <section class="preview-panel">
+      <h2>ตัวอย่างที่จะแสดงบนจอแฟน</h2>
+      
+      <div id="previewContainer" class="surprise-container template-envelope closed">
+        
+        <div id="containerCover" class="container-cover">
+          <div class="cover-icon">✉️</div>
+          <p class="cover-text">มีข้อความลับส่งถึงคุณนะ 💕</p>
+          <button type="button" id="openPreviewBtn" class="open-btn pulse">แตะเพื่อเปิดดูเซอร์ไพรส์ 💌</button>
         </div>
 
-        <div class="envelope-stage" id="envelopeStage">
-          <div class="envelope-card" id="envelopeCard">
-            <div class="envelope-flap"></div>
-            <div class="envelope-body"></div>
-            <div class="letter-card" id="letterCard">
-              <div class="letter-content">
-                <p class="greeting" id="previewGreeting">ถึงคนเก่งของเค้า~ 💖</p>
-                <p class="message" id="previewMessage">ขอบคุณที่เข้ามาเป็นความสุขในทุกๆ วันนะ...</p>
-                <p class="signature" id="previewSignature">ด้วยรักและคิดถึงเสมอ</p>
-              </div>
-              <div class="sticker-layer" id="stickerLayer"></div>
-              <div class="photo-slot" id="photoSlot"></div>
-            </div>
-          </div>
-          <button class="open-button" id="openButton" type="button">แตะเพื่อเปิดซองจดหมาย 💌</button>
+        <div id="innerCard" class="inner-card">
+          <div id="previewStickerLayer" class="sticker-layer"></div>
+          <h3 id="previewGreeting" class="greeting">ถึงคนเก่งของเค้า~ 💖</h3>
+          <p id="previewMessage" class="message">ขอบคุณที่เข้ามาเป็นความสุขในทุกๆ วันนะ ตั้งแต่เธอเข้ามา โลกนี้น่าอยู่ขึ้นเยอะเลย วันนี้อยากบอกว่ารักเธอที่สุดในโลกเลยนะ!</p>
+          <div id="previewPhotoSlot" class="photo-slot"></div>
+          <p id="previewSignature" class="signature">ด้วยรักและคิดถึงเสมอ</p>
         </div>
-      </section>
 
-      <section class="recipient-standalone-view" id="recipientView" style="display: none;">
-        <div class="recipient-container">
-          <div class="envelope-stage recipient-stage">
-            <div class="envelope-card" id="recipientEnvelope">
-              <div class="envelope-flap"></div>
-              <div class="envelope-body"></div>
-              <div class="letter-card" id="recipientLetterCard">
-                <div class="letter-content">
-                  <h2 class="greeting" id="recipientGreeting">ถึงคนเก่งของเค้า~ 💖</h2>
-                  <p class="message" id="recipientMessage">ข้อความบอกรัก...</p>
-                  <p class="signature" id="recipientSignature">ด้วยรักและคิดถึงเสมอ</p>
-                </div>
-                <div class="sticker-layer" id="recipientStickerLayer"></div>
-                <div class="photo-slot" id="recipientPhotoSlot"></div>
-              </div>
-            </div>
-            <button class="open-button big-pulse" id="recipientOpenBtn" type="button">แตะเปิดของขวัญสุดพิเศษ 🎁💖</button>
-          </div>
-        </div>
-      </section>
-    </main>
+      </div>
+    </section>
 
-    <script src="/app.js" defer></script>
-  </body>
+  </main>
+
+  <div id="recipientView" class="recipient-view-overlay" style="display: none;">
+    <div id="recipientContainer" class="surprise-container template-envelope closed">
+      
+      <div id="recipientCover" class="container-cover">
+        <div id="recipientCoverIcon" class="cover-icon">✉️</div>
+        <p class="cover-text">มีความสุขและความรักรออยู่ข้างในนี้... ✨</p>
+        <button type="button" id="recipientOpenBtn" class="open-btn pulse">แตะเพื่อเปิดเซอร์ไพรส์ 💕</button>
+      </div>
+
+      <div id="recipientInnerCard" class="inner-card">
+        <div id="recipientStickerLayer" class="sticker-layer"></div>
+        <h3 id="recipientGreeting" class="greeting"></h3>
+        <p id="recipientMessage" class="message"></p>
+        <div id="recipientPhotoSlot" class="photo-slot"></div>
+        <p id="recipientSignature" class="signature"></p>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
 </html>
