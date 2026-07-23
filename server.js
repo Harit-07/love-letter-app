@@ -5,30 +5,37 @@ const { createClient } = require('redis');
 const app = express();
 const port = process.env.PORT || 3000;
 
-// สร้าง Redis client
+// ดึง Redis URL จาก Environment Variable หลายๆ ชื่อที่ Vercel มักจะตั้งให้
+const redisUrl = process.env.STORAGE_URL || process.env.REDIS_URL || process.env.KV_URL;
+
 const redis = createClient({
-  url: process.env.STORAGE_URL || process.env.REDIS_URL
+  url: redisUrl
 });
 
 redis.on('error', (err) => console.error('Redis Client Error:', err));
 
-// เชื่อมต่อ Redis Database
-redis.connect();
+// ฟังก์ชันช่วยเชื่อมต่อ Redis อย่างปลอดภัย
+async function getRedisClient() {
+  if (!redis.isOpen) {
+    await redis.connect();
+  }
+  return redis;
+}
 
 app.use(express.json({ limit: '10mb' }));
 
-// Key prefix
 const KEY_PREFIX = 'letter:';
 
-// 1. Route สำหรับหน้าแรก (เสิร์ฟ index.html)
+// 1. หน้าแรก
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// 2. API Routes
+// 2. ดึงข้อมูลจดหมาย
 app.get('/api/letters/:slug', async (req, res) => {
   try {
-    const rawData = await redis.get(KEY_PREFIX + req.params.slug);
+    const client = await getRedisClient();
+    const rawData = await client.get(KEY_PREFIX + req.params.slug);
     if (!rawData) {
       return res.status(404).json({ error: 'Letter not found' });
     }
@@ -41,6 +48,7 @@ app.get('/api/letters/:slug', async (req, res) => {
   }
 });
 
+// 3. บันทึกจดหมาย
 app.post('/api/letters', async (req, res) => {
   try {
     const { greeting, message, signature, theme, stickers, photo } = req.body;
@@ -57,7 +65,8 @@ app.post('/api/letters', async (req, res) => {
       createdAt: new Date().toISOString()
     };
 
-    await redis.set(KEY_PREFIX + slug, JSON.stringify(letter));
+    const client = await getRedisClient();
+    await client.set(KEY_PREFIX + slug, JSON.stringify(letter));
 
     res.json({ slug, shareUrl: `/letter/${slug}` });
   } catch (error) {
@@ -66,7 +75,7 @@ app.post('/api/letters', async (req, res) => {
   }
 });
 
-// 3. Route สำหรับการดูจดหมายผ่านลิงก์
+// 4. หน้าดูจดหมาย
 app.get('/letter/:slug', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
