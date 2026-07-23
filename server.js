@@ -16,7 +16,7 @@ redis.on('error', (err) => console.error('Redis Client Error:', err));
 redis.connect();
 
 app.use(express.json({ limit: '10mb' }));
-
+app.use(express.static(__dirname));
 
 // Key prefix so letters don't collide with other data in the same KV store
 const KEY_PREFIX = 'letter:';
