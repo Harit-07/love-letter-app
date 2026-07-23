@@ -14,7 +14,7 @@ body {
   transition: background-color 0.3s ease;
 }
 
-.handwritten-title, .handwritten-body, .handwritten-sig, .p-caption, .cover-title, .cover-subtext {
+.handwritten-title, .handwritten-body, .handwritten-sig, .cover-title, .cover-subtext {
   font-family: 'Mali', cursive;
 }
 
@@ -67,19 +67,21 @@ body {
 
 .field-group { margin-bottom: 16px; }
 .field-group label, .field-label { display: block; font-weight: 600; font-size: 0.85rem; margin-bottom: 8px; }
+.field-sublabel { font-size: 0.75rem; color: #666; display: block; margin-bottom: 4px; }
 
-/* Color Pickers */
-.colors-group {
-  display: flex;
-  gap: 12px;
+.style-select {
+  width: 100%;
+  padding: 8px;
+  border-radius: 10px;
+  border: 1.5px solid #ffd1dc;
+  font-size: 0.85rem;
+  outline: none;
+  background: #fff;
 }
-.color-picker-item {
-  flex: 1;
-}
-.color-picker-item label {
-  font-size: 0.75rem;
-  margin-bottom: 4px;
-}
+
+.colors-group { display: flex; gap: 12px; }
+.color-picker-item { flex: 1; }
+.color-picker-item label { font-size: 0.75rem; margin-bottom: 4px; }
 .color-picker-item input[type="color"] {
   width: 100%;
   height: 36px;
@@ -132,8 +134,6 @@ input[type="text"], textarea {
 .upload-box input { display: none; }
 .custom-cover-label { background: #fff8f9; border-color: #ff758f; }
 
-.polaroid-uploads { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-
 .sticker-palette { display: flex; flex-wrap: wrap; gap: 6px; }
 .sticker-add-btn {
   font-size: 1.2rem;
@@ -157,13 +157,13 @@ input[type="text"], textarea {
 }
 
 /* ========================================= */
-/* COVER STYLES & ANIMATED BEAR */
+/* SCRAPBOOK STAGE & COVER */
 /* ========================================= */
 
 .scrapbook-stage {
   position: relative;
   width: 100%;
-  height: 520px;
+  height: 540px;
   background: rgba(255, 255, 255, 0.6);
   border-radius: 24px;
   border: 2px dashed #f3cad2;
@@ -186,11 +186,7 @@ input[type="text"], textarea {
   padding: 20px;
 }
 
-.cover-icon-box {
-  margin-bottom: 16px;
-  display: flex;
-  justify-content: center;
-}
+.cover-icon-box { margin-bottom: 16px; display: flex; justify-content: center; }
 
 .cover-graphic {
   width: 160px;
@@ -206,7 +202,6 @@ input[type="text"], textarea {
   transition: transform 0.3s ease, background-color 0.3s ease;
 }
 
-/* ซองจดหมาย */
 .cover-graphic.envelope-style::before {
   content: '';
   position: absolute;
@@ -216,12 +211,10 @@ input[type="text"], textarea {
   border-top: 55px solid rgba(0, 0, 0, 0.15);
 }
 
-/* กล่องของขวัญ */
 .cover-graphic.giftbox-style { width: 130px; height: 120px; }
 .cover-graphic.giftbox-style::before { content: ''; position: absolute; width: 22px; height: 100%; background: #ffeb3b; }
 .cover-graphic.giftbox-style::after { content: ''; position: absolute; height: 22px; width: 100%; background: #ffeb3b; }
 
-/* น้องหมีดุ๊กดิ๊ก */
 .cover-graphic.bear-style {
   width: 130px;
   height: 120px;
@@ -229,11 +222,8 @@ input[type="text"], textarea {
   animation: bearWiggle 2s infinite ease-in-out;
 }
 
-/* หูน้องหมี */
 .bear-ears { display: none; }
-.cover-graphic.bear-style .bear-ears {
-  display: block;
-}
+.cover-graphic.bear-style .bear-ears { display: block; }
 .cover-graphic.bear-style .bear-ears::before,
 .cover-graphic.bear-style .bear-ears::after {
   content: '';
@@ -283,8 +273,27 @@ input[type="text"], textarea {
   transform: scale(1);
 }
 
-.sticker-canvas { position: absolute; inset: 0; pointer-events: none; z-index: 6; }
-.placed-sticker { position: absolute; font-size: 2rem; pointer-events: auto; }
+/* ปุ่มปิดจดหมาย */
+.close-card-btn {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 50;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid #ffd1dc;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #ff477e;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+  transition: all 0.2s;
+}
+.close-card-btn:hover { background: #ff477e; color: #fff; }
+
+.sticker-canvas, .photos-canvas { position: absolute; inset: 0; z-index: 6; }
+.sticker-canvas { pointer-events: none; }
 
 .main-card {
   background: #ffffff;
@@ -303,34 +312,88 @@ input[type="text"], textarea {
 .handwritten-body { font-size: 0.85rem; line-height: 1.5; color: #444; white-space: pre-wrap; margin-bottom: 10px; }
 .handwritten-sig { font-size: 0.8rem; color: #888; text-align: right; }
 
-.polaroid {
+/* ========================================= */
+/* DRAGGABLE & RESIZABLE PHOTO FRAMES */
+/* ========================================= */
+
+.interactive-photo-item {
   position: absolute;
-  background: #fff;
-  padding: 6px 6px 14px 6px;
-  border-radius: 8px;
-  box-shadow: 0 6px 16px rgba(0,0,0,0.08);
-  width: 95px;
-  height: 120px;
-  text-align: center;
-  z-index: 4;
+  cursor: move;
+  user-select: none;
+  touch-action: none;
+  display: inline-block;
+  z-index: 8;
 }
 
-.polaroid .img-box {
+.interactive-photo-item img {
   width: 100%;
-  height: 80px;
-  background: #ffe3e8;
-  border-radius: 6px;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+  display: block;
 }
 
-.p-caption { font-size: 0.65rem; color: #777; margin-top: 4px; display: block; }
+/* กรอบโพลารอยด์ */
+.interactive-photo-item.frame-polaroid {
+  background: #fff;
+  padding: 8px 8px 24px 8px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+  border-radius: 6px;
+}
 
-.p1 { top: 20px; left: 20px; transform: rotate(-8deg); }
-.p2 { top: 20px; right: 20px; transform: rotate(6deg); }
-.p3 { bottom: 20px; left: 20px; transform: rotate(5deg); }
-.p4 { bottom: 20px; right: 20px; transform: rotate(-7deg); }
+/* กรอบมินิมอล */
+.interactive-photo-item.frame-border {
+  background: #fff;
+  padding: 6px;
+  border: 2px solid #ffd1dc;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+  border-radius: 10px;
+}
+
+/* ไม่ใส่กรอบ */
+.interactive-photo-item.frame-none {
+  padding: 0;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* ปุ่มสำหรับ Delete / Resize / Rotate (แสดงเฉพาะตอนตกแต่ง) */
+.photo-controls { display: none; }
+.interactive-photo-item:hover .photo-controls,
+.interactive-photo-item.active .photo-controls {
+  display: block;
+}
+
+.btn-delete-photo {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  width: 22px;
+  height: 22px;
+  background: #ff477e;
+  color: #fff;
+  border-radius: 50%;
+  font-size: 12px;
+  text-align: center;
+  line-height: 22px;
+  cursor: pointer;
+  z-index: 10;
+  border: 1px solid #fff;
+}
+
+.handle-resize {
+  position: absolute;
+  bottom: -6px;
+  right: -6px;
+  width: 14px;
+  height: 14px;
+  background: #ff477e;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  cursor: se-resize;
+  z-index: 10;
+}
 
 .recipient-standalone-view {
   position: fixed;
@@ -340,6 +403,7 @@ input[type="text"], textarea {
   align-items: center;
   justify-content: center;
   padding: 16px;
+  transition: opacity 0.4s ease;
 }
 
 .recipient-standalone-view .scrapbook-stage {

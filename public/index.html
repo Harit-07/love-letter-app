@@ -18,7 +18,7 @@
       <div class="hero">
         <span class="eyebrow">✨ CUSTOM SCRAPBOOK BUILDER</span>
         <h1>ออกแบบจดหมายรักสุดน่ารัก 💕</h1>
-        <p class="intro">ปรับสี เปลี่ยนรูปปก เพิ่มสติกเกอร์ และส่งให้คนพิเศษได้เลย!</p>
+        <p class="intro">ปรับสี เปลี่ยนรูปปก เพิ่มรูปภาพขยับได้ และส่งให้คนพิเศษ!</p>
       </div>
 
       <form id="letterForm" class="letter-form" onsubmit="return false;">
@@ -43,11 +43,11 @@
         <!-- เลือกสีเว็บ & สีปก -->
         <div class="field-group colors-group">
           <div class="color-picker-item">
-            <label for="themeColorPicker">🎨 เลือกสีธีมเว็บ</label>
+            <label for="themeColorPicker">🎨 สีธีมเว็บ</label>
             <input type="color" id="themeColorPicker" value="#fdf2f4">
           </div>
           <div class="color-picker-item">
-            <label for="coverColorPicker">🎨 เลือกสีปก (ซอง/กล่อง)</label>
+            <label for="coverColorPicker">🎨 สีปกจดหมาย</label>
             <input type="color" id="coverColorPicker" value="#ff5277">
           </div>
         </div>
@@ -67,15 +67,21 @@
           <input type="text" id="signatureInput" value="ด้วยรักเสมอมา">
         </div>
 
-        <!-- อัปโหลดรูปโพลารอยด์ -->
+        <!-- อัปโหลดรูปภาพแบบไม่จำกัด & เลือกสไตล์กรอบ -->
         <div class="field-group">
-          <span class="field-label">📸 รูปโพลารอยด์ตกแต่ง (สูงสุด 4 รูป)</span>
-          <div class="polaroid-uploads">
-            <label class="upload-box"><span id="labelP0">📷 รูปที่ 1</span><input type="file" class="photo-input" data-index="0" accept="image/*"></label>
-            <label class="upload-box"><span id="labelP1">📷 รูปที่ 2</span><input type="file" class="photo-input" data-index="1" accept="image/*"></label>
-            <label class="upload-box"><span id="labelP2">📷 รูปที่ 3</span><input type="file" class="photo-input" data-index="2" accept="image/*"></label>
-            <label class="upload-box"><span id="labelP3">📷 รูปที่ 4</span><input type="file" class="photo-input" data-index="3" accept="image/*"></label>
+          <span class="field-label">📸 เพิ่มรูปภาพความทรงจำ (ไม่จำกัดจำนวน)</span>
+          <div class="frame-style-selector" style="margin-bottom: 8px;">
+            <label class="field-sublabel">เลือกสไตล์กรอบรูปก่อนอัปโหลด:</label>
+            <select id="photoFrameStyleSelect" class="style-select">
+              <option value="polaroid">📸 กรอบโพลารอยด์ (Polaroid)</option>
+              <option value="border">🖼️ กรอบรูปมินิมอล (Simple Border)</option>
+              <option value="none">✂️ ไม่ใส่กรอบ (No Frame)</option>
+            </select>
           </div>
+          <label class="upload-box multi-photo-label">
+            <span>➕ คลิกเพื่อเพิ่มรูปภาพลงกระดาน</span>
+            <input type="file" id="multiPhotoInput" accept="image/*" multiple>
+          </label>
         </div>
 
         <!-- คลังสติกเกอร์ -->
@@ -107,7 +113,7 @@
       
       <div id="previewContainer" class="scrapbook-stage closed">
         
-        <!-- หน้าปกก่อนเปิด (จัดกึ่งกลาง) -->
+        <!-- หน้าปกก่อนเปิด -->
         <div id="coverEnvelope" class="cover-center-wrapper">
           <div class="cover-icon-box">
             <div id="coverGraphic" class="cover-graphic envelope-style">
@@ -121,12 +127,10 @@
 
         <!-- หน้ากระดานหลังเปิด -->
         <div id="letterBoard" class="letter-board">
-          <div id="stickerCanvas" class="sticker-canvas"></div>
+          <button type="button" id="closeLetterBtn" class="close-card-btn" title="ปิดจดหมายกลับไปหน้าปก">❌ ปิดจดหมาย</button>
 
-          <div class="polaroid p1" id="pol0"><div class="img-box" id="pImg0"></div><span class="p-caption">for u 🌹</span></div>
-          <div class="polaroid p2" id="pol1"><div class="img-box" id="pImg1"></div><span class="p-caption">cutie ✨</span></div>
-          <div class="polaroid p3" id="pol2"><div class="img-box" id="pImg2"></div><span class="p-caption">sending love 💕</span></div>
-          <div class="polaroid p4" id="pol3"><div class="img-box" id="pImg3"></div><span class="p-caption">forever 🐾</span></div>
+          <div id="stickerCanvas" class="sticker-canvas"></div>
+          <div id="photosCanvas" class="photos-canvas"></div>
 
           <div class="main-card">
             <h3 id="previewGreeting" class="handwritten-title">สวัสดีคุณคนสวย 💖</h3>
@@ -140,8 +144,8 @@
 
   </main>
 
-  <!-- หน้าผู้รับเปิดผ่านลิงก์ -->
-  <div id="recipientView" class="recipient-standalone-view" style="display: none;">
+  <!-- หน้าผู้รับเปิดผ่านลิงก์ (เริ่มต้นจะซ่อนแบบสมบูรณ์ เพื่อป้องกัน Delay เห็นภาพก่อนแต่ง) -->
+  <div id="recipientView" class="recipient-standalone-view" style="display: none; opacity: 0;">
     <div id="recipientStage" class="scrapbook-stage closed">
       
       <div id="recipientCover" class="cover-center-wrapper">
@@ -156,12 +160,10 @@
       </div>
 
       <div id="recipientLetterBoard" class="letter-board">
-        <div id="recipientStickerCanvas" class="sticker-canvas"></div>
+        <button type="button" id="recipientCloseLetterBtn" class="close-card-btn" title="ปิดจดหมายกลับไปหน้าปก">❌ ปิดจดหมาย</button>
 
-        <div class="polaroid p1"><div class="img-box" id="rImg0"></div><span class="p-caption">for u 🌹</span></div>
-        <div class="polaroid p2"><div class="img-box" id="rImg1"></div><span class="p-caption">cutie ✨</span></div>
-        <div class="polaroid p3"><div class="img-box" id="rImg2"></div><span class="p-caption">sending love 💕</span></div>
-        <div class="polaroid p4"><div class="img-box" id="rImg3"></div><span class="p-caption">forever 🐾</span></div>
+        <div id="recipientStickerCanvas" class="sticker-canvas"></div>
+        <div id="recipientPhotosCanvas" class="photos-canvas"></div>
 
         <div class="main-card">
           <h3 id="recipientGreeting" class="handwritten-title"></h3>

@@ -1,4 +1,4 @@
-﻿let polaroidPhotos = ['', '', '', ''];
+﻿let dynamicPhotos = []; // เก็บอาร์เรย์รูปภาพทั้งหมด
 let placedStickers = [];
 let currentCoverStyle = 'envelope';
 let customCoverImage = '';
@@ -122,26 +122,117 @@ function updateCoverDisplay(style, customImg, graphicId, badgeId, titleId, color
   }
 }
 
-// 5. อัปโหลดรูปโพลารอยด์
-function setupPhotoUploads() {
-  const inputs = document.querySelectorAll('.photo-input');
-  inputs.forEach((input) => {
-    input.addEventListener('change', (e) => {
-      const idx = e.target.dataset.index;
-      const file = e.target.files[0];
-      if (!file) return;
+// 5. อัปโหลดรูปภาพแบบไม่จำกัด & ระบบ Drag/Resize/Rotate
+function setupMultiPhotoUpload() {
+  const multiInput = document.getElementById('multiPhotoInput');
+  const frameStyleSelect = document.getElementById('photoFrameStyleSelect');
+  const canvas = document.getElementById('photosCanvas');
 
+  if (!multiInput) return;
+
+  multiInput.addEventListener('change', (e) => {
+    const files = Array.from(e.target.files);
+    files.forEach((file) => {
       const reader = new FileReader();
       reader.onload = (evt) => {
-        polaroidPhotos[idx] = evt.target.result;
-        const imgBox = document.getElementById(`pImg${idx}`);
-        if (imgBox) imgBox.style.backgroundImage = `url(${evt.target.result})`;
+        const photoObj = {
+          id: 'p_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+          src: evt.target.result,
+          frameStyle: frameStyleSelect.value || 'polaroid',
+          x: Math.random() * 80 + 20,
+          y: Math.random() * 80 + 20,
+          width: 110,
+          rotation: (Math.random() * 20) - 10
+        };
 
-        const label = document.getElementById(`labelP${idx}`);
-        if (label) label.textContent = `✅ รูปที่ ${parseInt(idx) + 1}`;
+        dynamicPhotos.push(photoObj);
+        renderInteractivePhoto(canvas, photoObj, true);
       };
       reader.readAsDataURL(file);
     });
+  });
+}
+
+function renderInteractivePhoto(canvas, p, isEditable = false) {
+  if (!canvas) return;
+
+  const item = document.createElement('div');
+  item.className = `interactive-photo-item frame-${p.frameStyle}`;
+  item.id = p.id;
+  item.style.left = p.x + 'px';
+  item.style.top = p.y + 'px';
+  item.style.width = p.width + 'px';
+  item.style.transform = `rotate(${p.rotation}deg)`;
+
+  const img = document.createElement('img');
+  img.src = p.src;
+  item.appendChild(img);
+
+  if (isEditable) {
+    const controls = document.createElement('div');
+    controls.className = 'photo-controls';
+
+    const btnDel = document.createElement('div');
+    btnDel.className = 'btn-delete-photo';
+    btnDel.textContent = '✕';
+    btnDel.onclick = (e) => {
+      e.stopPropagation();
+      dynamicPhotos = dynamicPhotos.filter(photo => photo.id !== p.id);
+      item.remove();
+    };
+
+    const handleResize = document.createElement('div');
+    handleResize.className = 'handle-resize';
+
+    controls.appendChild(btnDel);
+    controls.appendChild(handleResize);
+    item.appendChild(controls);
+
+    // ระบบ Ldrag & Resize
+    makeElementInteractive(item, p, handleResize);
+  }
+
+  canvas.appendChild(item);
+}
+
+function makeElementInteractive(el, photoData, resizeHandle) {
+  let isDragging = false;
+  let isResizing = false;
+  let startX, startY, startWidth, startLeft, startTop;
+
+  el.addEventListener('mousedown', (e) => {
+    if (e.target === resizeHandle) {
+      isResizing = true;
+      startX = e.clientX;
+      startWidth = el.offsetWidth;
+    } else {
+      isDragging = true;
+      startX = e.clientX - el.offsetLeft;
+      startY = e.clientY - el.offsetTop;
+    }
+    e.stopPropagation();
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    if (isDragging) {
+      let newX = e.clientX - startX;
+      let newY = e.clientY - startY;
+      el.style.left = newX + 'px';
+      el.style.top = newY + 'px';
+      photoData.x = newX;
+      photoData.y = newY;
+    } else if (isResizing) {
+      let newWidth = startWidth + (e.clientX - startX);
+      if (newWidth > 60 && newWidth < 300) {
+        el.style.width = newWidth + 'px';
+        photoData.width = newWidth;
+      }
+    }
+  });
+
+  document.addEventListener('mouseup', () => {
+    isDragging = false;
+    isResizing = false;
   });
 }
 
@@ -153,12 +244,8 @@ function setupStickerPalette() {
   stickerBtns.forEach((btn) => {
     btn.addEventListener('click', () => {
       const emoji = btn.dataset.emoji;
-      const left = Math.random() * 60 + 20;
-      const top = Math.random() * 60 + 20;
-
-      const stickerData = { emoji, left, top };
+      const stickerData = { emoji, left: Math.random() * 60 + 20, top: Math.random() * 60 + 20 };
       placedStickers.push(stickerData);
-
       renderSingleSticker(stickerCanvas, stickerData);
     });
   });
@@ -174,9 +261,11 @@ function renderSingleSticker(canvas, sticker) {
   canvas.appendChild(el);
 }
 
+// 7. ปุ่มเปิด-ปิดจดหมาย
 function setupEnvelopeToggle() {
   const previewContainer = document.getElementById('previewContainer');
   const cover = document.getElementById('coverEnvelope');
+  const closeBtn = document.getElementById('closeLetterBtn');
 
   if (cover && previewContainer) {
     cover.addEventListener('click', () => {
@@ -184,9 +273,17 @@ function setupEnvelopeToggle() {
       previewContainer.classList.remove('closed');
     });
   }
+
+  if (closeBtn && previewContainer) {
+    closeBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      previewContainer.classList.remove('open');
+      previewContainer.classList.add('closed');
+    });
+  }
 }
 
-// 7. บันทึกจดหมาย
+// 8. บันทึกจดหมาย
 function setupSaveButton() {
   const saveBtn = document.getElementById('saveButton');
   const copyBtn = document.getElementById('copyLinkButton');
@@ -206,7 +303,7 @@ function setupSaveButton() {
       customCoverImage: customCoverImage,
       coverColor: currentCoverColor,
       themeColor: currentThemeColor,
-      photos: polaroidPhotos,
+      photos: dynamicPhotos,
       stickers: placedStickers
     };
 
@@ -259,7 +356,7 @@ function setupSaveButton() {
   }
 }
 
-// 8. แสดงผลให้ผู้รับ (Recipient View)
+// 9. แสดงผลให้ผู้รับ (ไม่มี Delay)
 async function checkRecipientMode() {
   const path = window.location.pathname;
   const match = path.match(/\/letter\/(.+)$/);
@@ -270,41 +367,37 @@ async function checkRecipientMode() {
     const recipientView = document.getElementById('recipientView');
     const recipientStage = document.getElementById('recipientStage');
     const recipientCover = document.getElementById('recipientCover');
+    const recipientCloseBtn = document.getElementById('recipientCloseLetterBtn');
 
     if (mainApp) mainApp.style.display = 'none';
-    if (recipientView) recipientView.style.display = 'flex';
 
     try {
       const res = await fetch(`/api/letters/${slug}`);
       if (res.ok) {
         const data = await res.json();
         
-        // กำหนดสีธีมเว็บของผู้รับ
         if (data.themeColor) document.body.style.backgroundColor = data.themeColor;
 
         document.getElementById('recipientGreeting').textContent = data.greeting;
         document.getElementById('recipientMessage').textContent = data.message;
         document.getElementById('recipientSignature').textContent = data.signature;
 
-        // โหลดสไตล์ปก และสีปก
         const coverStyle = data.coverStyle || 'envelope';
         const customImg = data.customCoverImage || '';
         const coverColor = data.coverColor || '#ff5277';
 
         updateCoverDisplay(coverStyle, customImg, 'recipientCoverGraphic', 'recipientCoverBadge', 'recipientCoverTitle', coverColor);
 
-        // โหลดรูปโพลารอยด์ทั้ง 4 ใบ
+        // โหลดรูปภาพความทรงจำ
+        const rPhotosCanvas = document.getElementById('recipientPhotosCanvas');
         if (data.photos && Array.isArray(data.photos)) {
-          data.photos.forEach((src, idx) => {
-            const box = document.getElementById(`rImg${idx}`);
-            if (box && src) box.style.backgroundImage = `url(${src})`;
-          });
+          data.photos.forEach(p => renderInteractivePhoto(rPhotosCanvas, p, false));
         }
 
         // โหลดสติกเกอร์
         if (data.stickers && Array.isArray(data.stickers)) {
-          const rCanvas = document.getElementById('recipientStickerCanvas');
-          data.stickers.forEach((s) => renderSingleSticker(rCanvas, s));
+          const rStickerCanvas = document.getElementById('recipientStickerCanvas');
+          data.stickers.forEach((s) => renderSingleSticker(rStickerCanvas, s));
         }
 
         if (recipientCover && recipientStage) {
@@ -312,6 +405,20 @@ async function checkRecipientMode() {
             recipientStage.classList.add('open');
             recipientStage.classList.remove('closed');
           });
+        }
+
+        if (recipientCloseBtn && recipientStage) {
+          recipientCloseBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            recipientStage.classList.remove('open');
+            recipientStage.classList.add('closed');
+          });
+        }
+
+        // โหลดข้อมูลทุกอย่างพร้อมแล้ว ค่อยแสดงผล (ป้องกัน Delay)
+        if (recipientView) {
+          recipientView.style.display = 'flex';
+          setTimeout(() => { recipientView.style.opacity = '1'; }, 50);
         }
       }
     } catch (e) {
@@ -325,7 +432,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupRealtimePreview();
   setupColorPickers();
   setupStyleSelector();
-  setupPhotoUploads();
+  setupMultiPhotoUpload();
   setupStickerPalette();
   setupEnvelopeToggle();
   setupSaveButton();
