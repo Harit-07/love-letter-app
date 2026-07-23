@@ -5,29 +5,33 @@ const { createClient } = require('redis');
 const app = express();
 const port = process.env.PORT || 3000;
 
-// ดึง Redis URL จาก Environment Variable หลายๆ ชื่อที่ Vercel มักจะตั้งให้
+// ระบบสำรองในหน่วยความจำ (กรณีต่อ Redis ไม่ได้)
+const memoryStore = new Map();
+
+// ดึง Redis URL จาก Environment Variables
 const redisUrl = process.env.STORAGE_URL || process.env.REDIS_URL || process.env.KV_URL;
 
-const useRedis = Boolean(redisUrl);
-const redis = useRedis ? createClient({ url: redisUrl }) : null;
-const fallbackStore = new Map();
-
-if (redis) {
-  redis.on('error', (err) => console.error('Redis Client Error:', err));
+let redisClient = null;
+if (redisUrl && (redisUrl.startsWith('redis://') || redisUrl.startsWith('rediss://'))) {
+  redisClient = createClient({ url: redisUrl });
+  redisClient.on('error', (err) => console.error('Redis Client Error:', err.message));
 }
 
-// ฟังก์ชันช่วยเชื่อมต่อ Redis อย่างปลอดภัย
-async function getRedisClient() {
-  if (!useRedis || !redis) return null;
-  if (!redis.isOpen) {
-    await redis.connect();
+// ฟังก์ชันดึง Client พร้อม Reconnect ปลอดภัย
+async function getRedis() {
+  if (!redisClient) return null;
+  try {
+    if (!redisClient.isOpen) {
+      await redisClient.connect();
+    }
+    return redisClient;
+  } catch (err) {
+    console.error('Failed to connect Redis, using In-Memory store instead:', err.message);
+    return null;
   }
-  return redis;
 }
 
 app.use(express.json({ limit: '10mb' }));
-app.use(express.static(path.join(__dirname, 'public')));
-
 const KEY_PREFIX = 'letter:';
 
 // 1. หน้าแรก
@@ -35,31 +39,32 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// 2. ดึงข้อมูลจดหมาย
+// 2. API ดึงข้อมูลจดหมาย
 app.get('/api/letters/:slug', async (req, res) => {
+  const { slug } = req.params;
   try {
-    if (useRedis) {
-      const client = await getRedisClient();
-      const rawData = await client.get(KEY_PREFIX + req.params.slug);
-      if (!rawData) {
-        return res.status(404).json({ error: 'Letter not found' });
-      }
-      const row = typeof rawData === 'string' ? JSON.parse(rawData) : rawData;
-      return res.json(row);
+    const client = await getRedis();
+    let rawData = null;
+
+    if (client) {
+      rawData = await client.get(KEY_PREFIX + slug);
+    } else {
+      rawData = memoryStore.get(KEY_PREFIX + slug);
     }
 
-    const rawData = fallbackStore.get(KEY_PREFIX + req.params.slug);
     if (!rawData) {
       return res.status(404).json({ error: 'Letter not found' });
     }
-    res.json(JSON.parse(rawData));
+
+    const row = typeof rawData === 'string' ? JSON.parse(rawData) : rawData;
+    res.json(row);
   } catch (error) {
     console.error('Failed to load letter:', error);
     res.status(500).json({ error: 'Something went wrong loading this letter.' });
   }
 });
 
-// 3. บันทึกจดหมาย
+// 3. API บันทึกจดหมาย (มีระบบป้องกัน Server Crash)
 app.post('/api/letters', async (req, res) => {
   try {
     const { greeting, message, signature, theme, stickers, photo } = req.body;
@@ -76,12 +81,14 @@ app.post('/api/letters', async (req, res) => {
       createdAt: new Date().toISOString()
     };
 
-    if (useRedis) {
-      const client = await getRedisClient();
-      await client.set(KEY_PREFIX + slug, JSON.stringify(letter));
+    const client = await getRedis();
+    const jsonString = JSON.stringify(letter);
+
+    if (client) {
+      await client.set(KEY_PREFIX + slug, jsonString);
     } else {
-      fallbackStore.set(KEY_PREFIX + slug, JSON.stringify(letter));
-      console.warn('Redis not configured: using in-memory fallback store for letters.');
+      // เซฟลงหน่วยความจำชั่วคราวถ้าไม่ได้ต่อ Redis
+      memoryStore.set(KEY_PREFIX + slug, jsonString);
     }
 
     res.json({ slug, shareUrl: `/letter/${slug}` });
@@ -91,7 +98,7 @@ app.post('/api/letters', async (req, res) => {
   }
 });
 
-// 4. หน้าดูจดหมาย
+// 4. หน้าเปิดดูจดหมายผ่านลิงก์
 app.get('/letter/:slug', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });

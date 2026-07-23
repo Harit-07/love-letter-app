@@ -1,608 +1,77 @@
-:root {
-  --bg: #fff8f3;
-  --paper: #fffdf9;
-  --text: #6d4c5f;
-  --accent: #f4a7b9;
-  --accent-2: #cbb8ff;
-  --accent-3: #bfe8d4;
-  --accent-4: #f8d7a0;
-  --shadow: rgba(115, 87, 107, 0.16);
-}
-
-* {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-  font-family: "Segoe UI", "Trebuchet MS", sans-serif;
-  background: linear-gradient(135deg, #fff6ef 0%, #ffeef8 100%);
-  color: var(--text);
-  min-height: 100vh;
-}
-
-button,
-input,
-textarea {
-  font: inherit;
-}
-
-.app-shell {
-  min-height: 100vh;
-  display: grid;
-  gap: 1.2rem;
-  padding: 1rem;
-  max-width: 1100px;
-  margin: 0 auto;
-}
-
-.editor-panel,
-.preview-panel,
-.recipient-view {
-  background: rgba(255, 255, 255, 0.78);
-  border: 1px solid rgba(255, 255, 255, 0.8);
-  box-shadow: 0 18px 40px var(--shadow);
-  border-radius: 28px;
-  padding: 1.1rem;
-  backdrop-filter: blur(8px);
-}
-
-.hero h1,
-.preview-header h2 {
-  margin: 0.2rem 0 0.4rem;
-  font-size: clamp(1.4rem, 2.5vw, 2rem);
-}
-
-.eyebrow {
-  text-transform: uppercase;
-  letter-spacing: 0.2em;
-  font-size: 0.75rem;
-  opacity: 0.7;
-  margin: 0;
-}
-
-.intro {
-  margin: 0.3rem 0 0;
-  line-height: 1.5;
-  color: #8e6a7b;
-}
-
-.letter-form {
-  display: grid;
-  gap: 0.9rem;
-  margin-top: 1rem;
-}
-
-label {
-  display: grid;
-  gap: 0.35rem;
-  font-weight: 700;
-}
-
-input,
-textarea {
-  border: 1px solid #efd6df;
-  background: #fffdfb;
-  border-radius: 16px;
-  padding: 0.8rem 0.9rem;
-  outline: none;
-  color: var(--text);
-}
-
-textarea {
-  resize: vertical;
-  min-height: 110px;
-}
-
-.field-group {
-  display: grid;
-  gap: 0.45rem;
-}
-
-.field-label {
-  font-weight: 700;
-}
-
-.theme-picker,
-.sticker-picker {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.6rem;
-}
-
-.theme-chip,
-.sticker-chip,
-.primary-btn,
-.secondary-btn {
-  border: none;
-  border-radius: 999px;
-  padding: 0.7rem 0.95rem;
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.theme-chip:hover,
-.sticker-chip:hover,
-.primary-btn:hover,
-.secondary-btn:hover {
-  transform: translateY(-2px);
-}
-
-.theme-chip {
-  background: #fff;
-  color: var(--text);
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.06);
-}
-
-.theme-chip.active {
-  background: var(--accent);
-  color: white;
-}
-
-.sticker-chip {
-  font-size: 1.15rem;
-  background: #fff6fa;
-  box-shadow: inset 0 0 0 1px #f2dfe8;
-}
-
-.upload-box {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 2px dashed #f0d2db;
-  border-radius: 20px;
-  padding: 0.9rem;
-  background: linear-gradient(135deg, #fff7fb, #fdf8ea);
-  min-height: 70px;
-  text-align: center;
-  color: #a77589;
-}
-
-.upload-box input {
-  display: none;
-}
-
-.photo-preview {
-  min-height: 80px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.photo-preview img {
-  width: 100%;
-  max-width: 180px;
-  border-radius: 18px;
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.12);
-}
-
-.actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.7rem;
-  margin-top: 1rem;
-}
-
-.status-box {
-  min-height: 1.2rem;
-  margin-top: 0.6rem;
-  color: #a45a78;
-  font-weight: 600;
-}
-
-.primary-btn {
-  background: linear-gradient(135deg, var(--accent), #f7b2c9);
-  color: white;
-  font-weight: 700;
-  box-shadow: 0 12px 24px rgba(242, 164, 181, 0.24);
-}
-
-.secondary-btn {
-  background: #fff;
-  color: var(--text);
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.06);
-}
-
-.preview-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.app-shell.recipient-mode {
-  max-width: 960px;
-  padding: 1rem;
-}
-
-.preview-panel.recipient-mode-panel {
-  justify-content: center;
-  align-items: center;
-  min-height: calc(100vh - 2rem);
-  background: linear-gradient(135deg, #fff6f0 0%, #ffeef7 100%);
-  border: none;
-  box-shadow: none;
-}
-
-.preview-panel.recipient-mode-panel .preview-header {
-  display: none;
-}
-
-.recipient-view {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 560px;
-}
-
-.envelope-stage {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  min-height: 560px;
-}
-
-.envelope-card {
-  position: relative;
-  width: min(90vw, 360px);
-  height: 440px;
-  perspective: 1000px;
-  cursor: pointer;
-}
-
-.envelope-body,
-.envelope-flap,
-.letter-card {
-  position: absolute;
-  inset: 0;
-  border-radius: 24px;
-}
-
-.envelope-body {
-  background: linear-gradient(145deg, #fce0ea, #f8d8de);
-  box-shadow: 0 18px 35px rgba(0, 0, 0, 0.12);
-  overflow: hidden;
-}
-
-.envelope-front {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(145deg, #ffdfe7, #ffc4d2);
-  clip-path: polygon(0 0, 100% 0, 50% 60%, 0 0);
-}
-
-.envelope-flap {
-  background: linear-gradient(145deg, #f3c6d4, #efabc0);
-  transform-origin: top center;
-  transform: rotateX(0deg);
-  transition: transform 0.8s ease;
-  z-index: 2;
-  clip-path: polygon(0 0, 100% 0, 50% 100%);
-}
-
-.envelope-card.open .envelope-flap {
-  transform: rotateX(180deg);
-}
-
-.letter-card {
-  top: 18px;
-  left: 18px;
-  right: 18px;
-  bottom: 18px;
-  background: var(--paper);
-  border: 1px solid #f2dfe8;
-  box-shadow: inset 0 0 0 8px rgba(255, 255, 255, 0.55);
-  transform: translateY(30px) scale(0.96);
-  opacity: 0;
-  transition: all 0.9s ease;
-  padding: 1rem;
-  overflow: hidden;
-}
-
-.envelope-card.open .letter-card {
-  transform: translateY(0) scale(1);
-  opacity: 1;
-}
-
-.letter-content {
-  position: relative;
-  z-index: 2;
-  display: grid;
-  gap: 0.8rem;
-  height: 100%;
-  padding: 0.7rem;
-  border-radius: 18px;
-  border: 1px dashed rgba(153, 98, 122, 0.22);
-}
-
-.greeting,
-.signature {
-  font-family: "Segoe Print", "Comic Sans MS", cursive;
-  font-size: 1.2rem;
-  font-weight: 700;
-  margin: 0;
-}
-
-.message {
-  font-family: "Segoe Print", "Comic Sans MS", cursive;
-  font-size: 1rem;
-  line-height: 1.7;
-  margin: 0;
-}
-
-.letter-decor {
-  display: flex;
-  justify-content: space-between;
-  font-size: 1rem;
-  opacity: 0.88;
-}
-
-.top {
-  margin-bottom: 0.2rem;
-}
-
-.bottom {
-  margin-top: auto;
-}
-
-.sticker-layer {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 3;
-}
-
-.sticker {
-  position: absolute;
-  font-size: 1.6rem;
-  padding: 0.3rem;
-  border-radius: 50%;
-  cursor: grab;
-  pointer-events: auto;
-  animation: float 3.2s ease-in-out infinite;
-  user-select: none;
-}
-
-.sticker .remove {
-  position: absolute;
-  top: -8px;
-  right: -8px;
-  background: white;
-  color: #ad6279;
-  border: none;
-  border-radius: 50%;
-  width: 1.1rem;
-  height: 1.1rem;
-  font-size: 0.8rem;
-  line-height: 1;
-  cursor: pointer;
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
-}
-
-.photo-slot {
-  position: absolute;
-  right: 1rem;
-  bottom: 1rem;
-  z-index: 3;
-}
-
-.photo-slot img {
-  width: 92px;
-  height: 110px;
-  object-fit: cover;
-  border-radius: 14px;
-  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.12);
-  border: 6px solid white;
-  transform: rotate(-6deg);
-}
-
-.open-button {
-  border: none;
-  background: linear-gradient(135deg, #fff, #ffeef4);
-  padding: 0.75rem 1rem;
-  border-radius: 999px;
-  color: var(--text);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
-  animation: bounce 1.2s infinite;
-}
-
-.recipient-card {
-  position: relative;
-  width: min(94vw, 430px);
-  padding-top: 2.5rem;
-}
-
-.recipient-flap {
-  position: absolute;
+/* พื้นหลังหัวใจลอย */
+.floating-hearts-bg {
+  position: fixed;
   top: 0;
   left: 0;
-  right: 0;
-  height: 92px;
-  border-radius: 28px 28px 36px 36px;
-  background: linear-gradient(135deg, #f6a8bc, #f29fb4);
-  box-shadow: 0 12px 24px rgba(214, 119, 146, 0.25);
-}
-
-.recipient-letter {
-  position: relative;
-  background: linear-gradient(180deg, #fffdf9 0%, #fff7f2 100%);
-  border-radius: 26px;
-  padding: 2rem 1.2rem 1.4rem;
-  box-shadow: 0 20px 44px rgba(133, 85, 104, 0.16);
-  border: 1px solid #f6e2ea;
-  min-height: 420px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  text-align: center;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 0;
   overflow: hidden;
 }
 
-.recipient-letter h2 {
-  margin: 0.3rem 0 0.8rem;
-  font-size: clamp(1.4rem, 3vw, 1.8rem);
-  color: #c96c86;
-  font-family: "Segoe Print", "Comic Sans MS", cursive;
-}
-
-.recipient-letter p {
-  margin: 0;
-  line-height: 1.7;
-  color: #7c5b6b;
-  font-size: 1rem;
-}
-
-.recipient-corner-heart,
-.recipient-corner-sparkle {
+.floating-heart {
   position: absolute;
-  font-size: 1.2rem;
-  opacity: 0.9;
+  bottom: -50px;
+  font-size: 24px;
+  animation: floatUp 6s linear infinite;
+  opacity: 0.7;
 }
 
-.recipient-corner-heart {
-  top: 1rem;
-  left: 1rem;
-}
-
-.recipient-corner-sparkle {
-  top: 1rem;
-  right: 3.2rem;
-}
-
-.recipient-close {
-  position: absolute;
-  top: 0.9rem;
-  right: 0.9rem;
-  width: 2rem;
-  height: 2rem;
-  border: none;
-  border-radius: 50%;
-  background: #fff;
-  color: #c96c86;
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08);
-  cursor: pointer;
-}
-
-.recipient-signature-row {
-  margin-top: 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
-  font-weight: 700;
-  color: #bb6780;
-}
-
-.recipient-bunny {
-  font-size: 1.35rem;
-  animation: float 2.5s ease-in-out infinite;
-}
-
-.recipient-action-btn {
-  margin-top: 1rem;
-  border: none;
-  border-radius: 999px;
-  padding: 0.8rem 1.2rem;
-  background: linear-gradient(135deg, #ffcbde, #f8abbe);
-  color: white;
-  font-weight: 700;
-  box-shadow: 0 12px 24px rgba(238, 146, 175, 0.25);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.recipient-action-btn:hover,
-.recipient-action-btn:active {
-  transform: translateY(-2px) scale(1.01);
-  box-shadow: 0 16px 28px rgba(238, 146, 175, 0.3);
-}
-
-.recipient-sticker-layer {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-
-.recipient-photo-slot img {
-  position: absolute;
-  right: -0.2rem;
-  bottom: -0.3rem;
-  width: 90px;
-  height: 110px;
-  object-fit: cover;
-  border-radius: 14px;
-  border: 6px solid white;
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
-  transform: rotate(6deg);
-}
-
-@media (max-width: 640px) {
-  .recipient-letter {
-    padding: 1.8rem 1rem 1.2rem;
+@keyframes floatUp {
+  0% {
+    transform: translateY(0) rotate(0deg) scale(0.8);
+    opacity: 1;
   }
-
-  .recipient-card {
-    width: min(96vw, 420px);
-  }
-}
-
-@keyframes bounce {
-  0%,
   100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-6px);
+    transform: translateY(-110vh) rotate(360deg) scale(1.3);
+    opacity: 0;
   }
 }
 
-@keyframes float {
-  0%,
-  100% {
-    transform: translateY(0px) rotate(0deg);
-  }
-  50% {
-    transform: translateY(-8px) rotate(6deg);
-  }
-}
-
+/* ธีมต่างๆ */
 body.theme-pink {
-  --accent: #f4a7b9;
-  --accent-2: #cbb8ff;
-  --accent-3: #bfe8d4;
-  --accent-4: #f8d7a0;
+  background: linear-gradient(135deg, #ffe6eb 0%, #ffc3d0 100%);
+  color: #5c2c38;
 }
-
+body.theme-gift {
+  background: linear-gradient(135deg, #fff0f5 0%, #ffd1dc 100%);
+}
 body.theme-lavender {
-  --accent: #b99cff;
-  --accent-2: #e0b1ff;
-  --accent-3: #dff6e8;
-  --accent-4: #f8d7a0;
+  background: linear-gradient(135deg, #f3e8ff 0%, #d8b4fe 100%);
+  color: #4c1d95;
+}
+body.theme-night {
+  background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+  color: #f8fafc;
 }
 
-body.theme-mint {
-  --accent: #8dd3c7;
-  --accent-2: #b8f0db;
-  --accent-3: #c6f2ff;
-  --accent-4: #f8d7a0;
+/* หน้ารับจดหมายเดี่ยวๆ ของแฟน */
+.recipient-standalone-view {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: inherit;
+  padding: 20px;
 }
 
-body.theme-peach {
-  --accent: #f7b28b;
-  --accent-2: #f8cfa8;
-  --accent-3: #fde8c4;
-  --accent-4: #f8d7a0;
+.big-pulse {
+  animation: pulseBtn 1.8s infinite;
+  font-size: 1.2rem !important;
+  padding: 14px 28px !important;
+  border-radius: 30px !important;
+  background: #ff477e !important;
+  color: white !important;
+  border: none !important;
+  cursor: pointer;
+  box-shadow: 0 8px 25px rgba(255, 71, 126, 0.4);
 }
 
-@media (min-width: 820px) {
-  .app-shell {
-    grid-template-columns: 1.05fr 0.95fr;
-    align-items: start;
-    padding: 2rem;
-  }
-
-  .editor-panel,
-  .preview-panel {
-    padding: 1.35rem;
-  }
+@keyframes pulseBtn {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+  100% { transform: scale(1); }
 }
