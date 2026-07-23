@@ -18,7 +18,7 @@
       <div class="hero">
         <span class="eyebrow">✨ CUSTOM SCRAPBOOK BUILDER</span>
         <h1>ออกแบบจดหมายรักสุดน่ารัก 💕</h1>
-        <p class="intro">ปรับสี เปลี่ยนรูปปก เพิ่มรูปภาพขยับได้ และส่งให้คนพิเศษ!</p>
+        <p class="intro">รูปภาพและสติ๊กเกอร์ทุกลูกเล่น ลาก หมุน ย่อ-ขยาย ได้ตามใจชอบ!</p>
       </div>
 
       <form id="letterForm" class="letter-form" onsubmit="return false;">
@@ -86,7 +86,7 @@
 
         <!-- คลังสติกเกอร์ -->
         <div class="field-group">
-          <span class="field-label">✨ เพิ่มสติกเกอร์น่ารักๆ (แตะเพื่อแปะ)</span>
+          <span class="field-label">✨ เพิ่มสติกเกอร์ (ลาก หมุน ย่อ-ขยาย ได้)</span>
           <div class="sticker-palette">
             <button type="button" class="sticker-add-btn" data-emoji="💖">💖</button>
             <button type="button" class="sticker-add-btn" data-emoji="🌹">🌹</button>
@@ -125,10 +125,8 @@
           <p class="cover-subtext">แตะเพื่อเปิดดูเซอร์ไพรส์ ✨</p>
         </div>
 
-        <!-- หน้ากระดานหลังเปิด -->
+        <!-- หน้ากระดานหลังเปิด (คลิกที่กระดานเพื่อปิดกลับได้) -->
         <div id="letterBoard" class="letter-board">
-          <button type="button" id="closeLetterBtn" class="close-card-btn" title="ปิดจดหมายกลับไปหน้าปก">❌ ปิดจดหมาย</button>
-
           <div id="stickerCanvas" class="sticker-canvas"></div>
           <div id="photosCanvas" class="photos-canvas"></div>
 
@@ -144,7 +142,7 @@
 
   </main>
 
-  <!-- หน้าผู้รับเปิดผ่านลิงก์ (เริ่มต้นจะซ่อนแบบสมบูรณ์ เพื่อป้องกัน Delay เห็นภาพก่อนแต่ง) -->
+  <!-- หน้าผู้รับเปิดผ่านลิงก์ -->
   <div id="recipientView" class="recipient-standalone-view" style="display: none; opacity: 0;">
     <div id="recipientStage" class="scrapbook-stage closed">
       
@@ -160,8 +158,6 @@
       </div>
 
       <div id="recipientLetterBoard" class="letter-board">
-        <button type="button" id="recipientCloseLetterBtn" class="close-card-btn" title="ปิดจดหมายกลับไปหน้าปก">❌ ปิดจดหมาย</button>
-
         <div id="recipientStickerCanvas" class="sticker-canvas"></div>
         <div id="recipientPhotosCanvas" class="photos-canvas"></div>
 
