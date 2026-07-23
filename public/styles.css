@@ -14,6 +14,10 @@ body {
   transition: background-color 0.3s ease;
 }
 
+.handwritten-title, .handwritten-body, .handwritten-sig, .cover-title, .cover-subtext {
+  font-family: 'Mali', cursive;
+}
+
 .floating-hearts-bg {
   position: fixed;
   inset: 0;
@@ -40,7 +44,7 @@ body {
   margin: 0 auto;
   padding: 20px;
   display: grid;
-  grid-template-columns: 420px 1fr;
+  grid-template-columns: 380px 1fr;
   gap: 24px;
 }
 
@@ -61,109 +65,40 @@ body {
 .eyebrow { font-size: 0.75rem; letter-spacing: 1px; color: #a07883; font-weight: 700; }
 .intro { font-size: 0.85rem; margin-bottom: 16px; color: #666; }
 
-.section-divider {
-  border-top: 2px dashed #fce4e8;
-  padding-top: 14px;
-  margin-top: 14px;
-}
+.field-group { margin-bottom: 16px; }
+.field-group label, .field-label { display: block; font-weight: 600; font-size: 0.85rem; margin-bottom: 8px; }
+.field-sublabel { font-size: 0.75rem; color: #666; display: block; margin-bottom: 4px; }
 
-.field-label-main {
-  display: block;
-  font-weight: 700;
-  font-size: 0.9rem;
-  color: #ff477e;
-  margin-bottom: 10px;
-}
-
-.text-editor-box {
-  background: #fff8f9;
-  border: 1px solid #ffe3e8;
-  border-radius: 12px;
-  padding: 10px;
-}
-
-.text-editor-box label {
-  display: block;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #666;
-  margin-bottom: 4px;
-}
-
-input[type="text"], textarea {
+.style-select {
   width: 100%;
-  padding: 8px 10px;
-  border-radius: 8px;
+  padding: 8px;
+  border-radius: 10px;
   border: 1.5px solid #ffd1dc;
-  outline: none;
   font-size: 0.85rem;
+  outline: none;
   background: #fff;
 }
-
-.font-controls {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 6px;
-}
-
-.font-select {
-  flex: 1;
-  padding: 4px 6px;
-  border-radius: 6px;
-  border: 1px solid #ffd1dc;
-  font-size: 0.75rem;
-  background: #fff;
-}
-
-.size-input {
-  width: 48px;
-  padding: 4px;
-  border-radius: 6px;
-  border: 1px solid #ffd1dc;
-  font-size: 0.75rem;
-  text-align: center;
-}
-
-.bold-toggle-btn {
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
-  border: 1px solid #ffd1dc;
-  background: #fff;
-  font-weight: bold;
-  font-size: 0.8rem;
-  cursor: pointer;
-}
-.bold-toggle-btn.active {
-  background: #ff477e;
-  color: #fff;
-  border-color: #ff477e;
-}
-
-.text-color-picker {
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
-  border: 1px solid #ffd1dc;
-  cursor: pointer;
-  background: transparent;
-  padding: 0;
-}
-
-.field-group { margin-bottom: 12px; }
-.field-group label, .field-label { display: block; font-weight: 600; font-size: 0.85rem; margin-bottom: 6px; }
 
 .colors-group { display: flex; gap: 12px; }
 .color-picker-item { flex: 1; }
 .color-picker-item label { font-size: 0.75rem; margin-bottom: 4px; }
 .color-picker-item input[type="color"] {
   width: 100%;
-  height: 34px;
+  height: 36px;
   border-radius: 8px;
   border: 1px solid #ffd1dc;
   cursor: pointer;
   background: transparent;
+}
+
+input[type="text"], textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1.5px solid #ffd1dc;
+  outline: none;
+  font-size: 0.9rem;
+  background: #fff;
 }
 
 .style-selector { display: flex; gap: 6px; }
@@ -188,7 +123,7 @@ input[type="text"], textarea {
   background: #fff0f3;
   border: 1.5px dashed #ff9ebb;
   border-radius: 10px;
-  padding: 8px;
+  padding: 10px;
   text-align: center;
   font-size: 0.8rem;
   cursor: pointer;
@@ -197,12 +132,13 @@ input[type="text"], textarea {
   justify-content: center;
 }
 .upload-box input { display: none; }
+.custom-cover-label { background: #fff8f9; border-color: #ff758f; }
 
 .sticker-palette { display: flex; flex-wrap: wrap; gap: 6px; }
 .sticker-add-btn {
   font-size: 1.2rem;
-  padding: 4px 8px;
-  border-radius: 8px;
+  padding: 6px 10px;
+  border-radius: 10px;
   border: 1px solid #ffd1dc;
   background: #fff;
   cursor: pointer;
@@ -309,17 +245,8 @@ input[type="text"], textarea {
 }
 
 .cover-badge { font-size: 2rem; z-index: 5; }
-
-.cover-title {
-  font-size: 1.25rem;
-  color: #ff2a5f;
-  margin-bottom: 4px;
-}
-
-.cover-subtext {
-  font-size: 0.85rem;
-  color: #888;
-}
+.cover-title { font-size: 1.2rem; color: #ff2a5f; font-weight: 700; margin-bottom: 4px; }
+.cover-subtext { font-size: 0.85rem; color: #888; }
 
 .scrapbook-stage.open .cover-center-wrapper {
   opacity: 0;
@@ -339,7 +266,7 @@ input[type="text"], textarea {
   transform: scale(0.9);
   transition: all 0.5s ease;
   z-index: 10;
-  cursor: pointer;
+  cursor: pointer; /* คลิกที่ไหนบนกระดานก็ปิดจดหมายได้ */
 }
 
 .scrapbook-stage.open .letter-board {
@@ -351,12 +278,12 @@ input[type="text"], textarea {
   position: absolute;
   inset: 0;
   z-index: 15;
-  pointer-events: none;
+  pointer-events: none; /* ตัวพื้นหลังไม่ขวางคลิก */
 }
 
 .main-card {
   background: #ffffff;
-  width: 250px;
+  width: 240px;
   min-height: 220px;
   padding: 18px;
   border-radius: 16px;
@@ -368,9 +295,9 @@ input[type="text"], textarea {
   pointer-events: auto;
 }
 
-.handwritten-title { margin-bottom: 8px; word-break: break-word; }
-.handwritten-body { line-height: 1.5; white-space: pre-wrap; margin-bottom: 10px; word-break: break-word; }
-.handwritten-sig { text-align: right; word-break: break-word; }
+.handwritten-title { font-size: 1.05rem; color: #ff477e; margin-bottom: 8px; }
+.handwritten-body { font-size: 0.85rem; line-height: 1.5; color: #444; white-space: pre-wrap; margin-bottom: 10px; }
+.handwritten-sig { font-size: 0.8rem; color: #888; text-align: right; }
 
 /* ========================================= */
 /* DRAGGABLE, RESIZABLE, ROTATABLE ITEMS */
@@ -383,7 +310,7 @@ input[type="text"], textarea {
   touch-action: none;
   display: inline-block;
   z-index: 20;
-  pointer-events: auto;
+  pointer-events: auto; /* เปิดให้สติ๊กเกอร์และรูปภาพคลิกขยับได้ */
   transform-origin: center center;
 }
 
@@ -395,6 +322,7 @@ input[type="text"], textarea {
   display: block;
 }
 
+/* สติ๊กเกอร์ */
 .interactive-item.item-sticker {
   display: flex;
   align-items: center;
@@ -402,6 +330,7 @@ input[type="text"], textarea {
   line-height: 1;
 }
 
+/* กรอบโพลารอยด์ */
 .interactive-item.frame-polaroid {
   background: #fff;
   padding: 8px 8px 24px 8px;
@@ -409,6 +338,7 @@ input[type="text"], textarea {
   border-radius: 6px;
 }
 
+/* กรอบมินิมอล */
 .interactive-item.frame-border {
   background: #fff;
   padding: 6px;
@@ -417,6 +347,7 @@ input[type="text"], textarea {
   border-radius: 10px;
 }
 
+/* ไม่ใส่กรอบ */
 .interactive-item.frame-none {
   padding: 0;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
@@ -424,12 +355,14 @@ input[type="text"], textarea {
   overflow: hidden;
 }
 
+/* ปุ่มควบคุม Delete / Resize / Rotate */
 .item-controls { display: none; }
 .interactive-item:hover .item-controls,
 .interactive-item.active .item-controls {
   display: block;
 }
 
+/* ปุ่มลบ ✕ */
 .btn-delete-item {
   position: absolute;
   top: -10px;
@@ -448,6 +381,7 @@ input[type="text"], textarea {
   box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 }
 
+/* ปุ่มย่อ-ขยาย (ขวาล่าง) */
 .handle-resize {
   position: absolute;
   bottom: -8px;
@@ -462,6 +396,7 @@ input[type="text"], textarea {
   box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 }
 
+/* ปุ่มหมุน 🔄 (ซ้ายบน) */
 .handle-rotate {
   position: absolute;
   top: -10px;
