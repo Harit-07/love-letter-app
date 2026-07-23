@@ -363,7 +363,7 @@ function setupEnvelopeToggle() {
   }
 }
 
-// 8. บันทึกจดหมาย
+// 8. บันทึกจดหมาย (อัปเดตให้ดึงข้อความจากช่องกรอกสด ๆ ก่อนส่งเซิร์ฟเวอร์)
 function setupSaveButton() {
   const saveBtn = document.getElementById('saveButton');
   const copyBtn = document.getElementById('copyLinkButton');
@@ -374,6 +374,20 @@ function setupSaveButton() {
   saveBtn.addEventListener('click', async () => {
     saveBtn.disabled = true;
     saveBtn.textContent = '⏳ กำลังบันทึก...';
+
+    // ดึงค่าข้อความล่าสุดจากช่อง input หน้าบ้านก่อนบันทึกเสมอ เพื่อป้องกันข้อความหาย
+    const mapInputToStyle = (inputId, styleKey) => {
+      const input = document.getElementById(inputId);
+      if (input && input.value) {
+        textStyles[styleKey].text = input.value;
+      }
+    };
+
+    mapInputToStyle('coverTitleInput', 'coverTitle');
+    mapInputToStyle('coverSubtextInput', 'coverSubtext');
+    mapInputToStyle('greetingInput', 'greeting');
+    mapInputToStyle('messageInput', 'message');
+    mapInputToStyle('signatureInput', 'signature');
 
     const payload = {
       textStyles: textStyles,
