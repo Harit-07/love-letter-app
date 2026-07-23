@@ -2,8 +2,10 @@
 let placedStickers = [];
 let currentCoverStyle = 'envelope';
 let customCoverImage = '';
+let currentCoverColor = '#ff5277';
+let currentThemeColor = '#fdf2f4';
 
-// 1. หัวใจลอยพื้นหลัง
+// 1. หัวใจลอย
 function createFloatingHearts() {
   const container = document.getElementById('floatingHeartsContainer');
   if (!container) return;
@@ -36,7 +38,27 @@ function setupRealtimePreview() {
   if (signatureInput) signatureInput.addEventListener('input', (e) => previewSignature.textContent = e.target.value || 'ด้วยรักเสมอมา');
 }
 
-// 3. ปรับสไตล์ปก & อัปโหลดรูปปกเอง
+// 3. ปรับสีธีม & สีปก
+function setupColorPickers() {
+  const themePicker = document.getElementById('themeColorPicker');
+  const coverPicker = document.getElementById('coverColorPicker');
+
+  if (themePicker) {
+    themePicker.addEventListener('input', (e) => {
+      currentThemeColor = e.target.value;
+      document.body.style.backgroundColor = currentThemeColor;
+    });
+  }
+
+  if (coverPicker) {
+    coverPicker.addEventListener('input', (e) => {
+      currentCoverColor = e.target.value;
+      updateCoverDisplay(currentCoverStyle, customCoverImage, 'coverGraphic', 'coverBadge', 'coverTitleText', currentCoverColor);
+    });
+  }
+}
+
+// 4. สไตล์ปก & อัปโหลดรูปปกเอง
 function setupStyleSelector() {
   const styleBtns = document.querySelectorAll('.style-btn');
   const customCoverInput = document.getElementById('customCoverInput');
@@ -47,10 +69,10 @@ function setupStyleSelector() {
       btn.classList.add('active');
 
       currentCoverStyle = btn.dataset.style;
-      customCoverImage = ''; // รีเซ็ตรูปอัปโหลดเอง
+      customCoverImage = '';
       document.getElementById('customCoverLabel').textContent = '🖼️ หรืออัปโหลดรูปหน้าปกเอง (คลิก)';
 
-      updateCoverDisplay(currentCoverStyle, '', 'coverGraphic', 'coverBadge', 'coverTitleText');
+      updateCoverDisplay(currentCoverStyle, '', 'coverGraphic', 'coverBadge', 'coverTitleText', currentCoverColor);
     });
   });
 
@@ -64,17 +86,16 @@ function setupStyleSelector() {
         customCoverImage = evt.target.result;
         currentCoverStyle = 'custom';
         styleBtns.forEach((b) => b.classList.remove('active'));
-        document.getElementById('customCoverLabel').textContent = '✅ เปลี่ยนรูปปกเรียบร้อย';
+        document.getElementById('customCoverLabel').textContent = '✅ เปลี่ยนรูปปกเรียบร้อย!';
 
-        updateCoverDisplay('custom', customCoverImage, 'coverGraphic', 'coverBadge', 'coverTitleText');
+        updateCoverDisplay('custom', customCoverImage, 'coverGraphic', 'coverBadge', 'coverTitleText', currentCoverColor);
       };
       reader.readAsDataURL(file);
     });
   }
 }
 
-// ฟังก์ชันอัปเดตหน้าตาปก
-function updateCoverDisplay(style, customImg, graphicId, badgeId, titleId) {
+function updateCoverDisplay(style, customImg, graphicId, badgeId, titleId, color) {
   const graphic = document.getElementById(graphicId);
   const badge = document.getElementById(badgeId);
   const title = document.getElementById(titleId);
@@ -83,6 +104,7 @@ function updateCoverDisplay(style, customImg, graphicId, badgeId, titleId) {
 
   graphic.style.backgroundImage = '';
   graphic.className = 'cover-graphic';
+  graphic.style.backgroundColor = color || '#ff5277';
 
   if (style === 'custom' && customImg) {
     graphic.style.backgroundImage = `url(${customImg})`;
@@ -95,12 +117,12 @@ function updateCoverDisplay(style, customImg, graphicId, badgeId, titleId) {
     if (title) {
       if (style === 'envelope') title.textContent = 'มีความรักส่งถึงคุณ 💕';
       if (style === 'giftbox') title.textContent = 'มีกล่องของขวัญรอเปิดอยู่ 🎁';
-      if (style === 'bear') title.textContent = 'น้องหมีนำความรักมาส่ง 🧸';
+      if (style === 'bear') title.textContent = 'น้องหมีดุ๊กดิ๊กนำความรักมาส่ง 🧸';
     }
   }
 }
 
-// 4. อัปโหลดรูปโพลารอยด์ 4 รูป
+// 5. อัปโหลดรูปโพลารอยด์
 function setupPhotoUploads() {
   const inputs = document.querySelectorAll('.photo-input');
   inputs.forEach((input) => {
@@ -123,7 +145,7 @@ function setupPhotoUploads() {
   });
 }
 
-// 5. สติกเกอร์
+// 6. สติกเกอร์
 function setupStickerPalette() {
   const stickerBtns = document.querySelectorAll('.sticker-add-btn');
   const stickerCanvas = document.getElementById('stickerCanvas');
@@ -152,7 +174,6 @@ function renderSingleSticker(canvas, sticker) {
   canvas.appendChild(el);
 }
 
-// 6. คลิกเปิดจดหมาย
 function setupEnvelopeToggle() {
   const previewContainer = document.getElementById('previewContainer');
   const cover = document.getElementById('coverEnvelope');
@@ -183,6 +204,8 @@ function setupSaveButton() {
       signature: document.getElementById('signatureInput')?.value || '',
       coverStyle: currentCoverStyle,
       customCoverImage: customCoverImage,
+      coverColor: currentCoverColor,
+      themeColor: currentThemeColor,
       photos: polaroidPhotos,
       stickers: placedStickers
     };
@@ -256,15 +279,21 @@ async function checkRecipientMode() {
       if (res.ok) {
         const data = await res.json();
         
+        // กำหนดสีธีมเว็บของผู้รับ
+        if (data.themeColor) document.body.style.backgroundColor = data.themeColor;
+
         document.getElementById('recipientGreeting').textContent = data.greeting;
         document.getElementById('recipientMessage').textContent = data.message;
         document.getElementById('recipientSignature').textContent = data.signature;
 
-        // ดึงสไตล์ปกที่เลือกไว้ (ซอง/กล่อง/หมี/รูปอัปโหลด)
+        // โหลดสไตล์ปก และสีปก
         const coverStyle = data.coverStyle || 'envelope';
         const customImg = data.customCoverImage || '';
-        updateCoverDisplay(coverStyle, customImg, 'recipientCoverGraphic', 'recipientCoverBadge', 'recipientCoverTitle');
+        const coverColor = data.coverColor || '#ff5277';
 
+        updateCoverDisplay(coverStyle, customImg, 'recipientCoverGraphic', 'recipientCoverBadge', 'recipientCoverTitle', coverColor);
+
+        // โหลดรูปโพลารอยด์ทั้ง 4 ใบ
         if (data.photos && Array.isArray(data.photos)) {
           data.photos.forEach((src, idx) => {
             const box = document.getElementById(`rImg${idx}`);
@@ -272,6 +301,7 @@ async function checkRecipientMode() {
           });
         }
 
+        // โหลดสติกเกอร์
         if (data.stickers && Array.isArray(data.stickers)) {
           const rCanvas = document.getElementById('recipientStickerCanvas');
           data.stickers.forEach((s) => renderSingleSticker(rCanvas, s));
@@ -293,6 +323,7 @@ async function checkRecipientMode() {
 document.addEventListener('DOMContentLoaded', () => {
   createFloatingHearts();
   setupRealtimePreview();
+  setupColorPickers();
   setupStyleSelector();
   setupPhotoUploads();
   setupStickerPalette();

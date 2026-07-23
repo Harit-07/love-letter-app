@@ -1,77 +1,51 @@
 const express = require('express');
-const path = require('path');
-const { createClient } = require('redis');
-
 const app = express();
-const port = process.env.PORT || 3000;
+const path = require('path');
 
-// ให้ Express เปิดอ่านไฟล์ Static (styles.css, app.js) จากโฟลเดอร์ public
+// 📌 สำคัญมาก: เพิ่ม limit เป็น 50mb เพื่อรองรับรูปภาพ Base64
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(express.json({ limit: '10mb' }));
 
-const memoryStore = new Map();
-const redisUrl = process.env.STORAGE_URL || process.env.REDIS_URL || process.env.KV_URL;
+// ในหน่วยความจำจำลอง (หรือ MongoDB/Database ของคุณ)
+const lettersDb = {};
 
-let redisClient = null;
-if (redisUrl && (redisUrl.startsWith('redis://') || redisUrl.startsWith('rediss://'))) {
-  redisClient = createClient({ url: redisUrl });
-  redisClient.on('error', (err) => console.error('Redis Error:', err.message));
-}
+// API บันทึกข้อมูลจดหมาย
+app.post('/api/letters', (req, res) => {
+  const { greeting, message, signature, coverStyle, customCoverImage, coverColor, themeColor, photos, stickers } = req.body;
+  
+  const id = Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
 
-async function getRedis() {
-  if (!redisClient) return null;
-  try {
-    if (!redisClient.isOpen) await redisClient.connect();
-    return redisClient;
-  } catch (err) {
-    return null;
+  lettersDb[id] = {
+    greeting,
+    message,
+    signature,
+    coverStyle,
+    customCoverImage,
+    coverColor: coverColor || '#ff5277',
+    themeColor: themeColor || '#fdf2f4',
+    photos: photos || [],
+    stickers: stickers || []
+  };
+
+  res.json({ success: true, shareUrl: `/letter/${id}` });
+});
+
+// API ดึงข้อมูลจดหมายสำหรับผู้รับ
+app.get('/api/letters/:id', (req, res) => {
+  const letter = lettersDb[req.params.id];
+  if (letter) {
+    res.json(letter);
+  } else {
+    res.status(404).json({ error: 'ไม่พบข้อมูลจดหมาย' });
   }
-}
+});
 
-const KEY_PREFIX = 'letter:';
-
-app.get('/', (req, res) => {
+// เสิร์ฟหน้า SPA
+app.get('/letter/:id', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-app.get('/api/letters/:slug', async (req, res) => {
-  const { slug } = req.params;
-  try {
-    const client = await getRedis();
-    let rawData = client ? await client.get(KEY_PREFIX + slug) : memoryStore.get(KEY_PREFIX + slug);
-    if (!rawData) return res.status(404).json({ error: 'Letter not found' });
-    const row = typeof rawData === 'string' ? JSON.parse(rawData) : rawData;
-    res.json(row);
-  } catch (error) {
-    res.status(500).json({ error: 'Error loading letter' });
-  }
-});
-
-app.post('/api/letters', async (req, res) => {
-  try {
-    const { greeting, message, signature, theme, stickers, photo } = req.body;
-    const slug = Math.random().toString(36).slice(2, 10);
-    const letter = { slug, greeting, message, signature, theme, stickers: stickers || [], photo: photo || '', createdAt: new Date().toISOString() };
-    const client = await getRedis();
-    const jsonString = JSON.stringify(letter);
-
-    if (client) {
-      await client.set(KEY_PREFIX + slug, jsonString);
-    } else {
-      memoryStore.set(KEY_PREFIX + slug, jsonString);
-    }
-    res.json({ slug, shareUrl: `/letter/${slug}` });
-  } catch (error) {
-    res.status(500).json({ error: 'Error saving letter' });
-  }
-});
-
-app.get('/letter/:slug', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-if (require.main === module) {
-  app.listen(port, () => console.log(`Server running on port ${port}`));
-}
-
-module.exports = app;
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

@@ -11,6 +11,7 @@ body {
   color: #4a2831;
   overflow-x: hidden;
   position: relative;
+  transition: background-color 0.3s ease;
 }
 
 .handwritten-title, .handwritten-body, .handwritten-sig, .p-caption, .cover-title, .cover-subtext {
@@ -56,8 +57,8 @@ body {
   backdrop-filter: blur(12px);
   border-radius: 24px;
   padding: 24px;
-  box-shadow: 0 10px 30px rgba(255, 182, 193, 0.3);
-  border: 1px solid #ffe3e8;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.6);
 }
 
 .hero h1 { font-size: 1.35rem; color: #ff477e; margin-bottom: 6px; }
@@ -66,6 +67,27 @@ body {
 
 .field-group { margin-bottom: 16px; }
 .field-group label, .field-label { display: block; font-weight: 600; font-size: 0.85rem; margin-bottom: 8px; }
+
+/* Color Pickers */
+.colors-group {
+  display: flex;
+  gap: 12px;
+}
+.color-picker-item {
+  flex: 1;
+}
+.color-picker-item label {
+  font-size: 0.75rem;
+  margin-bottom: 4px;
+}
+.color-picker-item input[type="color"] {
+  width: 100%;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid #ffd1dc;
+  cursor: pointer;
+  background: transparent;
+}
 
 input[type="text"], textarea {
   width: 100%;
@@ -95,7 +117,6 @@ input[type="text"], textarea {
   border-color: #ff477e;
 }
 
-.polaroid-uploads { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .upload-box {
   background: #fff0f3;
   border: 1.5px dashed #ff9ebb;
@@ -110,6 +131,8 @@ input[type="text"], textarea {
 }
 .upload-box input { display: none; }
 .custom-cover-label { background: #fff8f9; border-color: #ff758f; }
+
+.polaroid-uploads { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 
 .sticker-palette { display: flex; flex-wrap: wrap; gap: 6px; }
 .sticker-add-btn {
@@ -134,21 +157,19 @@ input[type="text"], textarea {
 }
 
 /* ========================================= */
-/* FIX CENTER ALIGNMENT & PREVENT DISTORTION */
+/* COVER STYLES & ANIMATED BEAR */
 /* ========================================= */
 
 .scrapbook-stage {
   position: relative;
   width: 100%;
   height: 520px;
-  background: #fff8f9;
+  background: rgba(255, 255, 255, 0.6);
   border-radius: 24px;
   border: 2px dashed #f3cad2;
   overflow: hidden;
-  /* ใช้ Absolute Centering บังคับทุกชั้นให้อยู่กึ่งกลางเป๊ะ */
 }
 
-/* จัดกึ่งกลางหน้าปกด้วย Flexbox เต็มพื้นที่ 100% */
 .cover-center-wrapper {
   position: absolute;
   inset: 0;
@@ -161,7 +182,6 @@ input[type="text"], textarea {
   text-align: center;
   cursor: pointer;
   z-index: 20;
-  background: #fff8f9;
   transition: all 0.4s ease;
   padding: 20px;
 }
@@ -180,40 +200,70 @@ input[type="text"], textarea {
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 10px 25px rgba(255, 71, 126, 0.2);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
   background-size: cover;
   background-position: center;
+  transition: transform 0.3s ease, background-color 0.3s ease;
 }
 
-.cover-graphic.envelope-style { background-color: #ff5277; }
+/* ซองจดหมาย */
 .cover-graphic.envelope-style::before {
   content: '';
   position: absolute;
   top: 0;
   border-left: 80px solid transparent;
   border-right: 80px solid transparent;
-  border-top: 55px solid #ff3b65;
+  border-top: 55px solid rgba(0, 0, 0, 0.15);
 }
 
-.cover-graphic.giftbox-style { background-color: #ff758f; width: 130px; height: 120px; }
+/* กล่องของขวัญ */
+.cover-graphic.giftbox-style { width: 130px; height: 120px; }
 .cover-graphic.giftbox-style::before { content: ''; position: absolute; width: 22px; height: 100%; background: #ffeb3b; }
 .cover-graphic.giftbox-style::after { content: ''; position: absolute; height: 22px; width: 100%; background: #ffeb3b; }
 
-.cover-graphic.bear-style { background-color: #ffb703; width: 130px; height: 120px; border-radius: 50% 50% 45% 45%; }
+/* น้องหมีดุ๊กดิ๊ก */
+.cover-graphic.bear-style {
+  width: 130px;
+  height: 120px;
+  border-radius: 50% 50% 45% 45%;
+  animation: bearWiggle 2s infinite ease-in-out;
+}
+
+/* หูน้องหมี */
+.bear-ears { display: none; }
+.cover-graphic.bear-style .bear-ears {
+  display: block;
+}
+.cover-graphic.bear-style .bear-ears::before,
+.cover-graphic.bear-style .bear-ears::after {
+  content: '';
+  position: absolute;
+  top: -18px;
+  width: 38px;
+  height: 38px;
+  background-color: inherit;
+  border-radius: 50%;
+  z-index: -1;
+}
+.cover-graphic.bear-style .bear-ears::before { left: 4px; }
+.cover-graphic.bear-style .bear-ears::after { right: 4px; }
+
+@keyframes bearWiggle {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  25% { transform: rotate(-6deg) scale(1.03); }
+  75% { transform: rotate(6deg) scale(1.03); }
+}
 
 .cover-badge { font-size: 2rem; z-index: 5; }
-
 .cover-title { font-size: 1.2rem; color: #ff2a5f; font-weight: 700; margin-bottom: 4px; }
 .cover-subtext { font-size: 0.85rem; color: #888; }
 
-/* เมื่อคลิกเปิด */
 .scrapbook-stage.open .cover-center-wrapper {
   opacity: 0;
   pointer-events: none;
   transform: scale(0.6);
 }
 
-/* กระดานจดหมายหลังเปิด */
 .letter-board {
   position: absolute;
   inset: 0;
@@ -236,7 +286,6 @@ input[type="text"], textarea {
 .sticker-canvas { position: absolute; inset: 0; pointer-events: none; z-index: 6; }
 .placed-sticker { position: absolute; font-size: 2rem; pointer-events: auto; }
 
-/* การ์ดจดหมายหลักตรงกลาง (ยึดขนาดตายตัว ป้องกันยืด) */
 .main-card {
   background: #ffffff;
   width: 240px;
@@ -254,7 +303,6 @@ input[type="text"], textarea {
 .handwritten-body { font-size: 0.85rem; line-height: 1.5; color: #444; white-space: pre-wrap; margin-bottom: 10px; }
 .handwritten-sig { font-size: 0.8rem; color: #888; text-align: right; }
 
-/* กรอบรูปโพลารอยด์ (กำหนดขนาดและใช้วิธี Absolute เพื่อไม่ให้บีบ/ยืด) */
 .polaroid {
   position: absolute;
   background: #fff;
@@ -265,7 +313,6 @@ input[type="text"], textarea {
   height: 120px;
   text-align: center;
   z-index: 4;
-  box-sizing: border-box;
 }
 
 .polaroid .img-box {
@@ -280,18 +327,15 @@ input[type="text"], textarea {
 
 .p-caption { font-size: 0.65rem; color: #777; margin-top: 4px; display: block; }
 
-/* วางตำแหน่ง 4 มุมตายตัวไม่ให้เบี้ยว */
 .p1 { top: 20px; left: 20px; transform: rotate(-8deg); }
 .p2 { top: 20px; right: 20px; transform: rotate(6deg); }
 .p3 { bottom: 20px; left: 20px; transform: rotate(5deg); }
 .p4 { bottom: 20px; right: 20px; transform: rotate(-7deg); }
 
-/* Recipient View */
 .recipient-standalone-view {
   position: fixed;
   inset: 0;
   z-index: 999;
-  background: #fdf2f4;
   display: flex;
   align-items: center;
   justify-content: center;

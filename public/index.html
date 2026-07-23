@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="/styles.css">
   <link href="https://fonts.googleapis.com/css2?family=Mali:wght@400;600;700&family=Prompt:wght@300;400;600;700&display=swap" rel="stylesheet">
 </head>
-<body class="theme-pink">
+<body class="theme-pink" id="appBody">
 
   <div id="floatingHeartsContainer" class="floating-hearts-bg"></div>
 
@@ -18,25 +18,37 @@
       <div class="hero">
         <span class="eyebrow">✨ CUSTOM SCRAPBOOK BUILDER</span>
         <h1>ออกแบบจดหมายรักสุดน่ารัก 💕</h1>
-        <p class="intro">ใส่รูป ปรับหน้าปก และตกแต่งสติกเกอร์ส่งให้แฟนได้เลย!</p>
+        <p class="intro">ปรับสี เปลี่ยนรูปปก เพิ่มสติกเกอร์ และส่งให้คนพิเศษได้เลย!</p>
       </div>
 
       <form id="letterForm" class="letter-form" onsubmit="return false;">
         
-        <!-- 1. เลือกรูปแบบปกก่อนเปิด / อัปโหลดรูปปกเอง -->
+        <!-- เลือกรูปแบบปก -->
         <div class="field-group">
           <span class="field-label">🎁 เลือกรูปแบบปกก่อนเปิด</span>
           <div class="style-selector">
             <button type="button" class="style-btn active" data-style="envelope">💌 ซองจดหมาย</button>
             <button type="button" class="style-btn" data-style="giftbox">🎁 กล่องของขวัญ</button>
-            <button type="button" class="style-btn" data-style="bear">🧸 เจ้าหมีส่งความรัก</button>
+            <button type="button" class="style-btn" data-style="bear">🧸 หมีดุ๊กดิ๊ก</button>
           </div>
           
           <div class="custom-cover-upload" style="margin-top: 10px;">
-            <label class="upload-box custom-cover-label">
+            <label class="upload-box custom-cover-label" for="customCoverInput">
               <span id="customCoverLabel">🖼️ หรืออัปโหลดรูปหน้าปกเอง (คลิก)</span>
               <input type="file" id="customCoverInput" accept="image/*">
             </label>
+          </div>
+        </div>
+
+        <!-- เลือกสีเว็บ & สีปก -->
+        <div class="field-group colors-group">
+          <div class="color-picker-item">
+            <label for="themeColorPicker">🎨 เลือกสีธีมเว็บ</label>
+            <input type="color" id="themeColorPicker" value="#fdf2f4">
+          </div>
+          <div class="color-picker-item">
+            <label for="coverColorPicker">🎨 เลือกสีปก (ซอง/กล่อง)</label>
+            <input type="color" id="coverColorPicker" value="#ff5277">
           </div>
         </div>
 
@@ -55,7 +67,7 @@
           <input type="text" id="signatureInput" value="ด้วยรักเสมอมา">
         </div>
 
-        <!-- 2. อัปโหลดรูปโพลารอยด์ 4 รูป -->
+        <!-- อัปโหลดรูปโพลารอยด์ -->
         <div class="field-group">
           <span class="field-label">📸 รูปโพลารอยด์ตกแต่ง (สูงสุด 4 รูป)</span>
           <div class="polaroid-uploads">
@@ -66,7 +78,7 @@
           </div>
         </div>
 
-        <!-- 3. คลังสติกเกอร์ -->
+        <!-- คลังสติกเกอร์ -->
         <div class="field-group">
           <span class="field-label">✨ เพิ่มสติกเกอร์น่ารักๆ (แตะเพื่อแปะ)</span>
           <div class="sticker-palette">
@@ -95,11 +107,12 @@
       
       <div id="previewContainer" class="scrapbook-stage closed">
         
-        <!-- หน้าปกก่อนเปิด (บังคับจัดกึ่งกลาง Center Flexbox) -->
+        <!-- หน้าปกก่อนเปิด (จัดกึ่งกลาง) -->
         <div id="coverEnvelope" class="cover-center-wrapper">
           <div class="cover-icon-box">
             <div id="coverGraphic" class="cover-graphic envelope-style">
               <span class="cover-badge" id="coverBadge">💖</span>
+              <div class="bear-ears" id="bearEars"></div>
             </div>
           </div>
           <h3 id="coverTitleText" class="cover-title">มีความรักส่งถึงคุณ 💕</h3>
@@ -110,7 +123,6 @@
         <div id="letterBoard" class="letter-board">
           <div id="stickerCanvas" class="sticker-canvas"></div>
 
-          <!-- รูปโพลารอยด์แบบ Fixed Aspect Ratio -->
           <div class="polaroid p1" id="pol0"><div class="img-box" id="pImg0"></div><span class="p-caption">for u 🌹</span></div>
           <div class="polaroid p2" id="pol1"><div class="img-box" id="pImg1"></div><span class="p-caption">cutie ✨</span></div>
           <div class="polaroid p3" id="pol2"><div class="img-box" id="pImg2"></div><span class="p-caption">sending love 💕</span></div>
@@ -136,6 +148,7 @@
         <div class="cover-icon-box">
           <div id="recipientCoverGraphic" class="cover-graphic envelope-style">
             <span class="cover-badge" id="recipientCoverBadge">💖</span>
+            <div class="bear-ears" id="recipientBearEars"></div>
           </div>
         </div>
         <h3 id="recipientCoverTitle" class="cover-title">มีความรักส่งถึงคุณ 💕</h3>
@@ -147,8 +160,8 @@
 
         <div class="polaroid p1"><div class="img-box" id="rImg0"></div><span class="p-caption">for u 🌹</span></div>
         <div class="polaroid p2"><div class="img-box" id="rImg1"></div><span class="p-caption">cutie ✨</span></div>
-        <div class="polaroid p3"><div class="img-box" id="rImg3"></div><span class="p-caption">sending love 💕</span></div>
-        <div class="polaroid p4"><div class="img-box" id="rImg2"></div><span class="p-caption">forever 🐾</span></div>
+        <div class="polaroid p3"><div class="img-box" id="rImg2"></div><span class="p-caption">sending love 💕</span></div>
+        <div class="polaroid p4"><div class="img-box" id="rImg3"></div><span class="p-caption">forever 🐾</span></div>
 
         <div class="main-card">
           <h3 id="recipientGreeting" class="handwritten-title"></h3>
