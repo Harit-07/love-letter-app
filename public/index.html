@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cute Letter Scrapbook 💖</title>
   <link rel="stylesheet" href="/styles.css">
-  <link href="https://fonts.googleapis.com/css2?family=Mali:wght@400;600;700&family=Prompt:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;700&family=Charm:wght@400;700&family=Kanit:wght@300;400;600;700&family=Mali:wght@400;600;700&family=Prompt:wght@300;400;600;700&display=swap" rel="stylesheet">
 </head>
 <body class="theme-pink" id="appBody">
 
@@ -13,17 +13,15 @@
 
   <main id="mainApp" class="app-shell">
     
-    <!-- ฝั่งซ้าย: เมนูเครื่องมือตกแต่ง -->
     <section class="editor-panel">
       <div class="hero">
         <span class="eyebrow">✨ CUSTOM SCRAPBOOK BUILDER</span>
         <h1>ออกแบบจดหมายรักสุดน่ารัก 💕</h1>
-        <p class="intro">รูปภาพและสติ๊กเกอร์ทุกลูกเล่น ลาก หมุน ย่อ-ขยาย ได้ตามใจชอบ!</p>
+        <p class="intro">ปรับแต่งฟอนต์ สี ความหนา และแก้ไขข้อความได้ทุกจุด!</p>
       </div>
 
       <form id="letterForm" class="letter-form" onsubmit="return false;">
         
-        <!-- เลือกรูปแบบปก -->
         <div class="field-group">
           <span class="field-label">🎁 เลือกรูปแบบปกก่อนเปิด</span>
           <div class="style-selector">
@@ -34,13 +32,12 @@
           
           <div class="custom-cover-upload" style="margin-top: 10px;">
             <label class="upload-box custom-cover-label" for="customCoverInput">
-              <span id="customCoverLabel">🖼️ หรืออัปโหลดรูปหน้าปกเอง (คลิก)</span>
+              <span id="customCoverLabel">🖼️ อัปโหลดรูปหน้าปกเอง (คลิก)</span>
               <input type="file" id="customCoverInput" accept="image/*">
             </label>
           </div>
         </div>
 
-        <!-- เลือกสีเว็บ & สีปก -->
         <div class="field-group colors-group">
           <div class="color-picker-item">
             <label for="themeColorPicker">🎨 สีธีมเว็บ</label>
@@ -52,26 +49,94 @@
           </div>
         </div>
 
-        <div class="field-group">
-          <label for="greetingInput">คำขึ้นต้น (Greeting)</label>
-          <input type="text" id="greetingInput" value="สวัสดีคุณคนสวย 💖">
+        <div class="field-group section-divider">
+          <span class="field-label-main">💌 แก้ไขข้อความหน้าปก (นอกจดหมาย)</span>
+          
+          <div class="text-editor-box">
+            <label>ข้อความหัวข้อปก:</label>
+            <input type="text" id="coverTitleInput" value="มีความรักส่งถึงคุณ 💕">
+            <div class="font-controls">
+              <select id="coverTitleFont" class="font-select">
+                <option value="'Mali', cursive">Mali (น่ารัก)</option>
+                <option value="'Prompt', sans-serif">Prompt (มินิมอล)</option>
+                <option value="'Kanit', sans-serif">Kanit (ทันสมัย)</option>
+                <option value="'Charm', cursive">Charm (หวานซ่อนเปรี้ยว)</option>
+              </select>
+              <input type="number" id="coverTitleSize" value="20" min="12" max="36" class="size-input" title="ขนาด">
+              <button type="button" id="coverTitleBold" class="bold-toggle-btn active">B</button>
+              <input type="color" id="coverTitleColor" value="#ff2a5f" class="text-color-picker">
+            </div>
+          </div>
+
+          <div class="text-editor-box" style="margin-top: 10px;">
+            <label>ข้อความโปรยใต้ปก:</label>
+            <input type="text" id="coverSubtextInput" value="แตะเพื่อเปิดดูเซอร์ไพรส์ ✨">
+            <div class="font-controls">
+              <select id="coverSubtextFont" class="font-select">
+                <option value="'Mali', cursive">Mali (น่ารัก)</option>
+                <option value="'Prompt', sans-serif">Prompt (มินิมอล)</option>
+                <option value="'Kanit', sans-serif">Kanit (ทันสมัย)</option>
+              </select>
+              <input type="number" id="coverSubtextSize" value="14" min="10" max="24" class="size-input">
+              <button type="button" id="coverSubtextBold" class="bold-toggle-btn">B</button>
+              <input type="color" id="coverSubtextColor" value="#888888" class="text-color-picker">
+            </div>
+          </div>
+        </div>
+
+        <div class="field-group section-divider">
+          <span class="field-label-main">📖 แก้ไขข้อความในจดหมาย</span>
+
+          <div class="text-editor-box">
+            <label>คำขึ้นต้น (Greeting):</label>
+            <input type="text" id="greetingInput" value="สวัสดีคุณคนสวย 💖">
+            <div class="font-controls">
+              <select id="greetingFont" class="font-select">
+                <option value="'Mali', cursive">Mali</option>
+                <option value="'Prompt', sans-serif">Prompt</option>
+                <option value="'Kanit', sans-serif">Kanit</option>
+                <option value="'Charm', cursive">Charm</option>
+              </select>
+              <input type="number" id="greetingSize" value="17" min="12" max="32" class="size-input">
+              <button type="button" id="greetingBold" class="bold-toggle-btn active">B</button>
+              <input type="color" id="greetingColor" value="#ff477e" class="text-color-picker">
+            </div>
+          </div>
+
+          <div class="text-editor-box" style="margin-top: 10px;">
+            <label>ข้อความบอกรัก (Message):</label>
+            <textarea id="messageInput" rows="3">ทำงานเหนื่อยไหม ยิ้มเยอะๆ นะ คิดถึงคุณมากๆ เลย อยากไปทานข้าวด้วยกันแล้ว รักที่สุดในโลกเลยนะ 💕</textarea>
+            <div class="font-controls">
+              <select id="messageFont" class="font-select">
+                <option value="'Mali', cursive">Mali</option>
+                <option value="'Prompt', sans-serif">Prompt</option>
+                <option value="'Kanit', sans-serif">Kanit</option>
+              </select>
+              <input type="number" id="messageSize" value="14" min="10" max="24" class="size-input">
+              <button type="button" id="messageBold" class="bold-toggle-btn">B</button>
+              <input type="color" id="messageColor" value="#444444" class="text-color-picker">
+            </div>
+          </div>
+
+          <div class="text-editor-box" style="margin-top: 10px;">
+            <label>คำลงท้าย (Signature):</label>
+            <input type="text" id="signatureInput" value="ด้วยรักเสมอมา">
+            <div class="font-controls">
+              <select id="signatureFont" class="font-select">
+                <option value="'Mali', cursive">Mali</option>
+                <option value="'Prompt', sans-serif">Prompt</option>
+                <option value="'Kanit', sans-serif">Kanit</option>
+              </select>
+              <input type="number" id="signatureSize" value="13" min="10" max="22" class="size-input">
+              <button type="button" id="signatureBold" class="bold-toggle-btn">B</button>
+              <input type="color" id="signatureColor" value="#888888" class="text-color-picker">
+            </div>
+          </div>
         </div>
 
         <div class="field-group">
-          <label for="messageInput">ข้อความบอกรัก (Message)</label>
-          <textarea id="messageInput" rows="4">ทำงานเหนื่อยไหม ยิ้มเยอะๆ นะ คิดถึงคุณมากๆ เลย อยากไปทานข้าวด้วยกันแล้ว รักที่สุดในโลกเลยนะ 💕</textarea>
-        </div>
-
-        <div class="field-group">
-          <label for="signatureInput">คำลงท้าย (Signature)</label>
-          <input type="text" id="signatureInput" value="ด้วยรักเสมอมา">
-        </div>
-
-        <!-- อัปโหลดรูปภาพแบบไม่จำกัด & เลือกสไตล์กรอบ -->
-        <div class="field-group">
-          <span class="field-label">📸 เพิ่มรูปภาพความทรงจำ (ไม่จำกัดจำนวน)</span>
+          <span class="field-label">📸 เพิ่มรูปภาพความทรงจำ</span>
           <div class="frame-style-selector" style="margin-bottom: 8px;">
-            <label class="field-sublabel">เลือกสไตล์กรอบรูปก่อนอัปโหลด:</label>
             <select id="photoFrameStyleSelect" class="style-select">
               <option value="polaroid">📸 กรอบโพลารอยด์ (Polaroid)</option>
               <option value="border">🖼️ กรอบรูปมินิมอล (Simple Border)</option>
@@ -84,9 +149,8 @@
           </label>
         </div>
 
-        <!-- คลังสติกเกอร์ -->
         <div class="field-group">
-          <span class="field-label">✨ เพิ่มสติกเกอร์ (ลาก หมุน ย่อ-ขยาย ได้)</span>
+          <span class="field-label">✨ เพิ่มสติกเกอร์</span>
           <div class="sticker-palette">
             <button type="button" class="sticker-add-btn" data-emoji="💖">💖</button>
             <button type="button" class="sticker-add-btn" data-emoji="🌹">🌹</button>
@@ -107,13 +171,11 @@
       </form>
     </section>
 
-    <!-- ฝั่งขวา: พรีวิว -->
     <section class="preview-panel">
       <h2>ตัวอย่างหน้าจอของแฟน</h2>
       
       <div id="previewContainer" class="scrapbook-stage closed">
         
-        <!-- หน้าปกก่อนเปิด -->
         <div id="coverEnvelope" class="cover-center-wrapper">
           <div class="cover-icon-box">
             <div id="coverGraphic" class="cover-graphic envelope-style">
@@ -122,10 +184,9 @@
             </div>
           </div>
           <h3 id="coverTitleText" class="cover-title">มีความรักส่งถึงคุณ 💕</h3>
-          <p class="cover-subtext">แตะเพื่อเปิดดูเซอร์ไพรส์ ✨</p>
+          <p id="coverSubtext" class="cover-subtext">แตะเพื่อเปิดดูเซอร์ไพรส์ ✨</p>
         </div>
 
-        <!-- หน้ากระดานหลังเปิด (คลิกที่กระดานเพื่อปิดกลับได้) -->
         <div id="letterBoard" class="letter-board">
           <div id="stickerCanvas" class="sticker-canvas"></div>
           <div id="photosCanvas" class="photos-canvas"></div>
@@ -142,7 +203,6 @@
 
   </main>
 
-  <!-- หน้าผู้รับเปิดผ่านลิงก์ -->
   <div id="recipientView" class="recipient-standalone-view" style="display: none; opacity: 0;">
     <div id="recipientStage" class="scrapbook-stage closed">
       
@@ -153,8 +213,8 @@
             <div class="bear-ears" id="recipientBearEars"></div>
           </div>
         </div>
-        <h3 id="recipientCoverTitle" class="cover-title">มีความรักส่งถึงคุณ 💕</h3>
-        <p class="cover-subtext">แตะเพื่อเปิดดูเซอร์ไพรส์ ✨</p>
+        <h3 id="recipientCoverTitle" class="cover-title"></h3>
+        <p id="recipientCoverSubtext" class="cover-subtext"></p>
       </div>
 
       <div id="recipientLetterBoard" class="letter-board">
