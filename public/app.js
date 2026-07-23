@@ -335,14 +335,15 @@ function makeElementInteractive(el, itemData, resizeHandle, rotateHandle) {
   });
 }
 
-// 7. คลิกเปิด-ปิดจดหมาย
+// 7. คลิกเปิด-ปิดจดหมาย (แก้ไขให้สามารถคลิกเปิด และคลิกพื้นที่ว่างเพื่อพับปิดได้)
 function setupEnvelopeToggle() {
   const previewContainer = document.getElementById('previewContainer');
   const cover = document.getElementById('coverEnvelope');
   const letterBoard = document.getElementById('letterBoard');
 
   if (cover && previewContainer) {
-    cover.addEventListener('click', () => {
+    cover.addEventListener('click', (e) => {
+      e.stopPropagation();
       previewContainer.classList.add('open');
       previewContainer.classList.remove('closed');
     });
@@ -350,7 +351,11 @@ function setupEnvelopeToggle() {
 
   if (letterBoard && previewContainer) {
     letterBoard.addEventListener('click', (e) => {
-      if (e.target === letterBoard || e.target.id === 'photosCanvas' || e.target.id === 'stickerCanvas') {
+      if (
+        e.target === letterBoard || 
+        e.target.id === 'photosCanvas' || 
+        e.target.id === 'stickerCanvas'
+      ) {
         previewContainer.classList.remove('open');
         previewContainer.classList.add('closed');
       }
@@ -480,7 +485,8 @@ async function checkRecipientMode() {
 
         // คลิกเปิด
         if (recipientCover && recipientStage) {
-          recipientCover.addEventListener('click', () => {
+          recipientCover.addEventListener('click', (e) => {
+            e.stopPropagation();
             recipientStage.classList.add('open');
             recipientStage.classList.remove('closed');
           });
@@ -489,8 +495,14 @@ async function checkRecipientMode() {
         // คลิกปิด
         if (recipientLetterBoard && recipientStage) {
           recipientLetterBoard.addEventListener('click', (e) => {
-            recipientStage.classList.remove('open');
-            recipientStage.classList.add('closed');
+            if (
+              e.target === recipientLetterBoard || 
+              e.target.id === 'recipientPhotosCanvas' || 
+              e.target.id === 'recipientStickerCanvas'
+            ) {
+              recipientStage.classList.remove('open');
+              recipientStage.classList.add('closed');
+            }
           });
         }
 
