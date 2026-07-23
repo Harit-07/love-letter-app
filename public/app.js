@@ -100,34 +100,28 @@ function renderInteractiveItem(container, itemData, isEditable = true) {
     div.appendChild(resizeHandle);
 
     let isResizing = false;
-    let initialDist = 0;
+    let initialMouseX = 0;
     let initialScale = itemData.scale || 1;
 
     resizeHandle.addEventListener('mousedown', (e) => {
       e.stopPropagation();
+      e.preventDefault();
       isResizing = true;
       initialScale = itemData.scale || 1;
-      
-      const rect = div.getBoundingClientRect();
-      const centerX = rect.left + rect.width / 2;
-      const centerY = rect.top + rect.height / 2;
-      
+      initialMouseX = e.clientX;
+
       const onMouseMove = (moveEvent) => {
         if (!isResizing) return;
-        const currentDist = Math.hypot(moveEvent.clientX - centerX, moveEvent.clientY - centerY);
-        if (!initialDist) initialDist = currentDist;
-        
-        let newScale = initialScale * (currentDist / initialDist);
-        if (newScale < 0.3) newScale = 0.3; // จำกัดขนาดเล็กสุด
-        if (newScale > 3) newScale = 3;     // จำกัดขนาดใหญ่สุด
-        
+        const delta = (moveEvent.clientX - initialMouseX) / 120;
+        let newScale = initialScale + delta;
+        if (newScale < 0.3) newScale = 0.3;
+        if (newScale > 3) newScale = 3;
         itemData.scale = newScale;
         div.style.transform = `rotate(${itemData.rotate || 0}deg) scale(${newScale})`;
       };
 
       const onMouseUp = () => {
         isResizing = false;
-        initialDist = 0;
         window.removeEventListener('mousemove', onMouseMove);
         window.removeEventListener('mouseup', onMouseUp);
       };
@@ -364,8 +358,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const result = await response.json();
         if (response.ok) {
-          generatedShareLink = window.location.origin + '/letter/' + result.slug;
+          generatedShareLink = result.shareUrl
+            ? (result.shareUrl.startsWith('http') ? result.shareUrl : window.location.origin + result.shareUrl)
+            : window.location.origin + '/letter/' + result.slug;
           
+          if (!generatedShareLink) {
+            throw new Error('ไม่พบลิงก์จากเซิร์ฟเวอร์');
+          }
+
           // แสดงผลกล่องลิงก์และปุ่มคัดลอกให้ชัดเจน
           if (statusBox) {
             statusBox.innerHTML = `
@@ -393,11 +393,19 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   if (copyLinkButton) {
-    copyLinkButton.addEventListener('click', () => {
-      navigator.clipboard.writeText(generatedShareLink).then(() => {
+    copyLinkButton.addEventListener('click', async () => {
+      if (!generatedShareLink) {
+        if (statusBox) statusBox.textContent = 'กรุณาสร้างจดหมายก่อนคัดลอกลิงก์';
+        return;
+      }
+      try {
+        await navigator.clipboard.writeText(generatedShareLink);
         copyLinkButton.innerText = '📋 คัดลอกลิงก์แล้ว! ✨';
-        setTimeout(() => { copyLinkButton.innerText = '📋 คัดลอกลิงก์'; }, 3000);
-      });
+        if (statusBox) statusBox.textContent = 'คัดลอกลิงก์สำเร็จ! ส่งให้แฟนได้เลย';
+      } catch (err) {
+        if (statusBox) statusBox.textContent = 'ไม่สามารถคัดลอกอัตโนมัติได้ ลองคัดลอกลิงก์จากช่องด้านบน';
+      }
+      setTimeout(() => { if (copyLinkButton) copyLinkButton.innerText = '📋 คัดลอกลิงก์'; }, 3000);
     });
   }
 });
