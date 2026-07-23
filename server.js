@@ -5,7 +5,7 @@ const { createClient } = require('redis');
 const app = express();
 const port = process.env.PORT || 3000;
 
-// สร้าง Redis client โดยใช้ Environment Variable ที่ Vercel เจนให้ (STORAGE_URL หรือ REDIS_URL)
+// สร้าง Redis client โดยใช้ Environment Variable (STORAGE_URL หรือ REDIS_URL)
 const redis = createClient({
   url: process.env.STORAGE_URL || process.env.REDIS_URL
 });
@@ -16,14 +16,13 @@ redis.on('error', (err) => console.error('Redis Client Error:', err));
 redis.connect();
 
 app.use(express.json({ limit: '10mb' }));
-app.use(express.static(__dirname));
 
-// Key prefix so letters don't collide with other data in the same KV store
+// Key prefix
 const KEY_PREFIX = 'letter:';
 
+// API Routes
 app.get('/api/letters/:slug', async (req, res) => {
   try {
-    // ดึงข้อมูลเป็น string แล้วแปลงกลับเป็น JSON Object
     const rawData = await redis.get(KEY_PREFIX + req.params.slug);
     if (!rawData) {
       return res.status(404).json({ error: 'Letter not found' });
@@ -53,7 +52,6 @@ app.post('/api/letters', async (req, res) => {
       createdAt: new Date().toISOString()
     };
 
-    // แปลง Object เป็น JSON string ก่อนบันทึกลง Redis
     await redis.set(KEY_PREFIX + slug, JSON.stringify(letter));
 
     res.json({ slug, shareUrl: `/letter/${slug}` });
@@ -63,8 +61,9 @@ app.post('/api/letters', async (req, res) => {
   }
 });
 
+// Route สำหรับการกดลิงก์ดูจดหมาย (เสิร์ฟ index.html จากโฟลเดอร์ public)
 app.get('/letter/:slug', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 function generateSlug() {
