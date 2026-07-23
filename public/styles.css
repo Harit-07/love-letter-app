@@ -2,393 +2,498 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  font-family: 'Prompt', sans-serif;
 }
 
 body {
-  font-family: 'Mali', 'Prompt', sans-serif;
-  background-color: #fff0f3;
-  color: #333;
   min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
+  background: #fdf2f4;
+  color: #4a2831;
+  overflow-x: hidden;
+  position: relative;
+  transition: background-color 0.3s ease;
+}
+
+.floating-hearts-bg {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.floating-heart {
+  position: absolute;
+  bottom: -30px;
+  animation: floatUp 6s linear infinite;
+  opacity: 0.7;
+}
+
+@keyframes floatUp {
+  0% { transform: translateY(0) scale(0.8); opacity: 0.8; }
+  100% { transform: translateY(-110vh) scale(1.2); opacity: 0; }
+}
+
+.app-shell {
+  position: relative;
+  z-index: 1;
+  max-width: 1150px;
+  margin: 0 auto;
   padding: 20px;
+  display: grid;
+  grid-template-columns: 420px 1fr;
+  gap: 24px;
 }
 
-.app-container {
-  display: flex;
-  flex-direction: row;
-  width: 100%;
-  max-width: 1200px;
-  background: #ffffff;
-  border-radius: 20px;
-  box-shadow: 0 10px 30px rgba(255, 182, 193, 0.4);
-  overflow: hidden;
-  min-height: 850px;
+@media (max-width: 900px) {
+  .app-shell { grid-template-columns: 1fr; }
 }
 
-/* ================= ฝั่งซ้าย: Form Editor ================= */
-.editor-section {
-  flex: 1;
-  padding: 30px;
-  background: #ffffff;
-  border-right: 2px dashed #ffe6ea;
-  overflow-y: auto;
-  max-height: 900px;
+.editor-panel, .preview-panel {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  border-radius: 24px;
+  padding: 24px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.6);
 }
 
-.editor-header .sub-title {
-  font-size: 0.85rem;
-  color: #e63946;
-  text-transform: uppercase;
-  letter-spacing: 1px;
+.hero h1 { font-size: 1.35rem; color: #ff477e; margin-bottom: 6px; }
+.eyebrow { font-size: 0.75rem; letter-spacing: 1px; color: #a07883; font-weight: 700; }
+.intro { font-size: 0.85rem; margin-bottom: 16px; color: #666; }
+
+.section-divider {
+  border-top: 2px dashed #fce4e8;
+  padding-top: 14px;
+  margin-top: 14px;
 }
 
-.editor-header h1 {
-  font-size: 1.8rem;
-  color: #ff2a6d;
-  margin: 8px 0;
-}
-
-.editor-header .desc {
-  font-size: 0.9rem;
-  color: #666;
-  margin-bottom: 25px;
-}
-
-.form-group {
-  margin-bottom: 20px;
-}
-
-.section-label {
+.field-label-main {
   display: block;
-  font-weight: 600;
-  margin-bottom: 8px;
-  color: #ff477e;
-  font-size: 0.95rem;
-}
-
-.field-row {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  margin-bottom: 8px;
-}
-
-.field-row input[type="text"],
-.field-row textarea,
-.field-row select,
-.field-row input[type="number"] {
-  border: 1px solid #ffd1dc;
-  border-radius: 8px;
-  padding: 8px 12px;
-  font-family: inherit;
+  font-weight: 700;
   font-size: 0.9rem;
-  outline: none;
+  color: #ff477e;
+  margin-bottom: 10px;
+}
+
+.text-editor-box {
   background: #fff8f9;
+  border: 1px solid #ffe3e8;
+  border-radius: 12px;
+  padding: 10px;
 }
 
-.field-row input[type="text"] {
-  flex: 2;
+.text-editor-box label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #666;
+  margin-bottom: 4px;
 }
 
-.field-row textarea {
+input[type="text"], textarea {
   width: 100%;
-  resize: vertical;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1.5px solid #ffd1dc;
+  outline: none;
+  font-size: 0.85rem;
+  background: #fff;
 }
 
-.field-row input[type="color"] {
-  border: none;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
+.font-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.font-select {
+  flex: 1;
+  padding: 4px 6px;
+  border-radius: 6px;
+  border: 1px solid #ffd1dc;
+  font-size: 0.75rem;
+  background: #fff;
+}
+
+.size-input {
+  width: 48px;
+  padding: 4px;
+  border-radius: 6px;
+  border: 1px solid #ffd1dc;
+  font-size: 0.75rem;
+  text-align: center;
+}
+
+.bold-toggle-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid #ffd1dc;
+  background: #fff;
+  font-weight: bold;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+.bold-toggle-btn.active {
+  background: #ff477e;
+  color: #fff;
+  border-color: #ff477e;
+}
+
+.text-color-picker {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid #ffd1dc;
+  cursor: pointer;
+  background: transparent;
+  padding: 0;
+}
+
+.field-group { margin-bottom: 12px; }
+.field-group label, .field-label { display: block; font-weight: 600; font-size: 0.85rem; margin-bottom: 6px; }
+
+.colors-group { display: flex; gap: 12px; }
+.color-picker-item { flex: 1; }
+.color-picker-item label { font-size: 0.75rem; margin-bottom: 4px; }
+.color-picker-item input[type="color"] {
+  width: 100%;
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid #ffd1dc;
   cursor: pointer;
   background: transparent;
 }
 
-.btn-group {
-  display: flex;
-  gap: 10px;
-}
-
-.btn-option {
-  padding: 8px 16px;
-  border: 1px solid #ff477e;
-  background: #ffffff;
-  color: #ff477e;
-  border-radius: 20px;
-  cursor: pointer;
-  font-family: inherit;
-  font-size: 0.85rem;
-  transition: all 0.2s;
-}
-
-.btn-option.active, .btn-option:hover {
-  background: #ff477e;
-  color: #ffffff;
-}
-
-.sticker-palette {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.btn-sticker {
-  font-size: 1.4rem;
-  padding: 6px 12px;
-  background: #fff0f3;
-  border: 1px solid #ffccd5;
-  border-radius: 12px;
-  cursor: pointer;
-  transition: transform 0.2s;
-}
-
-.btn-sticker:hover {
-  transform: scale(1.2);
-}
-
-.btn-submit {
-  width: 100%;
-  padding: 14px;
-  background: linear-gradient(135deg, #ff477e, #ff2a6d);
-  color: white;
-  border: none;
-  border-radius: 25px;
-  font-size: 1.05rem;
-  font-weight: 600;
-  font-family: inherit;
-  cursor: pointer;
-  box-shadow: 0 4px 15px rgba(255, 42, 109, 0.3);
-  margin-top: 10px;
-  transition: transform 0.2s;
-}
-
-.btn-submit:hover {
-  transform: translateY(-2px);
-}
-
-/* ================= ฝั่งขวา: Stage Preview ================= */
-.preview-section {
+.style-selector { display: flex; gap: 6px; }
+.style-btn {
   flex: 1;
-  padding: 30px;
-  background: #fff5f7;
+  padding: 8px 4px;
+  border-radius: 10px;
+  border: 1.5px solid #ffd1dc;
+  background: #fff;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-align: center;
+}
+.style-btn.active {
+  background: #ff477e;
+  color: #fff;
+  border-color: #ff477e;
+}
+
+.upload-box {
+  background: #fff0f3;
+  border: 1.5px dashed #ff9ebb;
+  border-radius: 10px;
+  padding: 8px;
+  text-align: center;
+  font-size: 0.8rem;
+  cursor: pointer;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: center;
+}
+.upload-box input { display: none; }
+
+.sticker-palette { display: flex; flex-wrap: wrap; gap: 6px; }
+.sticker-add-btn {
+  font-size: 1.2rem;
+  padding: 4px 8px;
+  border-radius: 8px;
+  border: 1px solid #ffd1dc;
+  background: #fff;
+  cursor: pointer;
 }
 
-.preview-title {
-  font-size: 1.1rem;
-  color: #888;
-  margin-bottom: 20px;
+.primary-btn {
+  width: 100%;
+  padding: 12px;
+  border-radius: 16px;
+  border: none;
+  background: linear-gradient(135deg, #ff6b8b, #ff477e);
+  color: white;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
 }
 
-/* กรอบ Scrapbook Stage */
+/* ========================================= */
+/* SCRAPBOOK STAGE & COVER */
+/* ========================================= */
+
 .scrapbook-stage {
   position: relative;
   width: 100%;
-  max-width: 460px;
-  height: 650px;
-  background: #ffffff;
-  border: 2px dashed #ffccd5;
+  height: 540px;
+  background: rgba(255, 255, 255, 0.6);
   border-radius: 24px;
+  border: 2px dashed #f3cad2;
   overflow: hidden;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
 }
 
-/* ================= 1. ฝาปก (Cover Envelope View) ================= */
 .cover-center-wrapper {
   position: absolute;
-  top: 0;
-  left: 0;
+  inset: 0;
   width: 100%;
   height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: #fff0f3;
-  cursor: pointer;
-  z-index: 20;
-  transition: opacity 0.4s ease, transform 0.4s ease;
-}
-
-.cover-card {
-  text-align: center;
-  padding: 30px;
-  background: #ffffff;
-  border-radius: 20px;
-  box-shadow: 0 10px 25px rgba(255, 71, 126, 0.15);
-  max-width: 80%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  justify-content: center;
+  text-align: center;
+  cursor: pointer;
+  z-index: 20;
+  transition: all 0.4s ease;
+  padding: 20px;
 }
 
-.cover-icon-box {
-  font-size: 4rem;
+.cover-icon-box { margin-bottom: 16px; display: flex; justify-content: center; }
+
+.cover-graphic {
+  width: 160px;
+  height: 110px;
+  border-radius: 16px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+  background-size: cover;
+  background-position: center;
+  transition: transform 0.3s ease, background-color 0.3s ease;
 }
 
-.custom-cover-img {
-  width: 120px;
-  height: 120px;
-  object-fit: cover;
-  border-radius: 12px;
-}
-
-.hidden {
-  display: none !important;
-}
-
-.cover-title-text {
-  font-weight: 600;
-  word-break: break-word;
-}
-
-.cover-sub-text {
-  word-break: break-word;
-}
-
-/* ================= 2. กระดานจดหมาย (Letter Board View) ================= */
-.letter-board {
+.cover-graphic.envelope-style::before {
+  content: '';
   position: absolute;
   top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: #faf0f2;
-  padding: 20px;
-  z-index: 10;
-  transition: opacity 0.4s ease, transform 0.4s ease;
-  overflow: hidden;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  border-left: 80px solid transparent;
+  border-right: 80px solid transparent;
+  border-top: 55px solid rgba(0, 0, 0, 0.15);
 }
 
-/* ปุ่มปิดจดหมาย */
-.btn-close-letter {
+.cover-graphic.giftbox-style { width: 130px; height: 120px; }
+.cover-graphic.giftbox-style::before { content: ''; position: absolute; width: 22px; height: 100%; background: #ffeb3b; }
+.cover-graphic.giftbox-style::after { content: ''; position: absolute; height: 22px; width: 100%; background: #ffeb3b; }
+
+.cover-graphic.bear-style {
+  width: 130px;
+  height: 120px;
+  border-radius: 50% 50% 45% 45%;
+  animation: bearWiggle 2s infinite ease-in-out;
+}
+
+.bear-ears { display: none; }
+.cover-graphic.bear-style .bear-ears { display: block; }
+.cover-graphic.bear-style .bear-ears::before,
+.cover-graphic.bear-style .bear-ears::after {
+  content: '';
   position: absolute;
-  top: 15px;
-  right: 15px;
-  background: #ffffff;
-  color: #ff2a6d;
-  border: 1px solid #ffccd5;
-  padding: 6px 14px;
-  border-radius: 20px;
-  font-size: 0.8rem;
-  font-family: inherit;
-  cursor: pointer;
-  z-index: 30;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  transition: background 0.2s;
+  top: -18px;
+  width: 38px;
+  height: 38px;
+  background-color: inherit;
+  border-radius: 50%;
+  z-index: -1;
+}
+.cover-graphic.bear-style .bear-ears::before { left: 4px; }
+.cover-graphic.bear-style .bear-ears::after { right: 4px; }
+
+@keyframes bearWiggle {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  25% { transform: rotate(-6deg) scale(1.03); }
+  75% { transform: rotate(6deg) scale(1.03); }
 }
 
-.btn-close-letter:hover {
-  background: #ffe6ea;
+.cover-badge { font-size: 2rem; z-index: 5; }
+
+.cover-title {
+  font-size: 1.25rem;
+  color: #ff2a5f;
+  margin-bottom: 4px;
 }
 
-/* การ์ดข้อความหลัก */
-.main-card {
-  position: relative;
-  width: 80%;
-  background: #ffffff;
-  padding: 25px;
-  border-radius: 16px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
-  z-index: 8;
-  text-align: center;
+.cover-subtext {
+  font-size: 0.85rem;
+  color: #888;
 }
 
-.card-greeting {
-  font-weight: 600;
-  margin-bottom: 12px;
-}
-
-.card-message {
-  line-height: 1.6;
-  margin-bottom: 16px;
-  white-space: pre-line;
-}
-
-.card-signature {
-  text-align: right;
-  font-style: italic;
-}
-
-/* สติ๊กเกอร์บนกระดาน */
-.sticker-item {
-  position: absolute;
-  font-size: 2.2rem;
-  user-select: none;
-  z-index: 12;
-  cursor: pointer;
-  transition: transform 0.2s ease;
-}
-
-.sticker-item:hover {
-  transform: scale(1.3) !important;
-}
-
-/* รูปภาพโพลารอยด์ */
-.polaroid-photo-item {
-  position: absolute;
-  width: 110px;
-  background: #ffffff;
-  padding: 6px 6px 20px 6px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
-  border-radius: 4px;
-  z-index: 6;
-}
-
-.polaroid-photo-item img {
-  width: 100%;
-  height: 95px;
-  object-fit: cover;
-  border-radius: 2px;
-}
-
-/* ================= Toggle Animation States ================= */
-
-/* เมื่อจดหมายปิดอยู่ */
-.scrapbook-stage.closed .cover-center-wrapper {
-  opacity: 1;
-  pointer-events: auto;
-  transform: scale(1);
-}
-
-.scrapbook-stage.closed .letter-board {
-  opacity: 0;
-  pointer-events: none;
-  transform: scale(0.92);
-}
-
-/* เมื่อจดหมายเปิดอยู่ */
 .scrapbook-stage.open .cover-center-wrapper {
   opacity: 0;
   pointer-events: none;
   transform: scale(0.6);
 }
 
+.letter-board {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transform: scale(0.9);
+  transition: all 0.5s ease;
+  z-index: 10;
+  cursor: pointer;
+}
+
 .scrapbook-stage.open .letter-board {
   opacity: 1;
-  pointer-events: auto;
   transform: scale(1);
 }
 
-/* Responsive สำหรับมือถือ */
-@media (max-width: 850px) {
-  .app-container {
-    flex-direction: column;
-  }
-  .editor-section {
-    border-right: none;
-    border-bottom: 2px dashed #ffe6ea;
-    max-height: none;
-  }
-  .scrapbook-stage {
-    height: 550px;
-  }
+.sticker-canvas, .photos-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 15;
+  pointer-events: none;
+}
+
+.main-card {
+  background: #ffffff;
+  width: 250px;
+  min-height: 220px;
+  padding: 18px;
+  border-radius: 16px;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.06);
+  z-index: 5;
+  text-align: center;
+  border: 1px solid #fce4e8;
+  flex-shrink: 0;
+  pointer-events: auto;
+}
+
+.handwritten-title { margin-bottom: 8px; word-break: break-word; }
+.handwritten-body { line-height: 1.5; white-space: pre-wrap; margin-bottom: 10px; word-break: break-word; }
+.handwritten-sig { text-align: right; word-break: break-word; }
+
+/* ========================================= */
+/* DRAGGABLE, RESIZABLE, ROTATABLE ITEMS */
+/* ========================================= */
+
+.interactive-item {
+  position: absolute;
+  cursor: move;
+  user-select: none;
+  touch-action: none;
+  display: inline-block;
+  z-index: 20;
+  pointer-events: auto;
+  transform-origin: center center;
+}
+
+.interactive-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+  display: block;
+}
+
+.interactive-item.item-sticker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.interactive-item.frame-polaroid {
+  background: #fff;
+  padding: 8px 8px 24px 8px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+  border-radius: 6px;
+}
+
+.interactive-item.frame-border {
+  background: #fff;
+  padding: 6px;
+  border: 2px solid #ffd1dc;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+  border-radius: 10px;
+}
+
+.interactive-item.frame-none {
+  padding: 0;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.item-controls { display: none; }
+.interactive-item:hover .item-controls,
+.interactive-item.active .item-controls {
+  display: block;
+}
+
+.btn-delete-item {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  width: 22px;
+  height: 22px;
+  background: #ff477e;
+  color: #fff;
+  border-radius: 50%;
+  font-size: 12px;
+  text-align: center;
+  line-height: 20px;
+  cursor: pointer;
+  z-index: 30;
+  border: 1px solid #fff;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.handle-resize {
+  position: absolute;
+  bottom: -8px;
+  right: -8px;
+  width: 16px;
+  height: 16px;
+  background: #ff477e;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  cursor: se-resize;
+  z-index: 30;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.handle-rotate {
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  width: 22px;
+  height: 22px;
+  background: #4caf50;
+  color: #fff;
+  border-radius: 50%;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  z-index: 30;
+  border: 1px solid #fff;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.recipient-standalone-view {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  transition: opacity 0.4s ease;
+}
+
+.recipient-standalone-view .scrapbook-stage {
+  max-width: 440px;
+  width: 100%;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.12);
 }
