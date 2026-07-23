@@ -448,7 +448,7 @@ function setupSaveButton() {
   }
 }
 
-// 9. หน้าผู้รับลิงก์
+// 9. หน้าผู้รับลิงก์ (ฉบับแก้ปัญหาหา Element ไม่เจอ)
 async function checkRecipientMode() {
   const path = window.location.pathname;
   const match = path.match(/\/letter\/(.+)$/);
@@ -470,27 +470,31 @@ async function checkRecipientMode() {
         
         if (data.themeColor) document.body.style.backgroundColor = data.themeColor;
 
-        // นำสไตล์และข้อความจากฐานข้อมูลมาแสดงผลให้แฟน
+        // นำสไตล์และข้อความจากฐานข้อมูลมาแสดงผล
         if (data.textStyles) {
           const styles = data.textStyles;
 
-          // ฟังก์ชันช่วยหา element และใส่ข้อมูล (รองรับกรณีตั้งชื่อ ID ต่างกัน)
-          const setElemText = (possibleIds, styleObj) => {
+          // ฟังก์ชันพยายามหา ID หลายๆ รูปแบบ ถ้าไม่เจอจะเลือก element ตัวแรกที่อยู่ในหน้าจดหมายแทน
+          const applyToAny = (possibleIds, styleObj, fallbackSelector) => {
             if (!styleObj) return;
+            let el = null;
             for (let id of possibleIds) {
-              const el = document.getElementById(id);
-              if (el) {
-                applyStyleToElem(el, styleObj);
-                break;
-              }
+              el = document.getElementById(id);
+              if (el) break;
+            }
+            if (!el && fallbackSelector) {
+              el = document.querySelector(fallbackSelector);
+            }
+            if (el) {
+              applyStyleToElem(el, styleObj);
             }
           };
 
-          setElemText(['recipientCoverTitle', 'rcvCoverTitle', 'coverTitleText'], styles.coverTitle);
-          setElemText(['recipientCoverSubtext', 'rcvCoverSubtext', 'coverSubtext'], styles.coverSubtext);
-          setElemText(['recipientGreeting', 'rcvGreeting', 'previewGreeting'], styles.greeting);
-          setElemText(['recipientMessage', 'rcvMessage', 'previewMessage'], styles.message);
-          setElemText(['recipientSignature', 'rcvSignature', 'previewSignature'], styles.signature);
+          applyToAny(['recipientCoverTitle', 'rcvCoverTitle', 'coverTitleText'], styles.coverTitle, '#recipientView .cover-title, .cover-title');
+          applyToAny(['recipientCoverSubtext', 'rcvCoverSubtext', 'coverSubtext'], styles.coverSubtext, '#recipientView .cover-subtext, .cover-subtext');
+          applyToAny(['recipientGreeting', 'rcvGreeting', 'previewGreeting'], styles.greeting, '#recipientView .greeting, .preview-greeting');
+          applyToAny(['recipientMessage', 'rcvMessage', 'previewMessage'], styles.message, '#recipientView .message-body, .preview-message');
+          applyToAny(['recipientSignature', 'rcvSignature', 'previewSignature'], styles.signature, '#recipientView .signature, .preview-signature');
         }
 
         const coverStyle = data.coverStyle || 'envelope';
