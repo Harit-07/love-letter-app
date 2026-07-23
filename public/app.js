@@ -456,20 +456,16 @@ async function checkRecipientMode() {
         
         if (data.themeColor) document.body.style.backgroundColor = data.themeColor;
 
-        // นำสไตล์และข้อความทั้งหมดมาแสดงผลให้แฟนอย่างถูกต้อง
+        // นำสไตล์และข้อความจากฐานข้อมูลมาแสดงผลให้แฟนโดยตรง
         if (data.textStyles) {
-          // อัปเดตข้อมูลลงในตัวแปร global เพื่อให้ฟังก์ชัน applyStyle ทำงานได้สมบูรณ์
-          Object.keys(data.textStyles).forEach(key => {
-            if (textStyles[key] && data.textStyles[key]) {
-              textStyles[key] = data.textStyles[key];
-            }
-          });
+          // แทนที่จะใช้ Object.keys ข้าม ให้ดึงค่าและส่งเข้าฟังก์ชันแสดงผลทีละจุดอย่างชัดเจน
+          const styles = data.textStyles;
 
-          applyStyleToElem(document.getElementById('recipientCoverTitle'), textStyles.coverTitle);
-          applyStyleToElem(document.getElementById('recipientCoverSubtext'), textStyles.coverSubtext);
-          applyStyleToElem(document.getElementById('recipientGreeting'), textStyles.greeting);
-          applyStyleToElem(document.getElementById('recipientMessage'), textStyles.message);
-          applyStyleToElem(document.getElementById('recipientSignature'), textStyles.signature);
+          if (styles.coverTitle) applyStyleToElem(document.getElementById('recipientCoverTitle'), styles.coverTitle);
+          if (styles.coverSubtext) applyStyleToElem(document.getElementById('recipientCoverSubtext'), styles.coverSubtext);
+          if (styles.greeting) applyStyleToElem(document.getElementById('recipientGreeting'), styles.greeting);
+          if (styles.message) applyStyleToElem(document.getElementById('recipientMessage'), styles.message);
+          if (styles.signature) applyStyleToElem(document.getElementById('recipientSignature'), styles.signature);
         }
 
         const coverStyle = data.coverStyle || 'envelope';
