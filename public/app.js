@@ -335,31 +335,93 @@ function makeElementInteractive(el, itemData, resizeHandle, rotateHandle) {
   });
 }
 
-// 7. คลิกเปิด-ปิดจดหมาย (แก้ไขให้สามารถคลิกเปิด และคลิกพื้นที่ว่างเพื่อพับปิดได้)
-function setupEnvelopeToggle() {
-  const previewContainer = document.getElementById('previewContainer');
-  const cover = document.getElementById('coverEnvelope');
-  const letterBoard = document.getElementById('letterBoard');
+// 9. หน้าผู้รับลิงก์
+async function checkRecipientMode() {
+  const path = window.location.pathname;
+  const match = path.match(/\/letter\/(.+)$/);
 
-  if (cover && previewContainer) {
-    cover.addEventListener('click', (e) => {
-      e.stopPropagation();
-      previewContainer.classList.add('open');
-      previewContainer.classList.remove('closed');
-    });
-  }
+  if (match) {
+    const slug = match[1];
+    const mainApp = document.getElementById('mainApp');
+    const recipientView = document.getElementById('recipientView');
+    const recipientStage = document.getElementById('recipientStage');
+    const recipientCover = document.getElementById('recipientCover');
+    const recipientLetterBoard = document.getElementById('recipientLetterBoard');
 
-  if (letterBoard && previewContainer) {
-    letterBoard.addEventListener('click', (e) => {
-      if (
-        e.target === letterBoard || 
-        e.target.id === 'photosCanvas' || 
-        e.target.id === 'stickerCanvas'
-      ) {
-        previewContainer.classList.remove('open');
-        previewContainer.classList.add('closed');
+    if (mainApp) mainApp.style.display = 'none';
+
+    try {
+      const res = await fetch(`/api/letters/${slug}`);
+      if (res.ok) {
+        const data = await res.json();
+        
+        if (data.themeColor) document.body.style.backgroundColor = data.themeColor;
+
+        // นำสไตล์และข้อความทั้งหมดมาแสดงผลให้แฟนอย่างถูกต้อง
+        if (data.textStyles) {
+          // อัปเดตข้อมูลลงในตัวแปร global เพื่อให้ฟังก์ชัน applyStyle ทำงานได้สมบูรณ์
+          Object.keys(data.textStyles).forEach(key => {
+            if (textStyles[key] && data.textStyles[key]) {
+              textStyles[key] = data.textStyles[key];
+            }
+          });
+
+          applyStyleToElem(document.getElementById('recipientCoverTitle'), textStyles.coverTitle);
+          applyStyleToElem(document.getElementById('recipientCoverSubtext'), textStyles.coverSubtext);
+          applyStyleToElem(document.getElementById('recipientGreeting'), textStyles.greeting);
+          applyStyleToElem(document.getElementById('recipientMessage'), textStyles.message);
+          applyStyleToElem(document.getElementById('recipientSignature'), textStyles.signature);
+        }
+
+        const coverStyle = data.coverStyle || 'envelope';
+        const customImg = data.customCoverImage || '';
+        const coverColor = data.coverColor || '#ff5277';
+
+        updateCoverDisplay(coverStyle, customImg, 'recipientCoverGraphic', 'recipientCoverBadge', coverColor);
+
+        // โหลดรูปภาพ
+        const rPhotosCanvas = document.getElementById('recipientPhotosCanvas');
+        if (data.photos && Array.isArray(data.photos)) {
+          data.photos.forEach(p => renderInteractiveItem(rPhotosCanvas, p, false));
+        }
+
+        // โหลดสติ๊กเกอร์
+        const rStickerCanvas = document.getElementById('recipientStickerCanvas');
+        if (data.stickers && Array.isArray(data.stickers)) {
+          data.stickers.forEach(s => renderInteractiveItem(rStickerCanvas, s, false));
+        }
+
+        // คลิกเปิด
+        if (recipientCover && recipientStage) {
+          recipientCover.addEventListener('click', (e) => {
+            e.stopPropagation();
+            recipientStage.classList.add('open');
+            recipientStage.classList.remove('closed');
+          });
+        }
+
+        // คลิกปิด
+        if (recipientLetterBoard && recipientStage) {
+          recipientLetterBoard.addEventListener('click', (e) => {
+            if (
+              e.target === recipientLetterBoard || 
+              e.target.id === 'recipientPhotosCanvas' || 
+              e.target.id === 'recipientStickerCanvas'
+            ) {
+              recipientStage.classList.remove('open');
+              recipientStage.classList.add('closed');
+            }
+          });
+        }
+
+        if (recipientView) {
+          recipientView.style.display = 'flex';
+          setTimeout(() => { recipientView.style.opacity = '1'; }, 50);
+        }
       }
-    });
+    } catch (e) {
+      console.error('Error:', e);
+    }
   }
 }
 
