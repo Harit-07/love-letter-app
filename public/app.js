@@ -1,5 +1,5 @@
-﻿let dynamicPhotos = [];   // เก็บรูปภาพทั้งหมด
-let dynamicStickers = []; // เก็บสติ๊กเกอร์ทั้งหมด
+﻿let dynamicPhotos = [];   
+let dynamicStickers = []; 
 let currentCoverStyle = 'envelope';
 let customCoverImage = '';
 let currentCoverColor = '#ff5277';
@@ -58,7 +58,7 @@ function setupColorPickers() {
   }
 }
 
-// 4. สไตล์ปก & อัปโหลดรูปปกเอง
+// 4. สไตล์ปก
 function setupStyleSelector() {
   const styleBtns = document.querySelectorAll('.style-btn');
   const customCoverInput = document.getElementById('customCoverInput');
@@ -122,7 +122,7 @@ function updateCoverDisplay(style, customImg, graphicId, badgeId, titleId, color
   }
 }
 
-// 5. อัปโหลดรูปภาพ (Drag/Resize/Rotate)
+// 5. อัปโหลดรูปภาพ
 function setupMultiPhotoUpload() {
   const multiInput = document.getElementById('multiPhotoInput');
   const frameStyleSelect = document.getElementById('photoFrameStyleSelect');
@@ -140,9 +140,9 @@ function setupMultiPhotoUpload() {
           type: 'photo',
           src: evt.target.result,
           frameStyle: frameStyleSelect.value || 'polaroid',
-          x: Math.random() * 80 + 20,
-          y: Math.random() * 80 + 20,
-          width: 110,
+          x: 50 + Math.random() * 80, // กำหนดตำแหน่งให้อยู่บนกระดาน
+          y: 50 + Math.random() * 80,
+          width: 120,
           rotation: (Math.random() * 20) - 10
         };
 
@@ -154,7 +154,7 @@ function setupMultiPhotoUpload() {
   });
 }
 
-// 6. เพิ่มสติ๊กเกอร์ (Drag/Resize/Rotate)
+// 6. เพิ่มสติ๊กเกอร์
 function setupStickerPalette() {
   const stickerBtns = document.querySelectorAll('.sticker-add-btn');
   const stickerCanvas = document.getElementById('stickerCanvas');
@@ -166,9 +166,9 @@ function setupStickerPalette() {
         id: 's_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
         type: 'sticker',
         emoji: emoji,
-        x: Math.random() * 80 + 20,
-        y: Math.random() * 80 + 20,
-        width: 45,
+        x: 60 + Math.random() * 100, // สุ่มลงบนกระดาน ไม่ชิดขอบซ้าย
+        y: 60 + Math.random() * 100,
+        width: 50,
         rotation: (Math.random() * 20) - 10
       };
 
@@ -178,7 +178,7 @@ function setupStickerPalette() {
   });
 }
 
-// เรนเดอร์ Element ที่ขยับได้ (ทั้งรูปภาพและสติ๊กเกอร์)
+// เรนเดอร์ Element (ย้าย, ขยาย, หมุนได้ครบถ้วน)
 function renderInteractiveItem(canvas, itemData, isEditable = false) {
   if (!canvas) return;
 
@@ -196,13 +196,14 @@ function renderInteractiveItem(canvas, itemData, isEditable = false) {
     item.appendChild(img);
   } else {
     item.textContent = itemData.emoji;
-    item.style.fontSize = (itemData.width * 0.8) + 'px'; // ปรับขนาดฟอนต์สติ๊กเกอร์ตามขนาด width
+    item.style.fontSize = (itemData.width * 0.8) + 'px';
   }
 
   if (isEditable) {
     const controls = document.createElement('div');
     controls.className = 'item-controls';
 
+    // ปุ่มลบ
     const btnDel = document.createElement('div');
     btnDel.className = 'btn-delete-item';
     btnDel.textContent = '✕';
@@ -216,30 +217,48 @@ function renderInteractiveItem(canvas, itemData, isEditable = false) {
       item.remove();
     };
 
+    // ปุ่มย่อ-ขยาย
     const handleResize = document.createElement('div');
     handleResize.className = 'handle-resize';
 
+    // ปุ่มหมุน 🔄
+    const handleRotate = document.createElement('div');
+    handleRotate.className = 'handle-rotate';
+    handleRotate.textContent = '🔄';
+
     controls.appendChild(btnDel);
     controls.appendChild(handleResize);
+    controls.appendChild(handleRotate);
     item.appendChild(controls);
 
-    makeElementInteractive(item, itemData, handleResize);
+    makeElementInteractive(item, itemData, handleResize, handleRotate);
   }
 
   canvas.appendChild(item);
 }
 
-function makeElementInteractive(el, itemData, resizeHandle) {
+// ระบบขยับ Drag, ย่อขยาย Resize, หมุน Rotate
+function makeElementInteractive(el, itemData, resizeHandle, rotateHandle) {
   let isDragging = false;
   let isResizing = false;
-  let startX, startY, startWidth;
+  let isRotating = false;
+
+  let startX, startY, startWidth, initialAngle;
 
   el.addEventListener('mousedown', (e) => {
-    e.stopPropagation(); // ป้องกันไม่ให้คลิกแล้วปิดจดหมาย
+    e.stopPropagation(); // กันไม่ให้ปิดจดหมายขณะขยับของ
+
     if (e.target === resizeHandle) {
       isResizing = true;
       startX = e.clientX;
       startWidth = el.offsetWidth;
+    } else if (e.target === rotateHandle) {
+      isRotating = true;
+      const rect = el.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      const radians = Math.atan2(e.clientY - centerY, e.clientX - centerX);
+      initialAngle = radians * (180 / Math.PI) - itemData.rotation;
     } else {
       isDragging = true;
       startX = e.clientX - el.offsetLeft;
@@ -257,23 +276,33 @@ function makeElementInteractive(el, itemData, resizeHandle) {
       itemData.y = newY;
     } else if (isResizing) {
       let newWidth = startWidth + (e.clientX - startX);
-      if (newWidth > 25 && newWidth < 300) {
+      if (newWidth > 30 && newWidth < 350) {
         el.style.width = newWidth + 'px';
         itemData.width = newWidth;
         if (itemData.type === 'sticker') {
           el.style.fontSize = (newWidth * 0.8) + 'px';
         }
       }
+    } else if (isRotating) {
+      const rect = el.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      const radians = Math.atan2(e.clientY - centerY, e.clientX - centerX);
+      let degree = radians * (180 / Math.PI) - initialAngle;
+      
+      el.style.transform = `rotate(${degree}deg)`;
+      itemData.rotation = degree;
     }
   });
 
   document.addEventListener('mouseup', () => {
     isDragging = false;
     isResizing = false;
+    isRotating = false;
   });
 }
 
-// 7. คลิกเปิด-ปิดจดหมาย (กดที่หน้าปก = เปิด, กดที่จดหมาย = ปิด)
+// 7. คลิกเปิด-ปิดจดหมาย (คลิกกระดานจดหมายเพื่อปิด)
 function setupEnvelopeToggle() {
   const previewContainer = document.getElementById('previewContainer');
   const cover = document.getElementById('coverEnvelope');
@@ -288,7 +317,7 @@ function setupEnvelopeToggle() {
 
   if (letterBoard && previewContainer) {
     letterBoard.addEventListener('click', (e) => {
-      // ถ้าไม่ได้กดที่การ์ด หรือองค์ประกอบย่อย ให้ปิดจดหมาย
+      // คลิกตรงกระดานจดหมายเพื่อปิด
       if (e.target === letterBoard || e.target.id === 'photosCanvas' || e.target.id === 'stickerCanvas') {
         previewContainer.classList.remove('open');
         previewContainer.classList.add('closed');
@@ -370,7 +399,7 @@ function setupSaveButton() {
   }
 }
 
-// 9. แสดงผลฝั่งผู้รับ (คลิกที่จดหมายเปิด-ปิดได้ ไม่มีปุ่มตัวหนังสือ)
+// 9. หน้าผู้รับลิงก์
 async function checkRecipientMode() {
   const path = window.location.pathname;
   const match = path.match(/\/letter\/(.+)$/);
@@ -414,7 +443,7 @@ async function checkRecipientMode() {
           data.stickers.forEach(s => renderInteractiveItem(rStickerCanvas, s, false));
         }
 
-        // คลิกปกเพื่อเปิด
+        // คลิกเปิด
         if (recipientCover && recipientStage) {
           recipientCover.addEventListener('click', () => {
             recipientStage.classList.add('open');
@@ -422,7 +451,7 @@ async function checkRecipientMode() {
           });
         }
 
-        // คลิกที่กระดานจดหมายเพื่อปิด
+        // คลิกจดหมายเพื่อปิด
         if (recipientLetterBoard && recipientStage) {
           recipientLetterBoard.addEventListener('click', (e) => {
             recipientStage.classList.remove('open');
@@ -430,7 +459,6 @@ async function checkRecipientMode() {
           });
         }
 
-        // โหลดข้อมูลครบแล้วค่อยแสดงผล
         if (recipientView) {
           recipientView.style.display = 'flex';
           setTimeout(() => { recipientView.style.opacity = '1'; }, 50);
