@@ -8,6 +8,7 @@
   </head>
   <body>
     <main class="app-shell" id="appShell">
+      <!-- Editor Panel -->
       <section class="editor-panel" id="editorPanel">
         <div class="hero">
           <p class="eyebrow">A tiny love note for your favorite person</p>
@@ -17,7 +18,7 @@
           </p>
         </div>
 
-        <form id="letterForm" class="letter-form">
+        <form id="letterForm" class="letter-form" onsubmit="return false;">
           <label>
             Greeting
             <input id="greetingInput" name="greeting" type="text" maxlength="40" value="Hey cutie~" />
@@ -72,7 +73,8 @@
         <div class="status-box" id="statusBox" aria-live="polite"></div>
       </section>
 
-      <section class="preview-panel" id="previewPanel" aria-live="polite">
+      <!-- Preview Panel -->
+      <section class="preview-panel" id="previewPanel">
         <div class="preview-header">
           <p class="eyebrow">Recipient view</p>
           <h2>Your secret letter</h2>
@@ -86,17 +88,9 @@
             </div>
             <div class="letter-card" id="letterCard">
               <div class="letter-content">
-                <div class="letter-decor top">
-                  <span>💗</span><span>✨</span>
-                </div>
                 <p class="greeting" id="previewGreeting">Hey cutie~</p>
-                <p class="message" id="previewMessage">
-                  You make every ordinary moment feel soft, bright, and full of love.
-                </p>
+                <p class="message" id="previewMessage">You make every ordinary moment feel soft, bright, and full of love.</p>
                 <p class="signature" id="previewSignature">With all my love</p>
-                <div class="letter-decor bottom">
-                  <span>🌸</span><span>💖</span>
-                </div>
               </div>
               <div class="sticker-layer" id="stickerLayer"></div>
               <div class="photo-slot" id="photoSlot"></div>
@@ -106,22 +100,19 @@
         </div>
       </section>
 
+      <!-- Recipient View Overlay -->
       <section class="recipient-view" id="recipientView" hidden>
         <div class="recipient-card">
-          <div class="recipient-flap"></div>
-          <div class="recipient-letter">
-            <button class="recipient-close" id="recipientClose" type="button" aria-label="Close letter">×</button>
-            <div class="recipient-corner-heart">💖</div>
-            <div class="recipient-corner-sparkle">✨</div>
-            <h2 id="recipientGreeting">Hey cutie~</h2>
-            <p id="recipientMessage">You make every ordinary moment feel soft, bright, and full of love.</p>
-            <div class="recipient-signature-row">
-              <p id="recipientSignature">With all my love</p>
-              <span class="recipient-bunny">🐰</span>
-            </div>
-            <div class="recipient-sticker-layer" id="recipientStickerLayer"></div>
-            <div class="recipient-photo-slot" id="recipientPhotoSlot"></div>
+          <button class="recipient-close" id="recipientClose" type="button" aria-label="Close letter">×</button>
+          <h2 id="recipientGreeting">Hey cutie~</h2>
+          <p id="recipientMessage">You make every ordinary moment feel soft, bright, and full of love.</p>
+
+          <div class="recipient-signature-row">
+            <p id="recipientSignature">With all my love</p>
           </div>
+
+          <div class="recipient-sticker-layer" id="recipientStickerLayer"></div>
+          <div class="recipient-photo-slot" id="recipientPhotoSlot"></div>
           <button class="recipient-action-btn" id="recipientActionBtn" type="button">So cute!</button>
         </div>
       </section>
