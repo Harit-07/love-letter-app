@@ -456,16 +456,27 @@ async function checkRecipientMode() {
         
         if (data.themeColor) document.body.style.backgroundColor = data.themeColor;
 
-        // นำสไตล์และข้อความจากฐานข้อมูลมาแสดงผลให้แฟนโดยตรง
+        // นำสไตล์และข้อความจากฐานข้อมูลมาแสดงผลให้แฟน
         if (data.textStyles) {
-          // แทนที่จะใช้ Object.keys ข้าม ให้ดึงค่าและส่งเข้าฟังก์ชันแสดงผลทีละจุดอย่างชัดเจน
           const styles = data.textStyles;
 
-          if (styles.coverTitle) applyStyleToElem(document.getElementById('recipientCoverTitle'), styles.coverTitle);
-          if (styles.coverSubtext) applyStyleToElem(document.getElementById('recipientCoverSubtext'), styles.coverSubtext);
-          if (styles.greeting) applyStyleToElem(document.getElementById('recipientGreeting'), styles.greeting);
-          if (styles.message) applyStyleToElem(document.getElementById('recipientMessage'), styles.message);
-          if (styles.signature) applyStyleToElem(document.getElementById('recipientSignature'), styles.signature);
+          // ฟังก์ชันช่วยหา element และใส่ข้อมูล (รองรับกรณีตั้งชื่อ ID ต่างกัน)
+          const setElemText = (possibleIds, styleObj) => {
+            if (!styleObj) return;
+            for (let id of possibleIds) {
+              const el = document.getElementById(id);
+              if (el) {
+                applyStyleToElem(el, styleObj);
+                break;
+              }
+            }
+          };
+
+          setElemText(['recipientCoverTitle', 'rcvCoverTitle', 'coverTitleText'], styles.coverTitle);
+          setElemText(['recipientCoverSubtext', 'rcvCoverSubtext', 'coverSubtext'], styles.coverSubtext);
+          setElemText(['recipientGreeting', 'rcvGreeting', 'previewGreeting'], styles.greeting);
+          setElemText(['recipientMessage', 'rcvMessage', 'previewMessage'], styles.message);
+          setElemText(['recipientSignature', 'rcvSignature', 'previewSignature'], styles.signature);
         }
 
         const coverStyle = data.coverStyle || 'envelope';
@@ -475,13 +486,13 @@ async function checkRecipientMode() {
         updateCoverDisplay(coverStyle, customImg, 'recipientCoverGraphic', 'recipientCoverBadge', coverColor);
 
         // โหลดรูปภาพ
-        const rPhotosCanvas = document.getElementById('recipientPhotosCanvas');
+        const rPhotosCanvas = document.getElementById('recipientPhotosCanvas') || document.getElementById('photosCanvas');
         if (data.photos && Array.isArray(data.photos)) {
           data.photos.forEach(p => renderInteractiveItem(rPhotosCanvas, p, false));
         }
 
         // โหลดสติ๊กเกอร์
-        const rStickerCanvas = document.getElementById('recipientStickerCanvas');
+        const rStickerCanvas = document.getElementById('recipientStickerCanvas') || document.getElementById('stickerCanvas');
         if (data.stickers && Array.isArray(data.stickers)) {
           data.stickers.forEach(s => renderInteractiveItem(rStickerCanvas, s, false));
         }
