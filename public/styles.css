@@ -13,12 +13,11 @@ body {
   position: relative;
 }
 
-/* ฟอนต์ลายมือสไตล์ Scrapbook */
-.handwritten-title, .handwritten-body, .handwritten-sig, .p-caption {
+.handwritten-title, .handwritten-body, .handwritten-sig, .p-caption, .cover-title, .cover-subtext {
   font-family: 'Mali', cursive;
 }
 
-/* หัวใจลอย */
+/* Background Hearts */
 .floating-hearts-bg {
   position: fixed;
   inset: 0;
@@ -42,7 +41,7 @@ body {
 .app-shell {
   position: relative;
   z-index: 1;
-  max-width: 1100px;
+  max-width: 1150px;
   margin: 0 auto;
   padding: 20px;
   display: grid;
@@ -55,49 +54,82 @@ body {
 }
 
 .editor-panel, .preview-panel {
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(12px);
   border-radius: 24px;
   padding: 24px;
   box-shadow: 0 10px 30px rgba(255, 182, 193, 0.3);
   border: 1px solid #ffe3e8;
 }
 
-.hero h1 { font-size: 1.4rem; color: #ff477e; margin-bottom: 6px; }
+.hero h1 { font-size: 1.35rem; color: #ff477e; margin-bottom: 6px; }
 .eyebrow { font-size: 0.75rem; letter-spacing: 1px; color: #a07883; font-weight: 700; }
 .intro { font-size: 0.85rem; margin-bottom: 16px; color: #666; }
 
-.field-group { margin-bottom: 14px; }
-.field-group label, .field-label { display: block; font-weight: 600; font-size: 0.85rem; margin-bottom: 6px; }
+.field-group { margin-bottom: 16px; }
+.field-group label, .field-label { display: block; font-weight: 600; font-size: 0.85rem; margin-bottom: 8px; }
 
 input[type="text"], textarea {
   width: 100%;
-  padding: 10px;
+  padding: 10px 12px;
   border-radius: 12px;
   border: 1.5px solid #ffd1dc;
   outline: none;
   font-size: 0.9rem;
+  background: #fff;
 }
 
 input[type="text"]:focus, textarea:focus { border-color: #ff477e; }
 
-.polaroid-uploads {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
+/* Selector Styles */
+.style-selector { display: flex; flex-direction: column; gap: 6px; }
+.style-btn {
+  padding: 10px;
+  border-radius: 12px;
+  border: 1.5px solid #ffd1dc;
+  background: #fff;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-align: left;
+  transition: all 0.2s;
+}
+.style-btn.active, .style-btn:hover {
+  background: #ff477e;
+  color: #fff;
+  border-color: #ff477e;
 }
 
-.upload-btn {
+/* Upload Boxes */
+.polaroid-uploads { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.upload-box {
   background: #fff0f3;
-  border: 1px dashed #ff9ebb;
+  border: 1.5px dashed #ff9ebb;
   border-radius: 10px;
-  padding: 8px;
+  padding: 10px;
   text-align: center;
   font-size: 0.8rem;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
 }
+.upload-box:hover { background: #ffe3e8; }
+.upload-box input { display: none; }
 
-.upload-btn input { display: none; }
+/* Sticker Palette */
+.sticker-palette { display: flex; flex-wrap: wrap; gap: 6px; }
+.sticker-add-btn {
+  font-size: 1.3rem;
+  padding: 6px 10px;
+  border-radius: 12px;
+  border: 1px solid #ffd1dc;
+  background: #fff;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+.sticker-add-btn:hover { transform: scale(1.2); }
 
 .primary-btn {
   width: 100%;
@@ -113,90 +145,145 @@ input[type="text"]:focus, textarea:focus { border-color: #ff477e; }
 }
 
 /* ========================================= */
-/* SCRAPBOOK & POLAROID STAGE */
+/* PREVIEW & COVER CANVAS (FIX CENTER ALIGNMENT) */
 /* ========================================= */
 
 .scrapbook-stage {
   position: relative;
   width: 100%;
-  min-height: 480px;
-  background: #faf4f5;
-  border-radius: 20px;
+  min-height: 520px;
+  background: #fff8f9;
+  border-radius: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
   border: 2px dashed #f3cad2;
+  box-shadow: inset 0 0 20px rgba(255,182,193,0.15);
 }
 
-/* หน้าซองจดหมายตอนปิด */
-.envelope-cover {
+/* จัดวางปกให้อยู่กึ่งกลางสี่เหลี่ยมพอดี */
+.cover-center-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   text-align: center;
   cursor: pointer;
-  transition: all 0.4s ease;
   z-index: 10;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  padding: 20px;
+  width: 100%;
 }
 
-.envelope-graphic {
-  width: 140px;
-  height: 95px;
-  background: #ff758f;
-  margin: 0 auto 16px;
-  border-radius: 12px;
+.cover-center-wrapper:hover {
+  transform: scale(1.05);
+}
+
+/* ตัวไอคอนซองจดหมาย / กล่อง / หมี */
+.cover-icon-box {
+  margin-bottom: 16px;
+}
+
+.cover-graphic {
+  width: 180px;
+  height: 120px;
+  border-radius: 16px;
   position: relative;
-  box-shadow: 0 8px 20px rgba(255, 117, 143, 0.3);
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 10px 25px rgba(255, 71, 126, 0.25);
+  transition: all 0.3s;
 }
 
-.envelope-graphic::before {
+/* ซองจดหมาย */
+.cover-graphic.envelope-style {
+  background: #ff5277;
+}
+
+.cover-graphic.envelope-style::before {
   content: '';
   position: absolute;
   top: 0;
-  border-left: 70px solid transparent;
-  border-right: 70px solid transparent;
-  border-top: 50px solid #ff5277;
+  border-left: 90px solid transparent;
+  border-right: 90px solid transparent;
+  border-top: 65px solid #ff3b65;
 }
 
-.heart-badge {
-  font-size: 1.8rem;
-  z-index: 2;
-  animation: pulse 1.5s infinite;
+/* กล่องของขวัญ */
+.cover-graphic.giftbox-style {
+  background: #ff758f;
+  width: 140px;
+  height: 130px;
+}
+.cover-graphic.giftbox-style::before {
+  content: '';
+  position: absolute;
+  width: 24px;
+  height: 100%;
+  background: #ffeb3b;
+}
+.cover-graphic.giftbox-style::after {
+  content: '';
+  position: absolute;
+  height: 24px;
+  width: 100%;
+  background: #ffeb3b;
 }
 
-@keyframes pulse {
+/* หมีน้อย */
+.cover-graphic.bear-style {
+  background: #ffb703;
+  width: 140px;
+  height: 130px;
+  border-radius: 50% 50% 45% 45%;
+}
+
+.cover-badge {
+  font-size: 2.2rem;
+  z-index: 5;
+  animation: heartPulse 1.4s infinite ease-in-out;
+}
+
+@keyframes heartPulse {
   0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.15); }
+  50% { transform: scale(1.2); }
 }
 
-.click-hint {
-  font-family: 'Mali', cursive;
-  font-size: 1.1rem;
-  color: #ff477e;
-  font-weight: 600;
+.cover-title {
+  font-size: 1.3rem;
+  color: #ff2a5f;
+  font-weight: 700;
+  margin-bottom: 6px;
 }
 
-/* เมื่อเปิดจดหมาย (OPEN STATE) */
-.scrapbook-stage.open .envelope-cover {
+.cover-subtext {
+  font-size: 0.95rem;
+  color: #888;
+}
+
+/* เมื่อสั่งเปิด */
+.scrapbook-stage.open .cover-center-wrapper {
   opacity: 0;
   pointer-events: none;
-  transform: scale(0.6);
+  transform: scale(0.5);
   position: absolute;
 }
 
+/* หน้ากระดานจดหมายหลังเปิด */
 .letter-board {
   position: relative;
   width: 100%;
   height: 100%;
-  min-height: 480px;
+  min-height: 520px;
   padding: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
   opacity: 0;
   transform: scale(0.85);
-  transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .scrapbook-stage.open .letter-board {
@@ -204,55 +291,73 @@ input[type="text"]:focus, textarea:focus { border-color: #ff477e; }
   transform: scale(1);
 }
 
-/* การ์ดจดหมายหลักตรงกลาง */
+.sticker-canvas {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 6;
+}
+
+.placed-sticker {
+  position: absolute;
+  font-size: 2rem;
+  cursor: move;
+  pointer-events: auto;
+  user-select: none;
+}
+
+/* การ์ดตรงกลาง */
 .main-card {
   background: #ffffff;
-  width: 260px;
-  padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 8px 25px rgba(0,0,0,0.06);
+  width: 270px;
+  padding: 22px;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.06);
   z-index: 5;
   text-align: center;
   border: 1px solid #fce4e8;
 }
 
-.handwritten-title { font-size: 1.1rem; color: #ff477e; margin-bottom: 10px; }
-.handwritten-body { font-size: 0.9rem; line-height: 1.6; color: #444; white-space: pre-wrap; margin-bottom: 12px; }
+.handwritten-title { font-size: 1.15rem; color: #ff477e; margin-bottom: 10px; }
+.handwritten-body { font-size: 0.92rem; line-height: 1.6; color: #444; white-space: pre-wrap; margin-bottom: 12px; }
 .handwritten-sig { font-size: 0.85rem; color: #888; text-align: right; }
 
-/* รูปโพลารอยด์กระจาย 4 มุม */
+/* โพลารอยด์ */
 .polaroid {
   position: absolute;
   background: #fff;
-  padding: 6px 6px 16px 6px;
-  border-radius: 6px;
-  box-shadow: 0 6px 16px rgba(0,0,0,0.08);
-  width: 95px;
+  padding: 8px 8px 18px 8px;
+  border-radius: 8px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+  width: 105px;
   text-align: center;
   z-index: 4;
-  transition: transform 0.3s;
+  cursor: move;
+  user-select: none;
+  transition: box-shadow 0.2s;
 }
 
-.polaroid:hover { transform: scale(1.1) rotate(0deg) !important; z-index: 6; }
+.polaroid:hover { box-shadow: 0 12px 28px rgba(0,0,0,0.15); z-index: 8; }
 
 .polaroid .img-box {
   width: 100%;
-  height: 80px;
+  height: 90px;
   background: #ffe3e8;
-  border-radius: 4px;
+  border-radius: 6px;
   background-size: cover;
   background-position: center;
+  background-repeat: no-repeat;
 }
 
-.p-caption { font-size: 0.65rem; color: #777; margin-top: 4px; display: block; }
+.p-caption { font-size: 0.7rem; color: #777; margin-top: 6px; display: block; }
 
-/* ตำแหน่งและการเอียงแบบในคลิป */
-.p1 { top: 15px; left: 15px; transform: rotate(-8deg); }
-.p2 { top: 15px; right: 15px; transform: rotate(6deg); }
-.p3 { bottom: 15px; left: 20px; transform: rotate(5deg); }
-.p4 { bottom: 15px; right: 20px; transform: rotate(-7deg); }
+/* ตำแหน่งเริ่มต้น 4 มุม */
+.p1 { top: 20px; left: 20px; transform: rotate(-8deg); }
+.p2 { top: 20px; right: 20px; transform: rotate(6deg); }
+.p3 { bottom: 20px; left: 20px; transform: rotate(5deg); }
+.p4 { bottom: 20px; right: 20px; transform: rotate(-7deg); }
 
-/* Recipient View Standalone */
+/* Recipient Standalone */
 .recipient-standalone-view {
   position: fixed;
   inset: 0;
@@ -265,7 +370,7 @@ input[type="text"]:focus, textarea:focus { border-color: #ff477e; }
 }
 
 .recipient-standalone-view .scrapbook-stage {
-  max-width: 440px;
+  max-width: 480px;
   width: 100%;
-  box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+  box-shadow: 0 15px 40px rgba(0,0,0,0.12);
 }

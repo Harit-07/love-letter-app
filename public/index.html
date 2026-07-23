@@ -5,24 +5,35 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cute Letter Scrapbook 💖</title>
   <link rel="stylesheet" href="/styles.css">
-  <link href="https://fonts.googleapis.com/css2?family=Mali:wght@400;600;700&family=Prompt:wght@300;400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Mali:wght@400;600;700&family=Prompt:wght@300;400;600;700&display=swap" rel="stylesheet">
 </head>
 <body class="theme-pink">
 
   <div id="floatingHeartsContainer" class="floating-hearts-bg"></div>
 
-  <!-- หน้าสร้าง (Editor & Live Preview) -->
+  <!-- หน้าแอปหลัก -->
   <main id="mainApp" class="app-shell">
     
-    <!-- ฟอร์มกรอกข้อมูล -->
+    <!-- ฝั่งซ้าย: เมนูเครื่องมือตกแต่ง -->
     <section class="editor-panel">
       <div class="hero">
-        <span class="eyebrow">✨ POLAROID SCRAPBOOK SURPRISE</span>
-        <h1>สร้างจดหมายน่ารักๆ ส่งให้แฟน 💕</h1>
-        <p class="intro">ใส่รูปโพลารอยด์ พิมพ์ความในใจ แล้วส่งลิงก์เซอร์ไพรส์ได้เลย!</p>
+        <span class="eyebrow">✨ CUSTOM SCRAPBOOK BUILDER</span>
+        <h1>ออกแบบจดหมายรักสุดน่ารัก 💕</h1>
+        <p class="intro">ปรับเปลี่ยนรูปแบบรูปภาพ เพิ่มสติกเกอร์ และลากขยับได้ตามใจชอบ!</p>
       </div>
 
       <form id="letterForm" class="letter-form" onsubmit="return false;">
+        
+        <!-- เลือกรูปแบบปกก่อนเปิด -->
+        <div class="field-group">
+          <span class="field-label">🎁 เลือกรูปแบบปกก่อนเปิด</span>
+          <div class="style-selector">
+            <button type="button" class="style-btn active" data-style="envelope">💌 ซองจดหมายผูกหัวใจ</button>
+            <button type="button" class="style-btn" data-style="giftbox">🎁 กล่องของขวัญริบบิ้น</button>
+            <button type="button" class="style-btn" data-style="bear">🧸 เจ้าหมีส่งความรัก</button>
+          </div>
+        </div>
+
         <div class="field-group">
           <label for="greetingInput">คำขึ้นต้น (Greeting)</label>
           <input type="text" id="greetingInput" value="สวัสดีคุณคนสวย 💖">
@@ -38,14 +49,41 @@
           <input type="text" id="signatureInput" value="ด้วยรักเสมอมา">
         </div>
 
-        <!-- อัปโหลดรูปโพลารอยด์ 4 รูป -->
+        <!-- ปุ่มอัปโหลดรูปภาพ 4 กรอบ -->
         <div class="field-group">
-          <span class="field-label">📸 รูปโพลารอยด์ตกแต่งรอบๆ (สูงสุด 4 รูป)</span>
+          <span class="field-label">📸 อัปโหลดรูปโพลารอยด์ (คลิกเพื่อเลือกไฟล์)</span>
           <div class="polaroid-uploads">
-            <label class="upload-btn">รูปที่ 1 <input type="file" class="photo-input" data-index="0" accept="image/*"></label>
-            <label class="upload-btn">รูปที่ 2 <input type="file" class="photo-input" data-index="1" accept="image/*"></label>
-            <label class="upload-btn">รูปที่ 3 <input type="file" class="photo-input" data-index="2" accept="image/*"></label>
-            <label class="upload-btn">รูปที่ 4 <input type="file" class="photo-input" data-index="3" accept="image/*"></label>
+            <label class="upload-box">
+              <span id="labelP0">📷 รูปที่ 1</span>
+              <input type="file" class="photo-input" data-index="0" accept="image/*">
+            </label>
+            <label class="upload-box">
+              <span id="labelP1">📷 รูปที่ 2</span>
+              <input type="file" class="photo-input" data-index="1" accept="image/*">
+            </label>
+            <label class="upload-box">
+              <span id="labelP2">📷 รูปที่ 3</span>
+              <input type="file" class="photo-input" data-index="2" accept="image/*">
+            </label>
+            <label class="upload-box">
+              <span id="labelP3">📷 รูปที่ 4</span>
+              <input type="file" class="photo-input" data-index="3" accept="image/*">
+            </label>
+          </div>
+        </div>
+
+        <!-- คลังสติกเกอร์สำหรับลาก/กดแปะ -->
+        <div class="field-group">
+          <span class="field-label">✨ เพิ่มสติกเกอร์น่ารักๆ (แตะเพื่อแปะ)</span>
+          <div class="sticker-palette">
+            <button type="button" class="sticker-add-btn" data-emoji="💖">💖</button>
+            <button type="button" class="sticker-add-btn" data-emoji="🌹">🌹</button>
+            <button type="button" class="sticker-add-btn" data-emoji="🎀">🎀</button>
+            <button type="button" class="sticker-add-btn" data-emoji="🧸">🧸</button>
+            <button type="button" class="sticker-add-btn" data-emoji="✨">✨</button>
+            <button type="button" class="sticker-add-btn" data-emoji="🎂">🎂</button>
+            <button type="button" class="sticker-add-btn" data-emoji="💌">💌</button>
+            <button type="button" class="sticker-add-btn" data-emoji="🌸">🌸</button>
           </div>
         </div>
 
@@ -57,33 +95,48 @@
       </form>
     </section>
 
-    <!-- ฝั่งพรีวิว (Live Preview) -->
+    <!-- ฝั่งขวา: พื้นที่พรีวิว Scrapbook -->
     <section class="preview-panel">
-      <h2>ตัวอย่างหน้าจอของแฟน</h2>
+      <h2>ตัวอย่างหน้าจอของแฟน (ลากขยับรูปได้!)</h2>
       
-      <!-- หน้าต่างซองจดหมายแบบปิด -->
-      <div id="previewContainer" class="scrapbook-stage closed">
+      <div id="previewContainer" class="scrapbook-stage closed style-envelope">
         
-        <!-- ซองจดหมายสไตล์ในคลิป -->
-        <div id="coverEnvelope" class="envelope-cover">
-          <div class="mail-icon-wrap">
-            <div class="envelope-graphic">
-              <span class="heart-badge">💖</span>
+        <!-- ปกหน้าซองจดหมาย / กล่องของขวัญ (อยู่ตรงกลางพอดี) -->
+        <div id="coverEnvelope" class="cover-center-wrapper">
+          <div class="cover-icon-box">
+            <div id="coverGraphic" class="cover-graphic envelope-style">
+              <span class="cover-badge">💖</span>
             </div>
           </div>
-          <p class="click-hint">แตะเพื่อเปิดจดหมาย 💕</p>
+          <h3 id="coverTitleText" class="cover-title">คุณมีจดหมายรักฉบับใหม่ 💌</h3>
+          <p class="cover-subtext">แตะที่นี่เพื่อเปิดดูเซอร์ไพรส์ ✨</p>
         </div>
 
-        <!-- หน้าจดหมาย Scrapbook + Polaroid หลังเปิด -->
+        <!-- หน้ากระดานหลังเปิด (Scrapbook Board) -->
         <div id="letterBoard" class="letter-board">
           
-          <!-- รูปโพลารอยด์รอบๆ -->
-          <div class="polaroid p1"><div class="img-box" id="pImg0"></div><span class="p-caption">for u 🌹</span></div>
-          <div class="polaroid p2"><div class="img-box" id="pImg1"></div><span class="p-caption">cutie ✨</span></div>
-          <div class="polaroid p3"><div class="img-box" id="pImg2"></div><span class="p-caption">sending love 💕</span></div>
-          <div class="polaroid p4"><div class="img-box" id="pImg3"></div><span class="p-caption">forever 🐾</span></div>
+          <!-- เลเยอร์สติกเกอร์แปะอิสระ -->
+          <div id="stickerCanvas" class="sticker-canvas"></div>
 
-          <!-- การ์ดข้อความตรงกลาง -->
+          <!-- รูปโพลารอยด์ 4 ใบ (สามารถลากขยับได้) -->
+          <div class="draggable-item polaroid p1" id="pol0">
+            <div class="img-box" id="pImg0"></div>
+            <span class="p-caption">for u 🌹</span>
+          </div>
+          <div class="draggable-item polaroid p2" id="pol1">
+            <div class="img-box" id="pImg1"></div>
+            <span class="p-caption">cutie ✨</span>
+          </div>
+          <div class="draggable-item polaroid p3" id="pol2">
+            <div class="img-box" id="pImg2"></div>
+            <span class="p-caption">sending love 💕</span>
+          </div>
+          <div class="draggable-item polaroid p4" id="pol3">
+            <div class="img-box" id="pImg3"></div>
+            <span class="p-caption">forever 🐾</span>
+          </div>
+
+          <!-- การ์ดข้อความหลักตรงกลาง -->
           <div class="main-card">
             <h3 id="previewGreeting" class="handwritten-title">สวัสดีคุณคนสวย 💖</h3>
             <p id="previewMessage" class="handwritten-body">ทำงานเหนื่อยไหม ยิ้มเยอะๆ นะ คิดถึงคุณมากๆ เลย อยากไปทานข้าวด้วยกันแล้ว รักที่สุดในโลกเลยนะ 💕</p>
@@ -97,24 +150,27 @@
 
   </main>
 
-  <!-- หน้าสำหรับแฟนที่เปิดลิงก์ (Recipient Overlay) -->
+  <!-- หน้า Standalone สำหรับผู้รับ (แฟนเปิดดูจากลิงก์) -->
   <div id="recipientView" class="recipient-standalone-view" style="display: none;">
-    <div id="recipientStage" class="scrapbook-stage closed">
+    <div id="recipientStage" class="scrapbook-stage closed style-envelope">
       
-      <div id="recipientCover" class="envelope-cover">
-        <div class="mail-icon-wrap">
-          <div class="envelope-graphic">
-            <span class="heart-badge">💖</span>
+      <div id="recipientCover" class="cover-center-wrapper">
+        <div class="cover-icon-box">
+          <div id="recipientCoverGraphic" class="cover-graphic envelope-style">
+            <span class="cover-badge">💖</span>
           </div>
         </div>
-        <p class="click-hint">แตะเพื่อเปิดจดหมาย 💕</p>
+        <h3 id="recipientCoverTitle" class="cover-title">มีความรักส่งถึงคุณ 💕</h3>
+        <p class="cover-subtext">แตะเพื่อเปิดดูเซอร์ไพรส์ ✨</p>
       </div>
 
       <div id="recipientLetterBoard" class="letter-board">
-        <div class="polaroid p1"><div class="img-box" id="rImg0"></div><span class="p-caption">for u 🌹</span></div>
-        <div class="polaroid p2"><div class="img-box" id="rImg1"></div><span class="p-caption">cutie ✨</span></div>
-        <div class="polaroid p3"><div class="img-box" id="rImg2"></div><span class="p-caption">sending love 💕</span></div>
-        <div class="polaroid p4"><div class="img-box" id="rImg3"></div><span class="p-caption">forever 🐾</span></div>
+        <div id="recipientStickerCanvas" class="sticker-canvas"></div>
+
+        <div class="polaroid p1" id="rPol0"><div class="img-box" id="rImg0"></div><span class="p-caption">for u 🌹</span></div>
+        <div class="polaroid p2" id="rPol1"><div class="img-box" id="rImg1"></div><span class="p-caption">cutie ✨</span></div>
+        <div class="polaroid p3" id="rPol2"><div class="img-box" id="rImg2"></div><span class="p-caption">sending love 💕</span></div>
+        <div class="polaroid p4" id="rPol3"><div class="img-box" id="rImg3"></div><span class="p-caption">forever 🐾</span></div>
 
         <div class="main-card">
           <h3 id="recipientGreeting" class="handwritten-title"></h3>

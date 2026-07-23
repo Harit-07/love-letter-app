@@ -1,4 +1,6 @@
 ﻿let polaroidPhotos = ['', '', '', ''];
+let placedStickers = [];
+let currentCoverStyle = 'envelope';
 
 // 1. หัวใจลอยพื้นหลัง
 function createFloatingHearts() {
@@ -18,7 +20,7 @@ function createFloatingHearts() {
   }, 600);
 }
 
-// 2. Realtime Preview พิมพ์ข้อความ
+// 2. พรีวิวข้อความ Realtime
 function setupRealtimePreview() {
   const greetingInput = document.getElementById('greetingInput');
   const messageInput = document.getElementById('messageInput');
@@ -33,9 +35,43 @@ function setupRealtimePreview() {
   if (signatureInput) signatureInput.addEventListener('input', (e) => previewSignature.textContent = e.target.value || 'ด้วยรักเสมอมา');
 }
 
-// 3. อัปโหลดรูปโพลารอยด์ 4 รูป
+// 3. สลับรูปแบบปกก่อนเปิด (ซอง / กล่อง / หมี)
+function setupStyleSelector() {
+  const styleBtns = document.querySelectorAll('.style-btn');
+  const previewContainer = document.getElementById('previewContainer');
+  const coverGraphic = document.getElementById('coverGraphic');
+  const coverTitleText = document.getElementById('coverTitleText');
+
+  styleBtns.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      styleBtns.forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      currentCoverStyle = btn.dataset.style;
+      
+      if (coverGraphic) {
+        coverGraphic.className = `cover-graphic ${currentCoverStyle}-style`;
+      }
+
+      if (coverTitleText) {
+        if (currentCoverStyle === 'envelope') coverTitleText.textContent = 'คุณมีจดหมายรักฉบับใหม่ 💌';
+        if (currentCoverStyle === 'giftbox') coverTitleText.textContent = 'มีกล่องของขวัญเซอร์ไพรส์รออยู่ 🎁';
+        if (currentCoverStyle === 'bear') coverTitleText.textContent = 'เจ้าหมีน้อยนำความรักมาส่ง 🧸';
+      }
+
+      // รีเซ็ตให้กลับมาปิด
+      if (previewContainer) {
+        previewContainer.classList.remove('open');
+        previewContainer.classList.add('closed');
+      }
+    });
+  });
+}
+
+// 4. อัปโหลดรูปภาพโพลารอยด์ทั้ง 4 ช่อง
 function setupPhotoUploads() {
   const inputs = document.querySelectorAll('.photo-input');
+  
   inputs.forEach((input) => {
     input.addEventListener('change', (e) => {
       const idx = e.target.dataset.index;
@@ -44,16 +80,117 @@ function setupPhotoUploads() {
 
       const reader = new FileReader();
       reader.onload = (evt) => {
-        polaroidPhotos[idx] = evt.target.result;
+        const base64Img = evt.target.result;
+        polaroidPhotos[idx] = base64Img;
+
+        // อัปเดตพื้นหลังในกรอบโพลารอยด์
         const imgBox = document.getElementById(`pImg${idx}`);
-        if (imgBox) imgBox.style.backgroundImage = `url(${evt.target.result})`;
+        if (imgBox) {
+          imgBox.style.backgroundImage = `url(${base64Img})`;
+        }
+
+        // เปลี่ยนข้อความในปุ่มอัปโหลด
+        const label = document.getElementById(`labelP${idx}`);
+        if (label) label.textContent = `✅ รูปที่ ${parseInt(idx) + 1}`;
       };
       reader.readAsDataURL(file);
     });
   });
 }
 
-// 4. คลิกเปิด/ปิดจดหมาย
+// 5. ระบบแปะและลากสติกเกอร์
+function setupStickerPalette() {
+  const stickerBtns = document.querySelectorAll('.sticker-add-btn');
+  const stickerCanvas = document.getElementById('stickerCanvas');
+
+  stickerBtns.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const emoji = btn.dataset.emoji;
+      const id = 'stk_' + Date.now();
+      const left = Math.random() * 60 + 20; // %
+      const top = Math.random() * 60 + 20;  // %
+
+      const stickerData = { id, emoji, left, top };
+      placedStickers.push(stickerData);
+
+      renderSingleSticker(stickerCanvas, stickerData);
+    });
+  });
+}
+
+function renderSingleSticker(canvas, sticker) {
+  if (!canvas) return;
+  const el = document.createElement('div');
+  el.className = 'placed-sticker draggable-item';
+  el.id = sticker.id;
+  el.textContent = sticker.emoji;
+  el.style.left = sticker.left + '%';
+  el.style.top = sticker.top + '%';
+
+  canvas.appendChild(el);
+  makeDraggable(el);
+}
+
+// 6. ฟังก์ชันทำให้ Element สามารถ Drag & Drop (ลากขยับได้)
+function makeDraggable(element) {
+  let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+
+  element.onmousedown = dragMouseDown;
+  element.ontouchstart = dragTouchStart;
+
+  function dragMouseDown(e) {
+    e.preventDefault();
+    pos3 = e.clientX;
+    pos4 = e.clientY;
+    document.onmouseup = closeDragElement;
+    document.onmousemove = elementDrag;
+  }
+
+  function elementDrag(e) {
+    e.preventDefault();
+    pos1 = pos3 - e.clientX;
+    pos2 = pos4 - e.clientY;
+    pos3 = e.clientX;
+    pos4 = e.clientY;
+    element.style.top = (element.offsetTop - pos2) + "px";
+    element.style.left = (element.offsetLeft - pos1) + "px";
+  }
+
+  function closeDragElement() {
+    document.onmouseup = null;
+    document.onmousemove = null;
+  }
+
+  function dragTouchStart(e) {
+    const touch = e.touches[0];
+    pos3 = touch.clientX;
+    pos4 = touch.clientY;
+    document.ontouchend = closeTouchDrag;
+    document.ontouchmove = touchDrag;
+  }
+
+  function touchDrag(e) {
+    const touch = e.touches[0];
+    pos1 = pos3 - touch.clientX;
+    pos2 = pos4 - touch.clientY;
+    pos3 = touch.clientX;
+    pos4 = touch.clientY;
+    element.style.top = (element.offsetTop - pos2) + "px";
+    element.style.left = (element.offsetLeft - pos1) + "px";
+  }
+
+  function closeTouchDrag() {
+    document.ontouchend = null;
+    document.ontouchmove = null;
+  }
+}
+
+function setupDraggables() {
+  const draggables = document.querySelectorAll('.draggable-item');
+  draggables.forEach((item) => makeDraggable(item));
+}
+
+// 7. คลิกเปิด/ปิดจดหมาย
 function setupEnvelopeToggle() {
   const previewContainer = document.getElementById('previewContainer');
   const cover = document.getElementById('coverEnvelope');
@@ -66,7 +203,7 @@ function setupEnvelopeToggle() {
   }
 }
 
-// 5. บันทึกและคัดลอกลิงก์
+// 8. บันทึกและรับลิงก์
 function setupSaveButton() {
   const saveBtn = document.getElementById('saveButton');
   const copyBtn = document.getElementById('copyLinkButton');
@@ -76,13 +213,15 @@ function setupSaveButton() {
 
   saveBtn.addEventListener('click', async () => {
     saveBtn.disabled = true;
-    saveBtn.textContent = '⏳ กำลังสร้างจดหมาย...';
+    saveBtn.textContent = '⏳ กำลังบันทึกจดหมาย...';
 
     const payload = {
       greeting: document.getElementById('greetingInput')?.value || 'สวัสดีคุณคนสวย 💖',
       message: document.getElementById('messageInput')?.value || '',
       signature: document.getElementById('signatureInput')?.value || '',
-      photos: polaroidPhotos
+      coverStyle: currentCoverStyle,
+      photos: polaroidPhotos,
+      stickers: placedStickers
     };
 
     try {
@@ -96,7 +235,7 @@ function setupSaveButton() {
 
       if (response.ok) {
         const fullShareUrl = window.location.origin + data.shareUrl;
-        saveBtn.textContent = '✨ สร้างสำเร็จเรียบร้อย!';
+        saveBtn.textContent = '✨ บันทึกสำเร็จเรียบร้อย!';
         if (copyBtn) {
           copyBtn.style.display = 'inline-block';
           copyBtn.dataset.url = fullShareUrl;
@@ -105,13 +244,13 @@ function setupSaveButton() {
         if (statusBox) {
           statusBox.innerHTML = `
             <div style="margin-top:12px; padding:10px; background:#e6fffa; border:1px solid #38b2ac; border-radius:10px; color:#234e52; font-size:0.8rem;">
-              🎉 บันทึกเรียบร้อย!<br>
+              🎉 บันทึกจดหมายเรียบร้อยแล้ว!<br>
               <strong>ลิงก์ส่งแฟน:</strong> <a href="${fullShareUrl}" target="_blank">${fullShareUrl}</a>
             </div>
           `;
         }
       } else {
-        alert('เกิดข้อผิดพลาดในการบันทึก');
+        alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
         saveBtn.disabled = false;
         saveBtn.textContent = '💖 สร้างจดหมาย & รับลิงก์ส่งแฟน';
       }
@@ -127,14 +266,14 @@ function setupSaveButton() {
       const url = copyBtn.dataset.url;
       if (url) {
         navigator.clipboard.writeText(url).then(() => {
-          alert('คัดลอกลิงก์เรียบร้อยแล้ว! วางส่งในแชตให้แฟนได้เลย ❤️');
+          alert('คัดลอกลิงก์เรียบร้อยแล้ว! นำไปส่งในแชตให้แฟนได้เลยครับ ❤️');
         });
       }
     });
   }
 }
 
-// 6. โหมดแฟนเปิดดูผ่านลิงก์
+// 9. โหมดเปิดผ่านลิงก์ของผู้รับ (Recipient Mode)
 async function checkRecipientMode() {
   const path = window.location.pathname;
   const match = path.match(/\/letter\/(.+)$/);
@@ -145,6 +284,7 @@ async function checkRecipientMode() {
     const recipientView = document.getElementById('recipientView');
     const recipientStage = document.getElementById('recipientStage');
     const recipientCover = document.getElementById('recipientCover');
+    const recipientCoverGraphic = document.getElementById('recipientCoverGraphic');
 
     if (mainApp) mainApp.style.display = 'none';
     if (recipientView) recipientView.style.display = 'flex';
@@ -158,11 +298,21 @@ async function checkRecipientMode() {
         document.getElementById('recipientMessage').textContent = data.message;
         document.getElementById('recipientSignature').textContent = data.signature;
 
+        const coverStyle = data.coverStyle || 'envelope';
+        if (recipientCoverGraphic) {
+          recipientCoverGraphic.className = `cover-graphic ${coverStyle}-style`;
+        }
+
         if (data.photos && Array.isArray(data.photos)) {
           data.photos.forEach((src, idx) => {
             const box = document.getElementById(`rImg${idx}`);
             if (box && src) box.style.backgroundImage = `url(${src})`;
           });
+        }
+
+        if (data.stickers && Array.isArray(data.stickers)) {
+          const rCanvas = document.getElementById('recipientStickerCanvas');
+          data.stickers.forEach((s) => renderSingleSticker(rCanvas, s));
         }
 
         if (recipientCover && recipientStage) {
@@ -173,7 +323,7 @@ async function checkRecipientMode() {
         }
       }
     } catch (e) {
-      console.error('Error:', e);
+      console.error('Error fetching letter data:', e);
     }
   }
 }
@@ -181,7 +331,10 @@ async function checkRecipientMode() {
 document.addEventListener('DOMContentLoaded', () => {
   createFloatingHearts();
   setupRealtimePreview();
+  setupStyleSelector();
   setupPhotoUploads();
+  setupStickerPalette();
+  setupDraggables();
   setupEnvelopeToggle();
   setupSaveButton();
   checkRecipientMode();
