@@ -1,6 +1,7 @@
 ﻿let polaroidPhotos = ['', '', '', ''];
 let placedStickers = [];
 let currentCoverStyle = 'envelope';
+let customCoverImage = '';
 
 // 1. หัวใจลอยพื้นหลัง
 function createFloatingHearts() {
@@ -35,12 +36,10 @@ function setupRealtimePreview() {
   if (signatureInput) signatureInput.addEventListener('input', (e) => previewSignature.textContent = e.target.value || 'ด้วยรักเสมอมา');
 }
 
-// 3. สลับรูปแบบปกก่อนเปิด (ซอง / กล่อง / หมี)
+// 3. ปรับสไตล์ปก & อัปโหลดรูปปกเอง
 function setupStyleSelector() {
   const styleBtns = document.querySelectorAll('.style-btn');
-  const previewContainer = document.getElementById('previewContainer');
-  const coverGraphic = document.getElementById('coverGraphic');
-  const coverTitleText = document.getElementById('coverTitleText');
+  const customCoverInput = document.getElementById('customCoverInput');
 
   styleBtns.forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -48,30 +47,62 @@ function setupStyleSelector() {
       btn.classList.add('active');
 
       currentCoverStyle = btn.dataset.style;
-      
-      if (coverGraphic) {
-        coverGraphic.className = `cover-graphic ${currentCoverStyle}-style`;
-      }
+      customCoverImage = ''; // รีเซ็ตรูปอัปโหลดเอง
+      document.getElementById('customCoverLabel').textContent = '🖼️ หรืออัปโหลดรูปหน้าปกเอง (คลิก)';
 
-      if (coverTitleText) {
-        if (currentCoverStyle === 'envelope') coverTitleText.textContent = 'คุณมีจดหมายรักฉบับใหม่ 💌';
-        if (currentCoverStyle === 'giftbox') coverTitleText.textContent = 'มีกล่องของขวัญเซอร์ไพรส์รออยู่ 🎁';
-        if (currentCoverStyle === 'bear') coverTitleText.textContent = 'เจ้าหมีน้อยนำความรักมาส่ง 🧸';
-      }
-
-      // รีเซ็ตให้กลับมาปิด
-      if (previewContainer) {
-        previewContainer.classList.remove('open');
-        previewContainer.classList.add('closed');
-      }
+      updateCoverDisplay(currentCoverStyle, '', 'coverGraphic', 'coverBadge', 'coverTitleText');
     });
   });
+
+  if (customCoverInput) {
+    customCoverInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        customCoverImage = evt.target.result;
+        currentCoverStyle = 'custom';
+        styleBtns.forEach((b) => b.classList.remove('active'));
+        document.getElementById('customCoverLabel').textContent = '✅ เปลี่ยนรูปปกเรียบร้อย';
+
+        updateCoverDisplay('custom', customCoverImage, 'coverGraphic', 'coverBadge', 'coverTitleText');
+      };
+      reader.readAsDataURL(file);
+    });
+  }
 }
 
-// 4. อัปโหลดรูปภาพโพลารอยด์ทั้ง 4 ช่อง
+// ฟังก์ชันอัปเดตหน้าตาปก
+function updateCoverDisplay(style, customImg, graphicId, badgeId, titleId) {
+  const graphic = document.getElementById(graphicId);
+  const badge = document.getElementById(badgeId);
+  const title = document.getElementById(titleId);
+
+  if (!graphic) return;
+
+  graphic.style.backgroundImage = '';
+  graphic.className = 'cover-graphic';
+
+  if (style === 'custom' && customImg) {
+    graphic.style.backgroundImage = `url(${customImg})`;
+    if (badge) badge.style.display = 'none';
+    if (title) title.textContent = 'มีรูปภาพความทรงจำส่งถึงคุณ 📸';
+  } else {
+    if (badge) badge.style.display = 'block';
+    graphic.classList.add(`${style}-style`);
+
+    if (title) {
+      if (style === 'envelope') title.textContent = 'มีความรักส่งถึงคุณ 💕';
+      if (style === 'giftbox') title.textContent = 'มีกล่องของขวัญรอเปิดอยู่ 🎁';
+      if (style === 'bear') title.textContent = 'น้องหมีนำความรักมาส่ง 🧸';
+    }
+  }
+}
+
+// 4. อัปโหลดรูปโพลารอยด์ 4 รูป
 function setupPhotoUploads() {
   const inputs = document.querySelectorAll('.photo-input');
-  
   inputs.forEach((input) => {
     input.addEventListener('change', (e) => {
       const idx = e.target.dataset.index;
@@ -80,16 +111,10 @@ function setupPhotoUploads() {
 
       const reader = new FileReader();
       reader.onload = (evt) => {
-        const base64Img = evt.target.result;
-        polaroidPhotos[idx] = base64Img;
-
-        // อัปเดตพื้นหลังในกรอบโพลารอยด์
+        polaroidPhotos[idx] = evt.target.result;
         const imgBox = document.getElementById(`pImg${idx}`);
-        if (imgBox) {
-          imgBox.style.backgroundImage = `url(${base64Img})`;
-        }
+        if (imgBox) imgBox.style.backgroundImage = `url(${evt.target.result})`;
 
-        // เปลี่ยนข้อความในปุ่มอัปโหลด
         const label = document.getElementById(`labelP${idx}`);
         if (label) label.textContent = `✅ รูปที่ ${parseInt(idx) + 1}`;
       };
@@ -98,7 +123,7 @@ function setupPhotoUploads() {
   });
 }
 
-// 5. ระบบแปะและลากสติกเกอร์
+// 5. สติกเกอร์
 function setupStickerPalette() {
   const stickerBtns = document.querySelectorAll('.sticker-add-btn');
   const stickerCanvas = document.getElementById('stickerCanvas');
@@ -106,11 +131,10 @@ function setupStickerPalette() {
   stickerBtns.forEach((btn) => {
     btn.addEventListener('click', () => {
       const emoji = btn.dataset.emoji;
-      const id = 'stk_' + Date.now();
-      const left = Math.random() * 60 + 20; // %
-      const top = Math.random() * 60 + 20;  // %
+      const left = Math.random() * 60 + 20;
+      const top = Math.random() * 60 + 20;
 
-      const stickerData = { id, emoji, left, top };
+      const stickerData = { emoji, left, top };
       placedStickers.push(stickerData);
 
       renderSingleSticker(stickerCanvas, stickerData);
@@ -121,76 +145,14 @@ function setupStickerPalette() {
 function renderSingleSticker(canvas, sticker) {
   if (!canvas) return;
   const el = document.createElement('div');
-  el.className = 'placed-sticker draggable-item';
-  el.id = sticker.id;
+  el.className = 'placed-sticker';
   el.textContent = sticker.emoji;
   el.style.left = sticker.left + '%';
   el.style.top = sticker.top + '%';
-
   canvas.appendChild(el);
-  makeDraggable(el);
 }
 
-// 6. ฟังก์ชันทำให้ Element สามารถ Drag & Drop (ลากขยับได้)
-function makeDraggable(element) {
-  let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
-
-  element.onmousedown = dragMouseDown;
-  element.ontouchstart = dragTouchStart;
-
-  function dragMouseDown(e) {
-    e.preventDefault();
-    pos3 = e.clientX;
-    pos4 = e.clientY;
-    document.onmouseup = closeDragElement;
-    document.onmousemove = elementDrag;
-  }
-
-  function elementDrag(e) {
-    e.preventDefault();
-    pos1 = pos3 - e.clientX;
-    pos2 = pos4 - e.clientY;
-    pos3 = e.clientX;
-    pos4 = e.clientY;
-    element.style.top = (element.offsetTop - pos2) + "px";
-    element.style.left = (element.offsetLeft - pos1) + "px";
-  }
-
-  function closeDragElement() {
-    document.onmouseup = null;
-    document.onmousemove = null;
-  }
-
-  function dragTouchStart(e) {
-    const touch = e.touches[0];
-    pos3 = touch.clientX;
-    pos4 = touch.clientY;
-    document.ontouchend = closeTouchDrag;
-    document.ontouchmove = touchDrag;
-  }
-
-  function touchDrag(e) {
-    const touch = e.touches[0];
-    pos1 = pos3 - touch.clientX;
-    pos2 = pos4 - touch.clientY;
-    pos3 = touch.clientX;
-    pos4 = touch.clientY;
-    element.style.top = (element.offsetTop - pos2) + "px";
-    element.style.left = (element.offsetLeft - pos1) + "px";
-  }
-
-  function closeTouchDrag() {
-    document.ontouchend = null;
-    document.ontouchmove = null;
-  }
-}
-
-function setupDraggables() {
-  const draggables = document.querySelectorAll('.draggable-item');
-  draggables.forEach((item) => makeDraggable(item));
-}
-
-// 7. คลิกเปิด/ปิดจดหมาย
+// 6. คลิกเปิดจดหมาย
 function setupEnvelopeToggle() {
   const previewContainer = document.getElementById('previewContainer');
   const cover = document.getElementById('coverEnvelope');
@@ -203,7 +165,7 @@ function setupEnvelopeToggle() {
   }
 }
 
-// 8. บันทึกและรับลิงก์
+// 7. บันทึกจดหมาย
 function setupSaveButton() {
   const saveBtn = document.getElementById('saveButton');
   const copyBtn = document.getElementById('copyLinkButton');
@@ -213,13 +175,14 @@ function setupSaveButton() {
 
   saveBtn.addEventListener('click', async () => {
     saveBtn.disabled = true;
-    saveBtn.textContent = '⏳ กำลังบันทึกจดหมาย...';
+    saveBtn.textContent = '⏳ กำลังบันทึก...';
 
     const payload = {
       greeting: document.getElementById('greetingInput')?.value || 'สวัสดีคุณคนสวย 💖',
       message: document.getElementById('messageInput')?.value || '',
       signature: document.getElementById('signatureInput')?.value || '',
       coverStyle: currentCoverStyle,
+      customCoverImage: customCoverImage,
       photos: polaroidPhotos,
       stickers: placedStickers
     };
@@ -235,7 +198,7 @@ function setupSaveButton() {
 
       if (response.ok) {
         const fullShareUrl = window.location.origin + data.shareUrl;
-        saveBtn.textContent = '✨ บันทึกสำเร็จเรียบร้อย!';
+        saveBtn.textContent = '✨ สำเร็จเรียบร้อย!';
         if (copyBtn) {
           copyBtn.style.display = 'inline-block';
           copyBtn.dataset.url = fullShareUrl;
@@ -244,13 +207,13 @@ function setupSaveButton() {
         if (statusBox) {
           statusBox.innerHTML = `
             <div style="margin-top:12px; padding:10px; background:#e6fffa; border:1px solid #38b2ac; border-radius:10px; color:#234e52; font-size:0.8rem;">
-              🎉 บันทึกจดหมายเรียบร้อยแล้ว!<br>
+              🎉 บันทึกเรียบร้อย!<br>
               <strong>ลิงก์ส่งแฟน:</strong> <a href="${fullShareUrl}" target="_blank">${fullShareUrl}</a>
             </div>
           `;
         }
       } else {
-        alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+        alert('เกิดข้อผิดพลาดในการบันทึก');
         saveBtn.disabled = false;
         saveBtn.textContent = '💖 สร้างจดหมาย & รับลิงก์ส่งแฟน';
       }
@@ -266,14 +229,14 @@ function setupSaveButton() {
       const url = copyBtn.dataset.url;
       if (url) {
         navigator.clipboard.writeText(url).then(() => {
-          alert('คัดลอกลิงก์เรียบร้อยแล้ว! นำไปส่งในแชตให้แฟนได้เลยครับ ❤️');
+          alert('คัดลอกลิงก์เรียบร้อยแล้ว! วางส่งในแชตได้เลยครับ ❤️');
         });
       }
     });
   }
 }
 
-// 9. โหมดเปิดผ่านลิงก์ของผู้รับ (Recipient Mode)
+// 8. แสดงผลให้ผู้รับ (Recipient View)
 async function checkRecipientMode() {
   const path = window.location.pathname;
   const match = path.match(/\/letter\/(.+)$/);
@@ -284,7 +247,6 @@ async function checkRecipientMode() {
     const recipientView = document.getElementById('recipientView');
     const recipientStage = document.getElementById('recipientStage');
     const recipientCover = document.getElementById('recipientCover');
-    const recipientCoverGraphic = document.getElementById('recipientCoverGraphic');
 
     if (mainApp) mainApp.style.display = 'none';
     if (recipientView) recipientView.style.display = 'flex';
@@ -298,10 +260,10 @@ async function checkRecipientMode() {
         document.getElementById('recipientMessage').textContent = data.message;
         document.getElementById('recipientSignature').textContent = data.signature;
 
+        // ดึงสไตล์ปกที่เลือกไว้ (ซอง/กล่อง/หมี/รูปอัปโหลด)
         const coverStyle = data.coverStyle || 'envelope';
-        if (recipientCoverGraphic) {
-          recipientCoverGraphic.className = `cover-graphic ${coverStyle}-style`;
-        }
+        const customImg = data.customCoverImage || '';
+        updateCoverDisplay(coverStyle, customImg, 'recipientCoverGraphic', 'recipientCoverBadge', 'recipientCoverTitle');
 
         if (data.photos && Array.isArray(data.photos)) {
           data.photos.forEach((src, idx) => {
@@ -323,7 +285,7 @@ async function checkRecipientMode() {
         }
       }
     } catch (e) {
-      console.error('Error fetching letter data:', e);
+      console.error('Error:', e);
     }
   }
 }
@@ -334,7 +296,6 @@ document.addEventListener('DOMContentLoaded', () => {
   setupStyleSelector();
   setupPhotoUploads();
   setupStickerPalette();
-  setupDraggables();
   setupEnvelopeToggle();
   setupSaveButton();
   checkRecipientMode();
