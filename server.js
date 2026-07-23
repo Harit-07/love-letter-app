@@ -1,66 +1,66 @@
 const express = require('express');
 const path = require('path');
-const { DatabaseSync } = require('node:sqlite');
+const { createClient } = require('redis');
 
 const app = express();
 const port = process.env.PORT || 3000;
 
-const db = new DatabaseSync(path.join(__dirname, 'letters.db'));
+// สร้าง Redis client โดยใช้ Environment Variable ที่ Vercel เจนให้ (STORAGE_URL หรือ REDIS_URL)
+const redis = createClient({
+  url: process.env.STORAGE_URL || process.env.REDIS_URL
+});
 
-db.exec(`
-  CREATE TABLE IF NOT EXISTS letters (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    slug TEXT UNIQUE NOT NULL,
-    greeting TEXT NOT NULL,
-    message TEXT NOT NULL,
-    signature TEXT NOT NULL,
-    theme TEXT NOT NULL,
-    stickers TEXT NOT NULL,
-    photo TEXT,
-    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-  )
-`);
+redis.on('error', (err) => console.error('Redis Client Error:', err));
+
+// เชื่อมต่อ Redis Database
+redis.connect();
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.static(__dirname));
 
-app.get('/api/letters/:slug', (req, res) => {
-  const stmt = db.prepare('SELECT * FROM letters WHERE slug = ?');
-  const row = stmt.get(req.params.slug);
-  if (!row) {
-    return res.status(404).json({ error: 'Letter not found' });
+// Key prefix so letters don't collide with other data in the same KV store
+const KEY_PREFIX = 'letter:';
+
+app.get('/api/letters/:slug', async (req, res) => {
+  try {
+    // ดึงข้อมูลเป็น string แล้วแปลงกลับเป็น JSON Object
+    const rawData = await redis.get(KEY_PREFIX + req.params.slug);
+    if (!rawData) {
+      return res.status(404).json({ error: 'Letter not found' });
+    }
+
+    const row = typeof rawData === 'string' ? JSON.parse(rawData) : rawData;
+    res.json(row);
+  } catch (error) {
+    console.error('Failed to load letter:', error);
+    res.status(500).json({ error: 'Something went wrong loading this letter.' });
   }
-  res.json({
-    slug: row.slug,
-    greeting: row.greeting,
-    message: row.message,
-    signature: row.signature,
-    theme: row.theme,
-    stickers: JSON.parse(row.stickers),
-    photo: row.photo || ''
-  });
 });
 
-app.post('/api/letters', (req, res) => {
-  const { greeting, message, signature, theme, stickers, photo } = req.body;
-  const slug = generateSlug();
+app.post('/api/letters', async (req, res) => {
+  try {
+    const { greeting, message, signature, theme, stickers, photo } = req.body;
+    const slug = generateSlug();
 
-  const stmt = db.prepare(`
-    INSERT INTO letters (slug, greeting, message, signature, theme, stickers, photo)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
-  `);
+    const letter = {
+      slug,
+      greeting,
+      message,
+      signature,
+      theme,
+      stickers: stickers || [],
+      photo: photo || '',
+      createdAt: new Date().toISOString()
+    };
 
-  stmt.run(
-    slug,
-    greeting,
-    message,
-    signature,
-    theme,
-    JSON.stringify(stickers || []),
-    photo || ''
-  );
+    // แปลง Object เป็น JSON string ก่อนบันทึกลง Redis
+    await redis.set(KEY_PREFIX + slug, JSON.stringify(letter));
 
-  res.json({ slug, shareUrl: `/letter/${slug}` });
+    res.json({ slug, shareUrl: `/letter/${slug}` });
+  } catch (error) {
+    console.error('Failed to save letter:', error);
+    res.status(500).json({ error: 'Something went wrong saving this letter.' });
+  }
 });
 
 app.get('/letter/:slug', (req, res) => {
