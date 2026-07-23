@@ -1,21 +1,10 @@
-﻿let currentTheme = 'pink';
-let currentTemplate = 'envelope';
-let selectedStickers = [];
-let uploadedPhotoBase64 = '';
-
-// ไอคอนและคำอธิบายสำหรับแต่ละ Template
-const templateIcons = {
-  envelope: { icon: '💌', text: 'ซองจดหมายรักฉบับลับส่งถึงคุณ~' },
-  giftbox: { icon: '🎁', text: 'มีกล่องของขวัญเซอร์ไพรส์รอเปิดอยู่นะ!' },
-  teddy: { icon: '🧸', text: 'เจ้าหมีน้อยมีความลับอยากบอกคุณ 💕' },
-  starry: { icon: '✨', text: 'คำอธิษฐานใต้แสงดาวสำหรับคุณ...' }
-};
+﻿let polaroidPhotos = ['', '', '', ''];
 
 // 1. หัวใจลอยพื้นหลัง
 function createFloatingHearts() {
   const container = document.getElementById('floatingHeartsContainer');
   if (!container) return;
-  const emojis = ['💖', '💗', '✨', '🌸', '🎁', '💕', '🧸'];
+  const emojis = ['💖', '💗', '✨', '🌸', '💕'];
 
   setInterval(() => {
     const heart = document.createElement('div');
@@ -23,14 +12,13 @@ function createFloatingHearts() {
     heart.textContent = emojis[Math.floor(Math.random() * emojis.length)];
     heart.style.left = Math.random() * 100 + 'vw';
     heart.style.animationDuration = (Math.random() * 3 + 4) + 's';
-    heart.style.fontSize = (Math.random() * 15 + 18) + 'px';
+    heart.style.fontSize = (Math.random() * 12 + 16) + 'px';
     container.appendChild(heart);
-
-    setTimeout(() => heart.remove(), 7000);
-  }, 500);
+    setTimeout(() => heart.remove(), 6000);
+  }, 600);
 }
 
-// 2. พรีวิวการพิมพ์แบบ Realtime
+// 2. Realtime Preview พิมพ์ข้อความ
 function setupRealtimePreview() {
   const greetingInput = document.getElementById('greetingInput');
   const messageInput = document.getElementById('messageInput');
@@ -40,126 +28,45 @@ function setupRealtimePreview() {
   const previewMessage = document.getElementById('previewMessage');
   const previewSignature = document.getElementById('previewSignature');
 
-  if (greetingInput && previewGreeting) {
-    greetingInput.addEventListener('input', (e) => previewGreeting.textContent = e.target.value || 'ถึงคนเก่งของเค้า~ 💖');
-  }
-  if (messageInput && previewMessage) {
-    messageInput.addEventListener('input', (e) => previewMessage.textContent = e.target.value || 'ข้อความบอกรัก...');
-  }
-  if (signatureInput && previewSignature) {
-    signatureInput.addEventListener('input', (e) => previewSignature.textContent = e.target.value || 'ด้วยรักและคิดถึงเสมอ');
-  }
+  if (greetingInput) greetingInput.addEventListener('input', (e) => previewGreeting.textContent = e.target.value || 'สวัสดีคุณคนสวย 💖');
+  if (messageInput) messageInput.addEventListener('input', (e) => previewMessage.textContent = e.target.value || 'ข้อความบอกรัก...');
+  if (signatureInput) signatureInput.addEventListener('input', (e) => previewSignature.textContent = e.target.value || 'ด้วยรักเสมอมา');
 }
 
-// 3. ระบบเลือกธีม & Template
-function setupThemePicker() {
-  const themeChips = document.querySelectorAll('.theme-chip');
+// 3. อัปโหลดรูปโพลารอยด์ 4 รูป
+function setupPhotoUploads() {
+  const inputs = document.querySelectorAll('.photo-input');
+  inputs.forEach((input) => {
+    input.addEventListener('change', (e) => {
+      const idx = e.target.dataset.index;
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        polaroidPhotos[idx] = evt.target.result;
+        const imgBox = document.getElementById(`pImg${idx}`);
+        if (imgBox) imgBox.style.backgroundImage = `url(${evt.target.result})`;
+      };
+      reader.readAsDataURL(file);
+    });
+  });
+}
+
+// 4. คลิกเปิด/ปิดจดหมาย
+function setupEnvelopeToggle() {
   const previewContainer = document.getElementById('previewContainer');
-  const coverIcon = document.querySelector('#previewContainer .cover-icon');
-  const coverText = document.querySelector('#previewContainer .cover-text');
+  const cover = document.getElementById('coverEnvelope');
 
-  themeChips.forEach((chip) => {
-    chip.addEventListener('click', () => {
-      themeChips.forEach((c) => c.classList.remove('active'));
-      chip.classList.add('active');
-
-      currentTheme = chip.dataset.theme;
-      currentTemplate = chip.dataset.template;
-
-      // เปลี่ยนธีมพื้นหลัง
-      document.body.className = `theme-${currentTheme}`;
-
-      // เปลี่ยนไอคอนไอคอนปกพรีวิว
-      if (templateIcons[currentTemplate]) {
-        if (coverIcon) coverIcon.textContent = templateIcons[currentTemplate].icon;
-        if (coverText) coverText.textContent = templateIcons[currentTemplate].text;
-      }
-
-      // รีเซ็ตสถานะเป็นปิดซอง/กล่องใหม่
-      if (previewContainer) {
-        previewContainer.classList.remove('open');
-        previewContainer.classList.add('closed');
-      }
-    });
-  });
-}
-
-// 4. สติกเกอร์
-function setupStickerPicker() {
-  const stickerChips = document.querySelectorAll('.sticker-chip');
-  const previewStickerLayer = document.getElementById('previewStickerLayer');
-
-  stickerChips.forEach((chip) => {
-    chip.addEventListener('click', () => {
-      if (selectedStickers.length >= 6) {
-        alert('เลือกสติกเกอร์ได้สูงสุด 6 ตัวครับ');
-        return;
-      }
-      selectedStickers.push(chip.dataset.sticker);
-      renderStickers(previewStickerLayer);
-    });
-  });
-}
-
-function renderStickers(container) {
-  if (!container) return;
-  container.innerHTML = '';
-  selectedStickers.forEach((emoji, index) => {
-    const span = document.createElement('span');
-    span.textContent = emoji;
-    span.style.cursor = 'pointer';
-    span.title = 'แตะเพื่อลบ';
-    span.addEventListener('click', () => {
-      selectedStickers.splice(index, 1);
-      renderStickers(container);
-    });
-    container.appendChild(span);
-  });
-}
-
-// 5. อัปโหลดรูปภาพ
-function setupPhotoUpload() {
-  const photoInput = document.getElementById('photoInput');
-  const previewPhotoSlot = document.getElementById('previewPhotoSlot');
-  const uploadText = document.getElementById('uploadText');
-
-  if (!photoInput) return;
-
-  photoInput.addEventListener('change', (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    if (file.size > 3 * 1024 * 1024) {
-      alert('รูปภาพขนาดใหญ่เกินไป (ไม่เกิน 3MB)');
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      uploadedPhotoBase64 = evt.target.result;
-      if (previewPhotoSlot) {
-        previewPhotoSlot.innerHTML = `<img src="${uploadedPhotoBase64}" alt="Memory Photo" />`;
-      }
-      if (uploadText) uploadText.textContent = '✅ เลือกรูปภาพเรียบร้อย!';
-    };
-    reader.readAsDataURL(file);
-  });
-}
-
-// 6. ปุ่มเปิด/ปิดการ์ด ( toggle open/close )
-function setupOpenToggle() {
-  const openPreviewBtn = document.getElementById('openPreviewBtn');
-  const previewContainer = document.getElementById('previewContainer');
-
-  if (openPreviewBtn && previewContainer) {
-    openPreviewBtn.addEventListener('click', () => {
-      previewContainer.classList.toggle('open');
-      previewContainer.classList.toggle('closed');
+  if (cover && previewContainer) {
+    cover.addEventListener('click', () => {
+      previewContainer.classList.add('open');
+      previewContainer.classList.remove('closed');
     });
   }
 }
 
-// 7. บันทึกและรับลิงก์
+// 5. บันทึกและคัดลอกลิงก์
 function setupSaveButton() {
   const saveBtn = document.getElementById('saveButton');
   const copyBtn = document.getElementById('copyLinkButton');
@@ -172,13 +79,10 @@ function setupSaveButton() {
     saveBtn.textContent = '⏳ กำลังสร้างจดหมาย...';
 
     const payload = {
-      greeting: document.getElementById('greetingInput')?.value || 'ถึงคนเก่งของเค้า~ 💖',
+      greeting: document.getElementById('greetingInput')?.value || 'สวัสดีคุณคนสวย 💖',
       message: document.getElementById('messageInput')?.value || '',
       signature: document.getElementById('signatureInput')?.value || '',
-      theme: currentTheme,
-      template: currentTemplate,
-      stickers: selectedStickers,
-      photo: uploadedPhotoBase64
+      photos: polaroidPhotos
     };
 
     try {
@@ -200,20 +104,18 @@ function setupSaveButton() {
 
         if (statusBox) {
           statusBox.innerHTML = `
-            <div style="margin-top:15px; padding:12px; background:#e6fffa; border:1px solid #38b2ac; border-radius:12px; color:#234e52; font-size:0.85rem;">
-              🎉 สร้างเรียบร้อยแล้ว!<br>
-              <strong>ลิงก์สำหรับส่งให้แฟน:</strong><br>
-              <a href="${fullShareUrl}" target="_blank" style="color:#2b6cb0; word-break:break-all;">${fullShareUrl}</a>
+            <div style="margin-top:12px; padding:10px; background:#e6fffa; border:1px solid #38b2ac; border-radius:10px; color:#234e52; font-size:0.8rem;">
+              🎉 บันทึกเรียบร้อย!<br>
+              <strong>ลิงก์ส่งแฟน:</strong> <a href="${fullShareUrl}" target="_blank">${fullShareUrl}</a>
             </div>
           `;
         }
       } else {
-        alert('เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง');
+        alert('เกิดข้อผิดพลาดในการบันทึก');
         saveBtn.disabled = false;
         saveBtn.textContent = '💖 สร้างจดหมาย & รับลิงก์ส่งแฟน';
       }
     } catch (err) {
-      console.error(err);
       alert('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
       saveBtn.disabled = false;
       saveBtn.textContent = '💖 สร้างจดหมาย & รับลิงก์ส่งแฟน';
@@ -225,14 +127,14 @@ function setupSaveButton() {
       const url = copyBtn.dataset.url;
       if (url) {
         navigator.clipboard.writeText(url).then(() => {
-          alert('คัดลอกลิงก์เรียบร้อยแล้ว! นำไปส่งให้แฟนได้เลยครับ ❤️');
+          alert('คัดลอกลิงก์เรียบร้อยแล้ว! วางส่งในแชตให้แฟนได้เลย ❤️');
         });
       }
     });
   }
 }
 
-// 8. โหมดผู้รับ (แฟนเปิดดูผ่านลิงก์)
+// 6. โหมดแฟนเปิดดูผ่านลิงก์
 async function checkRecipientMode() {
   const path = window.location.pathname;
   const match = path.match(/\/letter\/(.+)$/);
@@ -241,9 +143,8 @@ async function checkRecipientMode() {
     const slug = match[1];
     const mainApp = document.getElementById('mainApp');
     const recipientView = document.getElementById('recipientView');
-    const recipientContainer = document.getElementById('recipientContainer');
-    const recipientCoverIcon = document.getElementById('recipientCoverIcon');
-    const recipientOpenBtn = document.getElementById('recipientOpenBtn');
+    const recipientStage = document.getElementById('recipientStage');
+    const recipientCover = document.getElementById('recipientCover');
 
     if (mainApp) mainApp.style.display = 'none';
     if (recipientView) recipientView.style.display = 'flex';
@@ -257,33 +158,22 @@ async function checkRecipientMode() {
         document.getElementById('recipientMessage').textContent = data.message;
         document.getElementById('recipientSignature').textContent = data.signature;
 
-        // สลับธีมให้ตรงกับที่คนสร้างเลือก
-        const theme = data.theme || 'pink';
-        const template = data.template || 'envelope';
-        document.body.className = `theme-${theme}`;
-
-        if (templateIcons[template] && recipientCoverIcon) {
-          recipientCoverIcon.textContent = templateIcons[template].icon;
+        if (data.photos && Array.isArray(data.photos)) {
+          data.photos.forEach((src, idx) => {
+            const box = document.getElementById(`rImg${idx}`);
+            if (box && src) box.style.backgroundImage = `url(${src})`;
+          });
         }
 
-        if (data.photo) {
-          document.getElementById('recipientPhotoSlot').innerHTML = `<img src="${data.photo}" alt="Memory" />`;
-        }
-
-        if (data.stickers && data.stickers.length > 0) {
-          document.getElementById('recipientStickerLayer').innerHTML = data.stickers.map(s => `<span>${s}</span>`).join(' ');
-        }
-
-        // ปุ่มกดเปิดสำหรับผู้รับ
-        if (recipientOpenBtn && recipientContainer) {
-          recipientOpenBtn.addEventListener('click', () => {
-            recipientContainer.classList.remove('closed');
-            recipientContainer.classList.add('open');
+        if (recipientCover && recipientStage) {
+          recipientCover.addEventListener('click', () => {
+            recipientStage.classList.add('open');
+            recipientStage.classList.remove('closed');
           });
         }
       }
     } catch (e) {
-      console.error('Error loading recipient view:', e);
+      console.error('Error:', e);
     }
   }
 }
@@ -291,10 +181,8 @@ async function checkRecipientMode() {
 document.addEventListener('DOMContentLoaded', () => {
   createFloatingHearts();
   setupRealtimePreview();
-  setupThemePicker();
-  setupStickerPicker();
-  setupPhotoUpload();
-  setupOpenToggle();
+  setupPhotoUploads();
+  setupEnvelopeToggle();
   setupSaveButton();
   checkRecipientMode();
 });
