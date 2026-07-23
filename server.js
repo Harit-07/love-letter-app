@@ -5,7 +5,7 @@ const { createClient } = require('redis');
 const app = express();
 const port = process.env.PORT || 3000;
 
-// สร้าง Redis client โดยใช้ Environment Variable (STORAGE_URL หรือ REDIS_URL)
+// สร้าง Redis client
 const redis = createClient({
   url: process.env.STORAGE_URL || process.env.REDIS_URL
 });
@@ -20,7 +20,12 @@ app.use(express.json({ limit: '10mb' }));
 // Key prefix
 const KEY_PREFIX = 'letter:';
 
-// API Routes
+// 1. Route สำหรับหน้าแรก (เสิร์ฟ index.html)
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// 2. API Routes
 app.get('/api/letters/:slug', async (req, res) => {
   try {
     const rawData = await redis.get(KEY_PREFIX + req.params.slug);
@@ -61,7 +66,7 @@ app.post('/api/letters', async (req, res) => {
   }
 });
 
-// Route สำหรับการกดลิงก์ดูจดหมาย (เสิร์ฟ index.html จากโฟลเดอร์ public)
+// 3. Route สำหรับการดูจดหมายผ่านลิงก์
 app.get('/letter/:slug', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
