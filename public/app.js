@@ -335,15 +335,14 @@ function makeElementInteractive(el, itemData, resizeHandle, rotateHandle) {
   });
 }
 
-// 7. คลิกเปิด-ปิดจดหมาย (แก้ไขให้สามารถคลิกเปิด และคลิกพื้นที่ว่างเพื่อพับปิดได้)
+// 7. คลิกเปิด-ปิดจดหมาย
 function setupEnvelopeToggle() {
   const previewContainer = document.getElementById('previewContainer');
   const cover = document.getElementById('coverEnvelope');
   const letterBoard = document.getElementById('letterBoard');
 
   if (cover && previewContainer) {
-    cover.addEventListener('click', (e) => {
-      e.stopPropagation();
+    cover.addEventListener('click', () => {
       previewContainer.classList.add('open');
       previewContainer.classList.remove('closed');
     });
@@ -351,11 +350,7 @@ function setupEnvelopeToggle() {
 
   if (letterBoard && previewContainer) {
     letterBoard.addEventListener('click', (e) => {
-      if (
-        e.target === letterBoard || 
-        e.target.id === 'photosCanvas' || 
-        e.target.id === 'stickerCanvas'
-      ) {
+      if (e.target === letterBoard || e.target.id === 'photosCanvas' || e.target.id === 'stickerCanvas') {
         previewContainer.classList.remove('open');
         previewContainer.classList.add('closed');
       }
@@ -363,7 +358,7 @@ function setupEnvelopeToggle() {
   }
 }
 
-// 8. บันทึกจดหมาย (อัปเดตให้ดึงข้อความจากช่องกรอกสด ๆ ก่อนส่งเซิร์ฟเวอร์)
+// 8. บันทึกจดหมาย
 function setupSaveButton() {
   const saveBtn = document.getElementById('saveButton');
   const copyBtn = document.getElementById('copyLinkButton');
@@ -374,20 +369,6 @@ function setupSaveButton() {
   saveBtn.addEventListener('click', async () => {
     saveBtn.disabled = true;
     saveBtn.textContent = '⏳ กำลังบันทึก...';
-
-    // ดึงค่าข้อความล่าสุดจากช่อง input หน้าบ้านก่อนบันทึกเสมอ เพื่อป้องกันข้อความหาย
-    const mapInputToStyle = (inputId, styleKey) => {
-      const input = document.getElementById(inputId);
-      if (input && input.value) {
-        textStyles[styleKey].text = input.value;
-      }
-    };
-
-    mapInputToStyle('coverTitleInput', 'coverTitle');
-    mapInputToStyle('coverSubtextInput', 'coverSubtext');
-    mapInputToStyle('greetingInput', 'greeting');
-    mapInputToStyle('messageInput', 'message');
-    mapInputToStyle('signatureInput', 'signature');
 
     const payload = {
       textStyles: textStyles,
@@ -448,7 +429,7 @@ function setupSaveButton() {
   }
 }
 
-// 9. หน้าผู้รับลิงก์ (ฉบับแก้ปัญหา ID ซ้ำซ้อน)
+// 9. หน้าผู้รับลิงก์
 async function checkRecipientMode() {
   const path = window.location.pathname;
   const match = path.match(/\/letter\/(.+)$/);
@@ -457,11 +438,9 @@ async function checkRecipientMode() {
     const slug = match[1];
     const mainApp = document.getElementById('mainApp');
     const recipientView = document.getElementById('recipientView');
-    
-    // ค้นหา Element ภายใน recipientView โดยเฉพาะ ป้องกันการไปโดน ID ซ้ำด้านบน
-    const recipientStage = recipientView ? recipientView.querySelector('#recipientStage') : document.getElementById('recipientStage');
-    const recipientCover = recipientView ? recipientView.querySelector('#recipientCover') : document.getElementById('recipientCover');
-    const recipientLetterBoard = recipientView ? recipientView.querySelector('#recipientLetterBoard') : document.getElementById('recipientLetterBoard');
+    const recipientStage = document.getElementById('recipientStage');
+    const recipientCover = document.getElementById('recipientCover');
+    const recipientLetterBoard = document.getElementById('recipientLetterBoard');
 
     if (mainApp) mainApp.style.display = 'none';
 
@@ -472,15 +451,13 @@ async function checkRecipientMode() {
         
         if (data.themeColor) document.body.style.backgroundColor = data.themeColor;
 
-        // นำสไตล์และข้อความจากฐานข้อมูลมาแสดงผลในหน้าผู้รับ
+        // นำสไตล์ข้อความทั้งหมดมาแสดงผลให้แฟน
         if (data.textStyles) {
-          const styles = data.textStyles;
-
-          if (styles.coverTitle) applyStyleToElem(recipientView.querySelector('#recipientCoverTitle'), styles.coverTitle);
-          if (styles.coverSubtext) applyStyleToElem(recipientView.querySelector('#recipientCoverSubtext'), styles.coverSubtext);
-          if (styles.greeting) applyStyleToElem(recipientView.querySelector('#recipientGreeting'), styles.greeting);
-          if (styles.message) applyStyleToElem(recipientView.querySelector('#recipientMessage'), styles.message);
-          if (styles.signature) applyStyleToElem(recipientView.querySelector('#recipientSignature'), styles.signature);
+          applyStyleToElem(document.getElementById('recipientCoverTitle'), data.textStyles.coverTitle);
+          applyStyleToElem(document.getElementById('recipientCoverSubtext'), data.textStyles.coverSubtext);
+          applyStyleToElem(document.getElementById('recipientGreeting'), data.textStyles.greeting);
+          applyStyleToElem(document.getElementById('recipientMessage'), data.textStyles.message);
+          applyStyleToElem(document.getElementById('recipientSignature'), data.textStyles.signature);
         }
 
         const coverStyle = data.coverStyle || 'envelope';
@@ -489,48 +466,38 @@ async function checkRecipientMode() {
 
         updateCoverDisplay(coverStyle, customImg, 'recipientCoverGraphic', 'recipientCoverBadge', coverColor);
 
-        // โหลดรูปภาพฝั่งผู้รับ
-        const rPhotosCanvas = recipientView.querySelector('#recipientPhotosCanvas');
+        // โหลดรูปภาพ
+        const rPhotosCanvas = document.getElementById('recipientPhotosCanvas');
         if (data.photos && Array.isArray(data.photos)) {
           data.photos.forEach(p => renderInteractiveItem(rPhotosCanvas, p, false));
         }
 
-        // โหลดสติ๊กเกอร์ฝั่งผู้รับ
-        const rStickerCanvas = recipientView.querySelector('#recipientStickerCanvas');
+        // โหลดสติ๊กเกอร์
+        const rStickerCanvas = document.getElementById('recipientStickerCanvas');
         if (data.stickers && Array.isArray(data.stickers)) {
           data.stickers.forEach(s => renderInteractiveItem(rStickerCanvas, s, false));
         }
 
-        // คลิกเปิดซองจดหมาย
+        // คลิกเปิด
         if (recipientCover && recipientStage) {
-          recipientCover.addEventListener('click', (e) => {
-            e.stopPropagation();
+          recipientCover.addEventListener('click', () => {
             recipientStage.classList.add('open');
             recipientStage.classList.remove('closed');
           });
         }
 
-        // คลิกพื้นที่ว่างเพื่อพับจดหมายปิด
+        // คลิกปิด
         if (recipientLetterBoard && recipientStage) {
           recipientLetterBoard.addEventListener('click', (e) => {
-            if (
-              e.target === recipientLetterBoard || 
-              e.target.id === 'recipientPhotosCanvas' || 
-              e.target.id === 'recipientStickerCanvas'
-            ) {
-              recipientStage.classList.remove('open');
-              recipientStage.classList.add('closed');
-            }
+            recipientStage.classList.remove('open');
+            recipientStage.classList.add('closed');
           });
         }
 
-        // แสดงผลหน้าผู้รับ
         if (recipientView) {
-          recipientView.style.display = 'block';
+          recipientView.style.display = 'flex';
           setTimeout(() => { recipientView.style.opacity = '1'; }, 50);
         }
-      } else {
-        alert('ไม่พบข้อมูลจดหมาย หรือลิงก์อาจจะไม่ถูกต้อง');
       }
     } catch (e) {
       console.error('Error:', e);
