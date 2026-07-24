@@ -141,7 +141,6 @@ function setupStyleSelector() {
 function updateCoverDisplay(style, customImg, graphicId, badgeId, titleId, color) {
   const graphic = document.getElementById(graphicId);
   const badge = document.getElementById(badgeId);
-  const title = document.getElementById(titleId);
 
   if (!graphic) return;
 
@@ -483,17 +482,30 @@ function setupSaveButton() {
   }
 }
 
-// ฟังก์ชันอัปเดตข้อความฝั่งผู้รับแบบรองรับหลาย ID สำรอง (ปัญหารูปหัวข้อหาย)
+// ฟังก์ชันอัปเดตข้อความฝั่งผู้รับแบบรองรับหลาย ID สำรอง
 function applyTextConfigToRecipient(config, targetId) {
-  let el = document.getElementById(targetId);
-  
-  // รองรับกรณี ID ฝั่งผู้รับอาจมีความแตกต่างกันเล็กน้อยใน HTML
+  let possibleIds = [targetId];
+  if (targetId === 'recipientCoverTitle') {
+    possibleIds = ['recipientCoverTitle', 'recipientCoverTitleText', 'recipientTitle', 'coverTitleText'];
+  } else if (targetId === 'recipientCoverSubtext') {
+    possibleIds = ['recipientCoverSubtext', 'recipientCoverSub', 'recipientSubtext', 'coverSubtext'];
+  } else if (targetId === 'recipientGreeting') {
+    possibleIds = ['recipientGreeting', 'recipientGreetingText', 'previewGreeting'];
+  } else if (targetId === 'recipientMessage') {
+    possibleIds = ['recipientMessage', 'recipientMessageText', 'previewMessage'];
+  } else if (targetId === 'recipientSignature') {
+    possibleIds = ['recipientSignature', 'recipientSignatureText', 'previewSignature'];
+  }
+
+  let el = null;
+  for (let id of possibleIds) {
+    el = document.getElementById(id);
+    if (el) break;
+  }
+
   if (!el) {
-    if (targetId === 'recipientCoverTitle') el = document.getElementById('recipientCoverTitleText') || document.getElementById('recipientTitle');
-    if (targetId === 'recipientCoverSubtext') el = document.getElementById('recipientCoverSub') || document.getElementById('recipientSubtext');
-    if (targetId === 'recipientGreeting') el = document.getElementById('recipientGreetingText');
-    if (targetId === 'recipientMessage') el = document.getElementById('recipientMessageText');
-    if (targetId === 'recipientSignature') el = document.getElementById('recipientSignatureText');
+    if (targetId.includes('Title')) el = document.querySelector('.cover-title, .recipient-title, h2, h3');
+    if (targetId.includes('Subtext')) el = document.querySelector('.cover-subtext, .recipient-subtext, p');
   }
 
   if (!el) return;
@@ -502,14 +514,8 @@ function applyTextConfigToRecipient(config, targetId) {
     el.textContent = config.text || '';
     if (config.font) el.style.fontFamily = config.font;
     if (config.size) el.style.fontSize = config.size + 'px';
-    if (config.bold) {
-      el.style.fontWeight = 'bold';
-    } else {
-      el.style.fontWeight = 'normal';
-    }
-    if (config.color) {
-      el.style.color = config.color;
-    }
+    el.style.fontWeight = config.bold ? 'bold' : 'normal';
+    if (config.color) el.style.color = config.color;
   } else if (typeof config === 'string') {
     el.textContent = config;
   }
@@ -634,7 +640,7 @@ async function checkRecipientMode() {
 
         if (recipientLetterBoard && recipientStage) {
           recipientLetterBoard.addEventListener('click', () => {
-            recipientStage.classList.remove('0pen');
+            recipientStage.classList.remove('open');
             recipientStage.classList.add('closed');
           });
         }
