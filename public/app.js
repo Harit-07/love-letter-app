@@ -5,7 +5,7 @@ let customCoverImage = '';
 let currentCoverColor = '#ff5277';
 let currentThemeColor = '#fdf2f4';
 
-// 1. หัวใจและอิโมจิลอยฟุ้งกระจาย (รวมน้องหมู 🐷 🐽 และสัตว์ต่างๆ)
+// 1. หัวใจและอิโมจิลอยฟุ้งกระจาย
 function createFloatingHearts() {
   const container = document.getElementById('floatingHeartsContainer');
   if (!container) return;
@@ -23,7 +23,6 @@ function createFloatingHearts() {
   }, 300);
 }
 
-// ฟังก์ชันช่วยเซ็ตสไตล์ข้อความ Realtime
 function applyStyleToElement(previewEl, text, fontSel, sizeSel, boldBtn, colorSel, defaultText) {
   if (!previewEl) return;
   previewEl.textContent = text !== undefined && text !== '' ? text : defaultText;
@@ -52,15 +51,7 @@ function setupRealtimePreview() {
     if (!preview) return;
 
     const update = () => {
-      applyStyleToElement(
-        preview, 
-        input ? input.value : '', 
-        font, 
-        size, 
-        bold, 
-        color, 
-        defaultText
-      );
+      applyStyleToElement(preview, input ? input.value : '', font, size, bold, color, defaultText);
     };
 
     if (input) input.addEventListener('input', update);
@@ -202,7 +193,7 @@ function setupMultiPhotoUpload() {
   });
 }
 
-// 6. เพิ่มสติ๊กเกอร์ (รวมหมวดหมู่น้องหมูและสัตว์ต่างๆ)
+// 6. เพิ่มสติ๊กเกอร์
 function setupStickerPalette() {
   const stickerBtns = document.querySelectorAll('.sticker-add-btn');
   const stickerCanvas = document.getElementById('stickerCanvas');
@@ -226,7 +217,6 @@ function setupStickerPalette() {
   });
 }
 
-// เรนเดอร์ Element
 function renderInteractiveItem(canvas, itemData, isEditable = false) {
   if (!canvas) return;
 
@@ -282,7 +272,6 @@ function renderInteractiveItem(canvas, itemData, isEditable = false) {
   canvas.appendChild(item);
 }
 
-// ระบบขยับ Drag, ขยาย Resize, หมุน Rotate
 function makeElementInteractive(el, itemData, resizeHandle, rotateHandle) {
   let isDragging = false;
   let isResizing = false;
@@ -345,7 +334,6 @@ function makeElementInteractive(el, itemData, resizeHandle, rotateHandle) {
   });
 }
 
-// 7. คลิกเปิด-ปิดจดหมาย
 function setupEnvelopeToggle() {
   const previewContainer = document.getElementById('previewContainer');
   const cover = document.getElementById('coverEnvelope');
@@ -368,7 +356,6 @@ function setupEnvelopeToggle() {
   }
 }
 
-// ฟังก์ชันดึงค่าสไตล์ข้อความ
 function getTextConfig(inputId, fontId, sizeId, boldId, colorId) {
   const input = document.getElementById(inputId);
   const font = document.getElementById(fontId);
@@ -385,7 +372,6 @@ function getTextConfig(inputId, fontId, sizeId, boldId, colorId) {
   };
 }
 
-// 8. บันทึกจดหมาย (รองรับระบบเลือกล็อกรหัสผ่าน 6 หลักและคำใบ้)
 function setupSaveButton() {
   const saveBtn = document.getElementById('saveButton');
 
@@ -450,7 +436,6 @@ function setupSaveButton() {
   });
 }
 
-// หน้าต่างแสดงผลลิงก์สำเร็จ
 function showSuccessModal(url) {
   let modalOverlay = document.getElementById('successModalOverlay');
   if (!modalOverlay) {
@@ -535,7 +520,7 @@ function applySavedStyle(previewEl, styleObj, defaultText) {
   }
 }
 
-// 9. หน้าผู้รับลิงก์ พร้อมระบบล็อกหน้าจดหมายด้วยรหัสผ่าน 6 หลัก & คำใบ้
+// 9. ตรวจสอบโหมดผู้รับและแสดงผล
 async function checkRecipientMode() {
   const path = window.location.pathname;
   const match = path.match(/\/letter\/(.+)$/);
@@ -579,69 +564,125 @@ async function checkRecipientMode() {
   }
 }
 
-// ฟังก์ชันสร้างหน้าจอกรอกรหัสผ่านฝั่งผู้รับ (จัดกึ่งกลางเต็มจอ)
+// ดีไซน์หน้าจอกรอกรหัสผ่าน 6 ช่องแบบในภาพตัวอย่าง พร้อมอนิเมชันดุ๊กดิ๊ก
 function showPasscodeLockScreen(data, recipientView, correctPasscode) {
   if (!recipientView) return;
   recipientView.style.display = 'flex';
   recipientView.style.justifyContent = 'center';
   recipientView.style.alignItems = 'center';
   recipientView.style.opacity = '1';
+
+  // แทรกสไตล์อนิเมชันดุ๊กดิ๊ก
+  if (!document.getElementById('lockScreenAnimationStyles')) {
+    const styleEl = document.createElement('style');
+    styleEl.id = 'lockScreenAnimationStyles';
+    styleEl.textContent = `
+      @keyframes floatBounce {
+        0%, 100% { transform: translateY(0px) rotate(0deg); }
+        50% { transform: translateY(-8px) rotate(2deg); }
+      }
+      @keyframes pulseHeart {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.15); }
+      }
+      .lock-card-animated {
+        animation: floatBounce 3s ease-in-out infinite;
+      }
+      .lock-icon-pulse {
+        animation: pulseHeart 1.5s ease-in-out infinite;
+        display: inline-block;
+      }
+    `;
+    document.head.appendChild(styleEl);
+  }
+
   recipientView.innerHTML = `
-    <div style="
-      background: #ffffff; padding: 35px 25px; border-radius: 24px; width: 90%; max-width: 400px;
-      text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.15); font-family: 'Mali', cursive;
-      z-index: 1000;
+    <div class="lock-card-animated" style="
+      background: #ff5277; padding: 40px 30px; border-radius: 32px; width: 90%; max-width: 440px;
+      text-align: center; box-shadow: 0 20px 50px rgba(255,82,119,0.4); font-family: 'Mali', cursive;
+      color: white; z-index: 1000; position: relative;
     ">
-      <div style="font-size: 50px; margin-bottom: 10px;">🔐</div>
-      <h2 style="color: #ff5277; margin-bottom: 8px; font-size: 1.4rem;">จดหมายฉบับนี้ถูกล็อกไว้</h2>
-      <p style="color: #666; font-size: 0.9rem; margin-bottom: 20px;">กรุณากรอกรหัสผ่าน 6 หลักเพื่อเปิดอ่าน</p>
-
+      <div class="lock-icon-pulse" style="font-size: 50px; margin-bottom: 12px;">💖</div>
+      <h2 style="color: white; margin-bottom: 6px; font-size: 1.6rem; font-weight: bold;">กรอกรหัสผ่าน</h2>
+      
       ${(data.passcodeHint || data.hint) ? `
-        <div style="background: #fff5f7; border: 1px dashed #ffb6c1; padding: 10px; border-radius: 12px; margin-bottom: 15px; color: #d53f8c; font-size: 0.85rem;">
-          💡 <strong>คำใบ้:</strong> ${data.passcodeHint || data.hint}
-        </div>
-      ` : ''}
+        <p style="color: #ffe6eb; font-size: 0.9rem; margin-bottom: 25px;">
+          คำใบ้ : ${data.passcodeHint || data.hint}
+        </p>
+      ` : '<div style="margin-bottom: 25px;"></div>'}
 
-      <input type="password" id="enterPasscodeInput" maxlength="6" placeholder="------" style="
-        width: 80%; padding: 12px; font-size: 1.5rem; text-align: center; letter-spacing: 8px;
-        border: 2px solid #cbd5e0; border-radius: 12px; outline: none; margin-bottom: 20px;
-        font-family: monospace;
+      <!-- ช่องใส่รหัสผ่าน 6 ช่องเรียงกันแบบในรูป -->
+      <div style="display: flex; justify-content: center; gap: 8px; margin-bottom: 30px;" id="pinBoxesContainer">
+        <div class="pin-box" style="width: 42px; height: 48px; background: white; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: #333; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.1);"></div>
+        <div class="pin-box" style="width: 42px; height: 48px; background: white; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: #333; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.1);"></div>
+        <div class="pin-box" style="width: 42px; height: 48px; background: white; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: #333; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.1);"></div>
+        <div class="pin-box" style="width: 42px; height: 48px; background: white; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: #333; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.1);"></div>
+        <div class="pin-box" style="width: 42px; height: 48px; background: white; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: #333; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.1);"></div>
+        <div class="pin-box" style="width: 42px; height: 48px; background: white; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: #333; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.1);"></div>
+      </div>
+
+      <!-- ซ่อน Input จริงไว้รับค่าพิมพ์ -->
+      <input type="password" id="realPinInput" maxlength="6" style="
+        position: absolute; opacity: 0; pointer-events: none; width: 1px; height: 1px;
       ">
 
+      <!-- ปุ่มยืนยัน -->
       <button id="submitPasscodeBtn" style="
-        width: 100%; background: linear-gradient(135deg, #ff5277, #ff758c); color: white; border: none;
-        padding: 12px; border-radius: 12px; font-weight: bold; font-size: 1rem; cursor: pointer;
-        box-shadow: 0 4px 15px rgba(255,82,119,0.4);
-      ">🔓 เปิดจดหมาย</button>
+        width: 60%; background: white; color: #ff5277; border: none;
+        padding: 12px; border-radius: 20px; font-weight: bold; font-size: 1.1rem; cursor: pointer;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.15); transition: transform 0.2s;
+      ">ยืนยัน</button>
       
-      <div id="passcodeError" style="color: #e53e3e; font-size: 0.85rem; margin-top: 10px; display: none;">
+      <div id="passcodeError" style="color: #ffe6eb; font-size: 0.85rem; margin-top: 12px; display: none; font-weight: bold;">
         ❌ รหัสผ่านไม่ถูกต้อง ลองใหม่อีกครั้งนะ
       </div>
     </div>
   `;
 
-  const inputEl = document.getElementById('enterPasscodeInput');
+  const realInput = document.getElementById('realPinInput');
+  const pinBoxes = document.querySelectorAll('.pin-box');
   const btnEl = document.getElementById('submitPasscodeBtn');
   const errEl = document.getElementById('passcodeError');
 
+  // ทำให้คลิกที่กล่องไหนก็ได้ แล้วโฟกัสพิมพ์ทันที
+  document.getElementById('pinBoxesContainer').addEventListener('click', () => {
+    realInput.focus();
+  });
+
+  realInput.addEventListener('input', () => {
+    const val = realInput.value;
+    pinBoxes.forEach((box, idx) => {
+      box.textContent = val[idx] ? '●' : ''; // แสดงจุดดำปกปิดรหัสผ่าน
+    });
+
+    if (val.length === 6) {
+      if (val === correctPasscode) {
+        renderLetterContent(data, recipientView);
+      } else {
+        errEl.style.display = 'block';
+        realInput.value = '';
+        pinBoxes.forEach(box => box.textContent = '');
+      }
+    } else {
+      errEl.style.display = 'none';
+    }
+  });
+
   const verifyPasscode = () => {
-    if (inputEl.value === correctPasscode) {
-      renderLetterContent(data, recipientView); 
+    if (realInput.value === correctPasscode) {
+      renderLetterContent(data, recipientView);
     } else {
       errEl.style.display = 'block';
-      inputEl.value = '';
-      inputEl.focus();
+      realInput.value = '';
+      pinBoxes.forEach(box => box.textContent = '');
+      realInput.focus();
     }
   };
 
   btnEl.addEventListener('click', verifyPasscode);
-  inputEl.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') verifyPasscode();
-  });
-  inputEl.focus();
+  realInput.focus();
 }
 
-// ฟังก์ชันเรนเดอร์เนื้อหาจดหมายปกติ (จัดกึ่งกลางและแสดงข้อความครบถ้วน)
 function renderLetterContent(data, recipientView) {
   if (data.themeColor) document.body.style.backgroundColor = data.themeColor;
 
