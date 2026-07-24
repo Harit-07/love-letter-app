@@ -26,7 +26,7 @@ function createFloatingHearts() {
 // ฟังก์ชันช่วยเซ็ตสไตล์ข้อความ Realtime
 function applyStyleToElement(previewEl, text, fontSel, sizeSel, boldBtn, colorSel, defaultText) {
   if (!previewEl) return;
-  previewEl.textContent = text || defaultText;
+  previewEl.textContent = text !== undefined && text !== '' ? text : defaultText;
   if (fontSel) previewEl.style.fontFamily = fontSel.value;
   if (sizeSel) previewEl.style.fontSize = sizeSel.value + 'px';
   if (boldBtn) {
@@ -525,7 +525,7 @@ function showSuccessModal(url) {
 function applySavedStyle(previewEl, styleObj, defaultText) {
   if (!previewEl) return;
   if (styleObj) {
-    previewEl.textContent = styleObj.text !== undefined ? styleObj.text : defaultText;
+    previewEl.textContent = (styleObj.text !== undefined && styleObj.text !== '') ? styleObj.text : defaultText;
     if (styleObj.font) previewEl.style.fontFamily = styleObj.font;
     if (styleObj.size) previewEl.style.fontSize = styleObj.size + 'px';
     previewEl.style.fontWeight = styleObj.bold ? 'bold' : 'normal';
@@ -546,17 +546,31 @@ async function checkRecipientMode() {
     const recipientView = document.getElementById('recipientView');
 
     if (mainApp) mainApp.style.display = 'none';
+    if (recipientView) {
+      recipientView.style.display = 'flex';
+      recipientView.style.justifyContent = 'center';
+      recipientView.style.alignItems = 'center';
+      recipientView.style.width = '100vw';
+      recipientView.style.height = '100vh';
+      recipientView.style.position = 'fixed';
+      recipientView.style.top = '0';
+      recipientView.style.left = '0';
+    }
 
     try {
       const res = await fetch(`/api/letters/${slug}`);
       if (res.ok) {
         const data = await res.json();
+        const letterPasscode = data.passcode || data.password;
 
-        // ตรวจสอบว่ามีการตั้งรหัสผ่านหรือไม่
-        if (data.passcode && data.passcode.length === 6) {
-          showPasscodeLockScreen(data, recipientView);
+        if (letterPasscode && letterPasscode.length === 6) {
+          showPasscodeLockScreen(data, recipientView, letterPasscode);
         } else {
           renderLetterContent(data, recipientView);
+        }
+      } else {
+        if (recipientView) {
+          recipientView.innerHTML = `<div style="text-align:center; font-family:'Mali',cursive; color:#ff5277; font-size:1.2rem;"><h2>❌ ไม่พบจดหมายฉบับนี้ หรือลิงก์อาจไม่ถูกต้อง</h2></div>`;
         }
       }
     } catch (e) {
@@ -565,24 +579,26 @@ async function checkRecipientMode() {
   }
 }
 
-// ฟังก์ชันสร้างหน้าจอกรอกรหัสผ่านฝั่งผู้รับ
-function showPasscodeLockScreen(data, recipientView) {
+// ฟังก์ชันสร้างหน้าจอกรอกรหัสผ่านฝั่งผู้รับ (จัดกึ่งกลางเต็มจอ)
+function showPasscodeLockScreen(data, recipientView, correctPasscode) {
   if (!recipientView) return;
   recipientView.style.display = 'flex';
+  recipientView.style.justifyContent = 'center';
+  recipientView.style.alignItems = 'center';
   recipientView.style.opacity = '1';
   recipientView.innerHTML = `
     <div style="
       background: #ffffff; padding: 35px 25px; border-radius: 24px; width: 90%; max-width: 400px;
       text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.15); font-family: 'Mali', cursive;
-      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      z-index: 1000;
     ">
       <div style="font-size: 50px; margin-bottom: 10px;">🔐</div>
       <h2 style="color: #ff5277; margin-bottom: 8px; font-size: 1.4rem;">จดหมายฉบับนี้ถูกล็อกไว้</h2>
       <p style="color: #666; font-size: 0.9rem; margin-bottom: 20px;">กรุณากรอกรหัสผ่าน 6 หลักเพื่อเปิดอ่าน</p>
 
-      ${data.passcodeHint ? `
+      ${(data.passcodeHint || data.hint) ? `
         <div style="background: #fff5f7; border: 1px dashed #ffb6c1; padding: 10px; border-radius: 12px; margin-bottom: 15px; color: #d53f8c; font-size: 0.85rem;">
-          💡 <strong>คำใบ้:</strong> ${data.passcodeHint}
+          💡 <strong>คำใบ้:</strong> ${data.passcodeHint || data.hint}
         </div>
       ` : ''}
 
@@ -609,8 +625,7 @@ function showPasscodeLockScreen(data, recipientView) {
   const errEl = document.getElementById('passcodeError');
 
   const verifyPasscode = () => {
-    if (inputEl.value === data.passcode) {
-      recipientView.innerHTML = ''; 
+    if (inputEl.value === correctPasscode) {
       renderLetterContent(data, recipientView); 
     } else {
       errEl.style.display = 'block';
@@ -626,11 +641,13 @@ function showPasscodeLockScreen(data, recipientView) {
   inputEl.focus();
 }
 
-// ฟังก์ชันเรนเดอร์เนื้อหาจดหมายปกติ
+// ฟังก์ชันเรนเดอร์เนื้อหาจดหมายปกติ (จัดกึ่งกลางและแสดงข้อความครบถ้วน)
 function renderLetterContent(data, recipientView) {
   if (data.themeColor) document.body.style.backgroundColor = data.themeColor;
 
-  recipientView.style.display = 'block';
+  recipientView.style.display = 'flex';
+  recipientView.style.justifyContent = 'center';
+  recipientView.style.alignItems = 'center';
   recipientView.style.opacity = '1';
 
   recipientView.innerHTML = `
@@ -661,13 +678,13 @@ function renderLetterContent(data, recipientView) {
     </div>
   `;
 
-  if (data.textStyles) {
-    applySavedStyle(document.getElementById('recipientCoverTitle'), data.textStyles.coverTitle, 'มีความรักส่งถึงคุณ 💕');
-    applySavedStyle(document.getElementById('recipientCoverSubtext'), data.textStyles.coverSubtext, 'แตะเพื่อเปิดดูเซอร์ไพรส์ ✨');
-    applySavedStyle(document.getElementById('recipientGreeting'), data.textStyles.greeting, 'สวัสดีคุณคนสวย 💖');
-    applySavedStyle(document.getElementById('recipientMessage'), data.textStyles.message, '');
-    applySavedStyle(document.getElementById('recipientSignature'), data.textStyles.signature, 'ด้วยรักเสมอมา');
-  }
+  const styles = data.textStyles || data.styles || {};
+  
+  applySavedStyle(document.getElementById('recipientCoverTitle'), styles.coverTitle, 'มีความรักส่งถึงคุณ 💕');
+  applySavedStyle(document.getElementById('recipientCoverSubtext'), styles.coverSubtext, 'แตะเพื่อเปิดดูเซอร์ไพรส์ ✨');
+  applySavedStyle(document.getElementById('recipientGreeting'), styles.greeting, 'สวัสดีคุณคนสวย 💖');
+  applySavedStyle(document.getElementById('recipientMessage'), styles.message, data.message || 'ข้อความบอกรัก...');
+  applySavedStyle(document.getElementById('recipientSignature'), styles.signature, 'ด้วยรักเสมอมา');
 
   const coverStyle = data.coverStyle || 'envelope';
   const customImg = data.customCoverImage || '';
