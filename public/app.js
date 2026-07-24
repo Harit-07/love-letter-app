@@ -221,7 +221,6 @@ function setupStickerPalette() {
   });
 }
 
-// เรนเดอร์ Element พร้อมปรับสัดส่วนขนาดสติ๊กเกอร์ให้แม่นยำ
 function renderInteractiveItem(canvas, itemData, isEditable = false) {
   if (!canvas) return;
 
@@ -482,7 +481,6 @@ function setupSaveButton() {
   }
 }
 
-// ฟังก์ชันอัปเดตข้อความฝั่งผู้รับแบบรองรับหลาย ID และสร้างอัตโนมัติหากไม่พบ
 function applyTextConfigToRecipient(config, targetId) {
   let possibleIds = [targetId];
   if (targetId === 'recipientCoverTitle') {
@@ -511,7 +509,6 @@ function applyTextConfigToRecipient(config, targetId) {
     }
   }
 
-  // หากยังไม่พบ Element ในหน้า HTML ฝั่งผู้รับ ให้สร้างให้อัตโนมัติทันที
   if (!el) {
     const coverEl = document.getElementById('recipientCover') || document.querySelector('.recipient-cover') || document.querySelector('.cover-container') || document.getElementById('recipientStage');
     if (coverEl) {
@@ -545,26 +542,70 @@ function applyTextConfigToRecipient(config, targetId) {
   }
 }
 
-// 9. แสดงหน้าต่างกรอกรหัสผ่านแบบโมเดิร์น
+// 9. ดีไซน์หน้าล็อกรหัสผ่านใหม่แบบ Full-Screen สุดพรีเมียม
 function showCustomPasscodeModal(correctPasscode, hint, onSuccess) {
   let modal = document.getElementById('customPasscodeModal');
   if (!modal) {
     modal = document.createElement('div');
     modal.id = 'customPasscodeModal';
     modal.style.cssText = `
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.4); z-index: 9999;
+      position: fixed; inset: 0;
+      background: linear-gradient(135deg, #ff758c 0%, #ff7eb3 100%);
+      z-index: 99999;
       display: flex; justify-content: center; align-items: center;
       font-family: 'Mali', cursive;
+      padding: 20px;
     `;
     modal.innerHTML = `
-      <div style="background: #ff5277; padding: 30px 25px; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); width: 90%; max-width: 320px; text-align: center; color: white;">
-        <h3 style="margin: 0 0 6px 0; font-size: 1.3rem;">กรอกรหัสผ่าน</h3>
-        <p id="modalHint" style="font-size: 0.8rem; margin: 0 0 20px 0; opacity: 0.9;"></p>
-        <input type="password" id="modalPinInput" placeholder="กรอกรหัสผ่านที่นี่" style="width: 85%; padding: 12px 15px; border: none; border-radius: 14px; font-size: 1rem; text-align: center; outline: none; margin-bottom: 20px; background: white; color: #333; box-shadow: inset 0 2px 5px rgba(0,0,0,0.05);" />
-        <div>
-          <button id="modalSubmitBtn" style="background: white; color: #ff5277; border: none; padding: 10px 28px; border-radius: 20px; font-weight: bold; font-size: 0.95rem; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">ยืนยัน</button>
+      <div style="
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(15px);
+        padding: 45px 35px;
+        border-radius: 32px;
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.18);
+        width: 100%;
+        max-width: 400px;
+        text-align: center;
+        border: 2px solid rgba(255, 255, 255, 0.9);
+      ">
+        <div style="font-size: 4rem; margin-bottom: 12px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1));">🔐</div>
+        <h2 style="margin: 0 0 10px 0; font-size: 1.6rem; color: #ff3366; font-weight: bold;">จดหมายฉบับนี้ถูกล็อกไว้</h2>
+        <p style="font-size: 0.95rem; color: #666; margin: 0 0 22px 0; line-height: 1.5;">กรุณากรอกรหัสผ่านเพื่อเปิดอ่านความในใจจดหมายฉบับนี้ครับ ❤️</p>
+        
+        <div id="modalHintBox" style="display: none; background: #fff0f3; border: 1px dashed #ffb3c1; padding: 12px 16px; border-radius: 16px; margin-bottom: 22px; font-size: 0.9rem; color: #d63384; text-align: left;">
+          💡 <strong>คำใบ้:</strong> <span id="modalHintText"></span>
         </div>
+
+        <div style="margin-bottom: 22px;">
+          <input type="password" id="modalPinInput" placeholder="🔑 ใส่รหัสผ่านที่นี่..." style="
+            width: 100%;
+            padding: 14px 20px;
+            border: 2px solid #ffd1dc;
+            border-radius: 18px;
+            font-size: 1.05rem;
+            text-align: center;
+            outline: none;
+            background: #fff;
+            color: #333;
+            box-sizing: border-box;
+            box-shadow: inset 0 2px 6px rgba(0,0,0,0.03);
+            transition: all 0.3s;
+          " />
+        </div>
+
+        <button id="modalSubmitBtn" style="
+          width: 100%;
+          background: linear-gradient(135deg, #ff5277 0%, #ff3366 100%);
+          color: white;
+          border: none;
+          padding: 14px 0;
+          border-radius: 18px;
+          font-weight: bold;
+          font-size: 1.1rem;
+          cursor: pointer;
+          box-shadow: 0 8px 22px rgba(255, 82, 119, 0.4);
+          transition: transform 0.2s, box-shadow 0.2s;
+        ">เปิดอ่านจดหมาย ✨</button>
       </div>
     `;
     document.body.appendChild(modal);
@@ -572,11 +613,24 @@ function showCustomPasscodeModal(correctPasscode, hint, onSuccess) {
     const submitBtn = modal.querySelector('#modalSubmitBtn');
     const pinInput = modal.querySelector('#modalPinInput');
 
+    pinInput.addEventListener('focus', () => {
+      pinInput.style.borderColor = '#ff3366';
+      pinInput.style.boxShadow = '0 0 12px rgba(255, 51, 102, 0.25)';
+    });
+    pinInput.addEventListener('blur', () => {
+      pinInput.style.borderColor = '#ffd1dc';
+      pinInput.style.boxShadow = 'inset 0 2px 6px rgba(0,0,0,0.03)';
+    });
+
     const handleVerify = () => {
       const entered = pinInput.value.trim();
       if (entered === correctPasscode.trim()) {
-        modal.style.display = 'none';
-        pinInput.value = '';
+        modal.style.opacity = '0';
+        modal.style.transition = 'opacity 0.3s ease';
+        setTimeout(() => {
+          modal.style.display = 'none';
+          pinInput.value = '';
+        }, 300);
         onSuccess();
       } else {
         alert('❌ รหัสผ่านไม่ถูกต้อง ลองใหม่อีกครั้งนะจ๊ะ!');
@@ -591,13 +645,21 @@ function showCustomPasscodeModal(correctPasscode, hint, onSuccess) {
     });
   }
 
-  const hintEl = modal.querySelector('#modalHint');
-  hintEl.textContent = hint ? `คำใบ้ : ${hint}` : '';
+  const hintBox = modal.querySelector('#modalHintBox');
+  const hintText = modal.querySelector('#modalHintText');
+  if (hint && hint.trim() !== '') {
+    hintText.textContent = hint;
+    hintBox.style.display = 'block';
+  } else {
+    hintBox.style.display = 'none';
+  }
+
   modal.style.display = 'flex';
-  setTimeout(() => modal.querySelector('#modalPinInput').focus(), 100);
+  modal.style.opacity = '1';
+  setTimeout(() => modal.querySelector('#modalPinInput').focus(), 150);
 }
 
-// 10. หน้าผู้รับลิงก์ (เช็ครหัสผ่านทันทีแบบไม่ให้เห็นเนื้อหาจดหมายก่อน)
+// 10. หน้าผู้รับลิงก์ (เช็ครหัสผ่านทันทีแบบแยกตามลิงก์ slug ใครลิงก์มัน)
 async function checkRecipientMode() {
   const path = window.location.pathname;
   const match = path.match(/\/letter\/(.+)$/);
@@ -612,7 +674,6 @@ async function checkRecipientMode() {
 
     if (mainApp) mainApp.style.display = 'none';
 
-    // ซ่อนหน้าจดหมายไว้ก่อนจนกว่าจะโหลดข้อมูลเสร็จหรือผ่านรหัสผ่าน
     if (recipientView) {
       recipientView.style.opacity = '0';
       recipientView.style.display = 'flex';
@@ -637,34 +698,31 @@ async function checkRecipientMode() {
 
         updateCoverDisplay(coverStyle, customImg, 'recipientCoverGraphic', 'recipientCoverBadge', 'recipientCoverTitle', coverColor);
 
-        // โหลดรูปภาพ
         const rPhotosCanvas = document.getElementById('recipientPhotosCanvas');
         if (data.photos && Array.isArray(data.photos)) {
           data.photos.forEach(p => renderInteractiveItem(rPhotosCanvas, p, false));
         }
 
-        // โหลดสติ๊กเกอร์
         const rStickerCanvas = document.getElementById('recipientStickerCanvas');
         if (data.stickers && Array.isArray(data.stickers)) {
           data.stickers.forEach(s => renderInteractiveItem(rStickerCanvas, s, false));
         }
 
+        // คีย์แยกตามลิงก์ (Slug) แต่ละลิงก์จะมีสถานะปลดล็อกแยกจากกันเด็ดขาด
         const unlockedKey = 'unlocked_' + slug;
         const isUnlocked = localStorage.getItem(unlockedKey) === 'true';
 
-        // 🔒 หากมีรหัสผ่านและยังไม่ปลดล็อก ให้แสดงกล่องรหัสผ่านทันทีก่อนแสดงหน้าจดหมาย
+        // 🔒 หากมีรหัสผ่านและยังไม่เคยปลดล็อกของลิงก์นี้ ให้บังคับขึ้นหน้ากรอกรหัสแบบเต็มจอก่อน
         if (data.passcode && data.passcode.trim() !== '' && !isUnlocked) {
           showCustomPasscodeModal(data.passcode, data.passcodeHint, () => {
             localStorage.setItem(unlockedKey, 'true');
           });
         }
 
-        // แสดงหน้าจอผู้รับหลังจากประมวลผลรหัสผ่านเสร็จ
         setTimeout(() => { 
           if (recipientView) recipientView.style.opacity = '1'; 
         }, 50);
 
-        // ระบบคลิกเปิดจดหมาย
         if (recipientCover && recipientStage) {
           recipientCover.addEventListener('click', () => {
             const currentlyUnlocked = localStorage.getItem(unlockedKey) === 'true';
