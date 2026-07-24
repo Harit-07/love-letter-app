@@ -5,11 +5,11 @@ let customCoverImage = '';
 let currentCoverColor = '#ff5277';
 let currentThemeColor = '#fdf2f4';
 
-// 1. หัวใจและอิโมจิลอยฟุ้งกระจายหนาแน่นแบบ IG (เพิ่มหมวดสัตว์และวิบวับ)
+// 1. หัวใจและอิโมจิลอยฟุ้งกระจาย (รวมน้องหมู 🐷 🐽 และสัตว์ต่างๆ)
 function createFloatingHearts() {
   const container = document.getElementById('floatingHeartsContainer');
   if (!container) return;
-  const emojis = ['💖', '💗', '💓', '💞', '💕', '✨', '🐷', '🐽', '🐗', '🌸', '🌷', '💘', '💌', '🌟', '🥰', '🐱', '🐶', '🐰', '🦊', '🐼', '🐥'];
+  const emojis = ['💖', '💗', '💓', '💞', '💕', '✨', '🌸', '🌷', '💘', '💌', '🌟', '🥰', '🐷', '🐽', '🐗', '🐱', '🐶', '🐰', '🦊', '🐼', '🐥'];
 
   setInterval(() => {
     const heart = document.createElement('div');
@@ -202,7 +202,7 @@ function setupMultiPhotoUpload() {
   });
 }
 
-// 6. เพิ่มสติ๊กเกอร์ (รวมหมวดสัตว์)
+// 6. เพิ่มสติ๊กเกอร์ (รวมหมวดหมู่น้องหมูและสัตว์ต่างๆ)
 function setupStickerPalette() {
   const stickerBtns = document.querySelectorAll('.sticker-add-btn');
   const stickerCanvas = document.getElementById('stickerCanvas');
@@ -385,14 +385,13 @@ function getTextConfig(inputId, fontId, sizeId, boldId, colorId) {
   };
 }
 
-// 8. บันทึกจดหมาย (รองรับระบบรหัสผ่าน 6 หลักและคำใบ้)
+// 8. บันทึกจดหมาย (รองรับระบบเลือกล็อกรหัสผ่าน 6 หลักและคำใบ้)
 function setupSaveButton() {
   const saveBtn = document.getElementById('saveButton');
 
   if (!saveBtn) return;
 
   saveBtn.addEventListener('click', async () => {
-    // ดึงค่ารหัสผ่านและคำใบ้จากหน้าฟอร์ม (สมมติว่ามี input id="passcodeInput" และ "passcodeHintInput")
     const passcodeInput = document.getElementById('passcodeInput');
     const passcodeHintInput = document.getElementById('passcodeHintInput');
 
@@ -400,7 +399,7 @@ function setupSaveButton() {
     const passcodeHint = passcodeHintInput ? passcodeHintInput.value.trim() : '';
 
     if (passcode && passcode.length !== 6) {
-      alert('⚠️ กรุณากำหนดรหัสผ่านเป็นตัวเลขหรือตัวอักษร 6 หลัก หรือเว้นว่างไว้หากไม่ต้องการล็อกครับ');
+      alert('⚠️ กรุณากำหนดรหัสผ่านเป็นตัวเลข 6 หลัก หรือเว้นว่างไว้หากไม่ต้องการล็อกครับ');
       if (passcodeInput) passcodeInput.focus();
       return;
     }
@@ -471,7 +470,7 @@ function showSuccessModal(url) {
       text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.2); font-family: 'Mali', cursive;
     ">
       <div style="font-size: 50px; margin-bottom: 10px;">🔒🎉</div>
-      <h2 style="color: #ff5277; margin-bottom: 8px; font-size: 1.5rem;">สร้างจดหมายล็อกรหัสสำเร็จ!</h2>
+      <h2 style="color: #ff5277; margin-bottom: 8px; font-size: 1.5rem;">สร้างจดหมายสำเร็จแล้ว!</h2>
       <p style="color: #666; font-size: 0.9rem; margin-bottom: 20px;">คัดลอกลิงก์นี้ส่งให้คนพิเศษของคุณได้เลย ❤️</p>
       
       <div style="
@@ -536,7 +535,7 @@ function applySavedStyle(previewEl, styleObj, defaultText) {
   }
 }
 
-// 9. หน้าผู้รับลิงก์ พร้อมระบบตรวจสอบรหัสผ่าน 6 หลัก & คำใบ้
+// 9. หน้าผู้รับลิงก์ พร้อมระบบล็อกหน้าจดหมายด้วยรหัสผ่าน 6 หลัก & คำใบ้
 async function checkRecipientMode() {
   const path = window.location.pathname;
   const match = path.match(/\/letter\/(.+)$/);
@@ -553,11 +552,10 @@ async function checkRecipientMode() {
       if (res.ok) {
         const data = await res.json();
 
-        // ตรวจสอบว่าจดหมายนี้มีการตั้งรหัสผ่านล็อกไว้หรือไม่
+        // ตรวจสอบว่ามีการตั้งรหัสผ่านหรือไม่
         if (data.passcode && data.passcode.length === 6) {
           showPasscodeLockScreen(data, recipientView);
         } else {
-          // ถ้าไม่มีรหัสผ่าน เปิดดูได้ทันที
           renderLetterContent(data, recipientView);
         }
       }
@@ -567,7 +565,7 @@ async function checkRecipientMode() {
   }
 }
 
-// ฟังก์ชันสร้างหน้าจอกรอกรหัสผ่าน (Passcode Lock Screen)
+// ฟังก์ชันสร้างหน้าจอกรอกรหัสผ่านฝั่งผู้รับ
 function showPasscodeLockScreen(data, recipientView) {
   if (!recipientView) return;
   recipientView.style.display = 'flex';
@@ -612,8 +610,8 @@ function showPasscodeLockScreen(data, recipientView) {
 
   const verifyPasscode = () => {
     if (inputEl.value === data.passcode) {
-      recipientView.innerHTML = ''; // ล้างหน้าล็อกรหัส
-      renderLetterContent(data, recipientView); // โหลดเนื้อหาจดหมายปกติ
+      recipientView.innerHTML = ''; 
+      renderLetterContent(data, recipientView); 
     } else {
       errEl.style.display = 'block';
       inputEl.value = '';
@@ -628,11 +626,10 @@ function showPasscodeLockScreen(data, recipientView) {
   inputEl.focus();
 }
 
-// ฟังก์ชันเรนเดอร์เนื้อหาจดหมายฝั่งผู้รับ
+// ฟังก์ชันเรนเดอร์เนื้อหาจดหมายปกติ
 function renderLetterContent(data, recipientView) {
   if (data.themeColor) document.body.style.backgroundColor = data.themeColor;
 
-  // โครงสร้างหน้าจดหมายปกติ
   recipientView.innerHTML = `
     <div id="recipientStage" class="envelope-stage closed">
       <div id="recipientCover" class="envelope-cover">
