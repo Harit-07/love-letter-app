@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+Disallow: /api/  # ป้องกันไม่ให้บอทเข้าไปยุ่งกับระบบหลังบ้านหรือ API
+Sitemap: https://love-note-pearl.vercel.app/sitemap.xml

@@ -13,8 +13,21 @@ const lettersDb = {};
 
 // API บันทึกข้อมูลจดหมาย
 app.post('/api/letters', (req, res) => {
-  const { greeting, message, signature, coverStyle, customCoverImage, coverColor, themeColor, photos, stickers } = req.body;
-  
+  const {
+    greeting,
+    message,
+    signature,
+    coverStyle,
+    customCoverImage,
+    coverColor,
+    themeColor,
+    photos,
+    stickers,
+    passcode,
+    passcodeHint,
+    textStyles
+  } = req.body;
+
   const id = Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
 
   lettersDb[id] = {
@@ -26,7 +39,10 @@ app.post('/api/letters', (req, res) => {
     coverColor: coverColor || '#ff5277',
     themeColor: themeColor || '#fdf2f4',
     photos: photos || [],
-    stickers: stickers || []
+    stickers: stickers || [],
+    passcode: passcode || '',
+    passcodeHint: passcodeHint || '',
+    textStyles: textStyles || {}
   };
 
   res.json({ success: true, shareUrl: `/letter/${id}` });
