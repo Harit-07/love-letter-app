@@ -483,8 +483,19 @@ function setupSaveButton() {
   }
 }
 
+// ฟังก์ชันอัปเดตข้อความฝั่งผู้รับแบบรองรับหลาย ID สำรอง (ปัญหารูปหัวข้อหาย)
 function applyTextConfigToRecipient(config, targetId) {
-  const el = document.getElementById(targetId);
+  let el = document.getElementById(targetId);
+  
+  // รองรับกรณี ID ฝั่งผู้รับอาจมีความแตกต่างกันเล็กน้อยใน HTML
+  if (!el) {
+    if (targetId === 'recipientCoverTitle') el = document.getElementById('recipientCoverTitleText') || document.getElementById('recipientTitle');
+    if (targetId === 'recipientCoverSubtext') el = document.getElementById('recipientCoverSub') || document.getElementById('recipientSubtext');
+    if (targetId === 'recipientGreeting') el = document.getElementById('recipientGreetingText');
+    if (targetId === 'recipientMessage') el = document.getElementById('recipientMessageText');
+    if (targetId === 'recipientSignature') el = document.getElementById('recipientSignatureText');
+  }
+
   if (!el) return;
 
   if (config && typeof config === 'object') {
@@ -496,13 +507,15 @@ function applyTextConfigToRecipient(config, targetId) {
     } else {
       el.style.fontWeight = 'normal';
     }
-    if (config.color) el.style.color = config.color;
+    if (config.color) {
+      el.style.color = config.color;
+    }
   } else if (typeof config === 'string') {
     el.textContent = config;
   }
 }
 
-// 9. แสดงหน้าต่างกรอกรหัสผ่านแบบโมเดิร์น (สไตล์สวยงามตามที่ต้องการ)
+// 9. แสดงหน้าต่างกรอกรหัสผ่านแบบโมเดิร์น
 function showCustomPasscodeModal(correctPasscode, hint, onSuccess) {
   let modal = document.getElementById('customPasscodeModal');
   if (!modal) {
@@ -621,7 +634,7 @@ async function checkRecipientMode() {
 
         if (recipientLetterBoard && recipientStage) {
           recipientLetterBoard.addEventListener('click', () => {
-            recipientStage.classList.remove('open');
+            recipientStage.classList.remove('0pen');
             recipientStage.classList.add('closed');
           });
         }
