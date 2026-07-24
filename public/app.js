@@ -482,19 +482,19 @@ function setupSaveButton() {
   }
 }
 
-// ฟังก์ชันอัปเดตข้อความฝั่งผู้รับแบบรองรับหลาย ID สำรอง
+// ฟังก์ชันอัปเดตข้อความฝั่งผู้รับแบบรองรับหลาย ID และสร้างอัตโนมัติหากไม่พบ
 function applyTextConfigToRecipient(config, targetId) {
   let possibleIds = [targetId];
   if (targetId === 'recipientCoverTitle') {
-    possibleIds = ['recipientCoverTitle', 'recipientCoverTitleText', 'recipientTitle', 'coverTitleText'];
+    possibleIds = ['recipientCoverTitle', 'recipientCoverTitleText', 'recipientTitle', 'coverTitleText', 'recipientCoverTitleDisplay'];
   } else if (targetId === 'recipientCoverSubtext') {
-    possibleIds = ['recipientCoverSubtext', 'recipientCoverSub', 'recipientSubtext', 'coverSubtext'];
+    possibleIds = ['recipientCoverSubtext', 'recipientCoverSub', 'recipientSubtext', 'coverSubtext', 'recipientCoverSubtextDisplay'];
   } else if (targetId === 'recipientGreeting') {
-    possibleIds = ['recipientGreeting', 'recipientGreetingText', 'previewGreeting'];
+    possibleIds = ['recipientGreeting', 'recipientGreetingText', 'previewGreeting', 'recipientGreetingDisplay'];
   } else if (targetId === 'recipientMessage') {
-    possibleIds = ['recipientMessage', 'recipientMessageText', 'previewMessage'];
+    possibleIds = ['recipientMessage', 'recipientMessageText', 'previewMessage', 'recipientMessageDisplay'];
   } else if (targetId === 'recipientSignature') {
-    possibleIds = ['recipientSignature', 'recipientSignatureText', 'previewSignature'];
+    possibleIds = ['recipientSignature', 'recipientSignatureText', 'previewSignature', 'recipientSignatureDisplay'];
   }
 
   let el = null;
@@ -504,20 +504,44 @@ function applyTextConfigToRecipient(config, targetId) {
   }
 
   if (!el) {
-    if (targetId.includes('Title')) el = document.querySelector('.cover-title, .recipient-title, h2, h3');
-    if (targetId.includes('Subtext')) el = document.querySelector('.cover-subtext, .recipient-subtext, p');
+    if (targetId.includes('Title')) {
+      el = document.querySelector('.cover-title, .recipient-title, h2, h3');
+    } else if (targetId.includes('Subtext')) {
+      el = document.querySelector('.cover-subtext, .recipient-subtext, p');
+    }
+  }
+
+  // หากยังไม่พบ Element ในหน้า HTML ฝั่งผู้รับ ให้สร้างให้อัตโนมัติทันที
+  if (!el) {
+    const coverEl = document.getElementById('recipientCover') || document.querySelector('.recipient-cover') || document.querySelector('.cover-container') || document.getElementById('recipientStage');
+    if (coverEl) {
+      el = document.createElement('div');
+      if (targetId.includes('Title')) {
+        el.id = 'recipientCoverTitle';
+        el.className = 'cover-title';
+        el.style.cssText = 'font-size: 1.4rem; font-weight: bold; color: #ff5277; margin-top: 15px; text-align: center;';
+      } else {
+        el.id = 'recipientCoverSubtext';
+        el.className = 'cover-subtext';
+        el.style.cssText = 'font-size: 0.9rem; color: #666; margin-top: 5px; text-align: center;';
+      }
+      coverEl.appendChild(el);
+    }
   }
 
   if (!el) return;
 
+  const textVal = (config && typeof config === 'object') ? (config.text || '') : (config || '');
+  if (textVal !== undefined) {
+    el.textContent = textVal;
+    el.style.display = 'block';
+  }
+
   if (config && typeof config === 'object') {
-    el.textContent = config.text || '';
     if (config.font) el.style.fontFamily = config.font;
     if (config.size) el.style.fontSize = config.size + 'px';
     el.style.fontWeight = config.bold ? 'bold' : 'normal';
     if (config.color) el.style.color = config.color;
-  } else if (typeof config === 'string') {
-    el.textContent = config;
   }
 }
 
