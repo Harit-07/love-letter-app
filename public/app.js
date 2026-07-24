@@ -23,7 +23,7 @@ function createFloatingHearts() {
   }, 600);
 }
 
-// 2. ระบบควบคุมและพรีวิวข้อความทุกจุดแบบ Realtime (ฟอนต์, ขนาด, สี, ตัวหนา, ข้อความ)
+// 2. ระบบควบคุมและพรีวิวข้อความทุกจุดแบบ Realtime
 function setupTextEditor(idPrefix, previewId) {
   const textInput = document.getElementById(idPrefix + 'Input');
   const fontSelect = document.getElementById(idPrefix + 'Font');
@@ -65,7 +65,6 @@ function setupAllTextEditors() {
   setupTextEditor('signature', 'previewSignature');
 }
 
-// ฟังก์ชันดึงค่าการตั้งค่าข้อความเพื่อส่งบันทึก
 function getTextConfig(idPrefix) {
   const textInput = document.getElementById(idPrefix + 'Input');
   const fontSelect = document.getElementById(idPrefix + 'Font');
@@ -153,16 +152,13 @@ function updateCoverDisplay(style, customImg, graphicId, badgeId, titleId, color
   if (style === 'custom' && customImg) {
     graphic.style.backgroundImage = `url(${customImg})`;
     if (badge) badge.style.display = 'none';
-    if (title && titleId === 'coverTitleText') {
-      // ไม่บังคับทับถ้าผู้ใช้พิมพ์เอง
-    }
   } else {
     if (badge) badge.style.display = 'block';
     graphic.classList.add(`${style}-style`);
   }
 }
 
-// 5. อัปโหลดรูปภาพ (บันทึกตำแหน่งเป็น %)
+// 5. อัปโหลดรูปภาพ
 function setupMultiPhotoUpload() {
   const multiInput = document.getElementById('multiPhotoInput');
   const frameStyleSelect = document.getElementById('photoFrameStyleSelect');
@@ -198,7 +194,7 @@ function setupMultiPhotoUpload() {
   });
 }
 
-// 6. เพิ่มสติ๊กเกอร์ (บันทึกตำแหน่งเป็น %)
+// 6. เพิ่มสติ๊กเกอร์
 function setupStickerPalette() {
   const stickerBtns = document.querySelectorAll('.sticker-add-btn');
   const stickerCanvas = document.getElementById('stickerCanvas');
@@ -226,7 +222,7 @@ function setupStickerPalette() {
   });
 }
 
-// เรนเดอร์ Element (รองรับทั้ง % และ px)
+// เรนเดอร์ Element พร้อมปรับสัดส่วนขนาดสติ๊กเกอร์ให้แม่นยำ
 function renderInteractiveItem(canvas, itemData, isEditable = false) {
   if (!canvas) return;
 
@@ -235,9 +231,9 @@ function renderInteractiveItem(canvas, itemData, isEditable = false) {
   item.id = itemData.id;
   
   item.style.position = 'absolute';
-  item.style.left = typeof itemData.x === 'string' && itemData.x.includes('%') ? itemData.x : itemData.x + 'px';
-  item.style.top = typeof itemData.y === 'string' && itemData.y.includes('%') ? itemData.y : itemData.y + 'px';
-  item.style.width = typeof itemData.width === 'string' && itemData.width.includes('%') ? itemData.width : itemData.width + 'px';
+  item.style.left = itemData.x;
+  item.style.top = itemData.y;
+  item.style.width = itemData.width;
   item.style.transform = `rotate(${itemData.rotation || 0}deg)`;
   item.style.zIndex = '50';
 
@@ -249,8 +245,11 @@ function renderInteractiveItem(canvas, itemData, isEditable = false) {
     item.appendChild(img);
   } else {
     item.textContent = itemData.emoji;
-    const numericWidth = parseFloat(itemData.width);
-    item.style.fontSize = (itemData.width + '').includes('%') ? `${numericWidth * 2.5}vw` : (numericWidth * 0.8) + 'px';
+    setTimeout(() => {
+      if (item.offsetWidth) {
+        item.style.fontSize = (item.offsetWidth * 0.8) + 'px';
+      }
+    }, 20);
   }
 
   if (isEditable) {
@@ -288,7 +287,6 @@ function renderInteractiveItem(canvas, itemData, isEditable = false) {
   canvas.appendChild(item);
 }
 
-// ระบบขยับ Drag, ย่อขยาย Resize, หมุน Rotate
 function makeElementInteractive(el, itemData, resizeHandle, rotateHandle, canvas) {
   let isDragging = false, isResizing = false, isRotating = false;
   let startX, startY, startWidth, initialAngle;
@@ -310,6 +308,9 @@ function makeElementInteractive(el, itemData, resizeHandle, rotateHandle, canvas
       itemData.x = ((leftPx / canvasRect.width) * 100).toFixed(2) + '%';
       itemData.y = ((topPx / canvasRect.height) * 100).toFixed(2) + '%';
       itemData.width = ((widthPx / canvasRect.width) * 100).toFixed(2) + '%';
+      if (itemData.type === 'sticker') {
+        el.style.fontSize = (widthPx * 0.8) + 'px';
+      }
     }
   };
 
@@ -376,10 +377,8 @@ function makeElementInteractive(el, itemData, resizeHandle, rotateHandle, canvas
 
   el.addEventListener('mousedown', handleStart);
   el.addEventListener('touchstart', handleStart, { passive: false });
-
   document.addEventListener('mousemove', handleMove);
   document.addEventListener('touchmove', handleMove, { passive: false });
-
   document.addEventListener('mouseup', handleEnd);
   document.addEventListener('touchend', handleEnd);
 }
@@ -407,7 +406,7 @@ function setupEnvelopeToggle() {
   }
 }
 
-// 8. บันทึกจดหมาย (รวมการตั้งค่าข้อความและรหัสผ่าน)
+// 8. บันทึกจดหมาย
 function setupSaveButton() {
   const saveBtn = document.getElementById('saveButton');
   const copyBtn = document.getElementById('copyLinkButton');
@@ -484,8 +483,7 @@ function setupSaveButton() {
   }
 }
 
-// ฟังก์ชันช่วยใส่สไตล์ให้ฝั่งผู้รับ
-function applyTextConfigToRecipient(idPrefix, config, targetId) {
+function applyTextConfigToRecipient(config, targetId) {
   const el = document.getElementById(targetId);
   if (!el) return;
 
@@ -500,12 +498,63 @@ function applyTextConfigToRecipient(idPrefix, config, targetId) {
     }
     if (config.color) el.style.color = config.color;
   } else if (typeof config === 'string') {
-    // รองรับข้อมูลรุ่นเก่าที่เป็นข้อความธรรมดา
     el.textContent = config;
   }
 }
 
-// 9. หน้าผู้รับลิงก์ (ตรวจสอบรหัสผ่าน + โหลดสไตล์ข้อความทั้งหมด)
+// 9. แสดงหน้าต่างกรอกรหัสผ่านแบบโมเดิร์น (สไตล์สวยงามตามที่ต้องการ)
+function showCustomPasscodeModal(correctPasscode, hint, onSuccess) {
+  let modal = document.getElementById('customPasscodeModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'customPasscodeModal';
+    modal.style.cssText = `
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.4); z-index: 9999;
+      display: flex; justify-content: center; align-items: center;
+      font-family: 'Mali', cursive;
+    `;
+    modal.innerHTML = `
+      <div style="background: #ff5277; padding: 30px 25px; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); width: 90%; max-width: 320px; text-align: center; color: white;">
+        <h3 style="margin: 0 0 6px 0; font-size: 1.3rem;">กรอกรหัสผ่าน</h3>
+        <p id="modalHint" style="font-size: 0.8rem; margin: 0 0 20px 0; opacity: 0.9;"></p>
+        <input type="password" id="modalPinInput" placeholder="กรอกรหัสผ่านที่นี่" style="width: 85%; padding: 12px 15px; border: none; border-radius: 14px; font-size: 1rem; text-align: center; outline: none; margin-bottom: 20px; background: white; color: #333; box-shadow: inset 0 2px 5px rgba(0,0,0,0.05);" />
+        <div>
+          <button id="modalSubmitBtn" style="background: white; color: #ff5277; border: none; padding: 10px 28px; border-radius: 20px; font-weight: bold; font-size: 0.95rem; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">ยืนยัน</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+
+    const submitBtn = modal.querySelector('#modalSubmitBtn');
+    const pinInput = modal.querySelector('#modalPinInput');
+
+    const handleVerify = () => {
+      const entered = pinInput.value.trim();
+      if (entered === correctPasscode.trim()) {
+        modal.style.display = 'none';
+        pinInput.value = '';
+        onSuccess();
+      } else {
+        alert('❌ รหัสผ่านไม่ถูกต้อง ลองใหม่อีกครั้งนะจ๊ะ!');
+        pinInput.value = '';
+        pinInput.focus();
+      }
+    };
+
+    submitBtn.addEventListener('click', handleVerify);
+    pinInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') handleVerify();
+    });
+  }
+
+  const hintEl = modal.querySelector('#modalHint');
+  hintEl.textContent = hint ? `คำใบ้ : ${hint}` : '';
+  modal.style.display = 'flex';
+  setTimeout(() => modal.querySelector('#modalPinInput').focus(), 100);
+}
+
+// 10. หน้าผู้รับลิงก์ (เช็ครหัสผ่านครั้งแรก + โหลดข้อมูล)
 async function checkRecipientMode() {
   const path = window.location.pathname;
   const match = path.match(/\/letter\/(.+)$/);
@@ -527,17 +576,11 @@ async function checkRecipientMode() {
         
         if (data.themeColor) document.body.style.backgroundColor = data.themeColor;
 
-        // โหลดข้อความและการปรับแต่งฟอนต์/สี/ขนาด (แก้ไขชื่อฟังก์ชันให้ถูกต้อง)
-        applyTextConfigToRecipient('coverTitle', data.coverTitle, 'recipientCoverTitle');
-        applyTextConfigToRecipient('coverSubtext', data.coverSubtext, 'recipientCoverSubtext');
-        applyTextConfigToRecipient('greeting', data.greeting, 'recipientGreeting');
-        applyTextConfigToRecipient('message', data.message, 'recipientMessage');
-        applyTextConfigToRecipient('signature', data.signature, 'recipientSignature');
-
-        // กรณีข้อมูลเก่าที่เป็นสตริงธรรมดา
-        if (typeof data.greeting === 'string') document.getElementById('recipientGreeting').textContent = data.greeting;
-        if (typeof data.message === 'string') document.getElementById('recipientMessage').textContent = data.message;
-        if (typeof data.signature === 'string') document.getElementById('recipientSignature').textContent = data.signature;
+        applyTextConfigToRecipient(data.coverTitle, 'recipientCoverTitle');
+        applyTextConfigToRecipient(data.coverSubtext, 'recipientCoverSubtext');
+        applyTextConfigToRecipient(data.greeting, 'recipientGreeting');
+        applyTextConfigToRecipient(data.message, 'recipientMessage');
+        applyTextConfigToRecipient(data.signature, 'recipientSignature');
 
         const coverStyle = data.coverStyle || 'envelope';
         const customImg = data.customCoverImage || '';
@@ -557,29 +600,25 @@ async function checkRecipientMode() {
           data.stickers.forEach(s => renderInteractiveItem(rStickerCanvas, s, false));
         }
 
-        // ระบบคลิกเปิดพร้อมเช็ครหัสผ่าน
+        // ระบบคลิกเปิดจดหมาย (เช็ครหัสผ่านเฉพาะครั้งแรกที่เปิด)
+        const unlockedKey = 'unlocked_' + slug;
         if (recipientCover && recipientStage) {
           recipientCover.addEventListener('click', () => {
-            if (data.passcode && data.passcode.trim() !== '') {
-              const hintText = data.passcodeHint ? `\n(คำใบ้: ${data.passcodeHint})` : '';
-              const userPin = prompt(`🔒 จดหมายฉบับนี้ถูกล็อครหัสผ่านไว้ กรุณากรอกรหัสผ่าน:${hintText}`);
-              
-              if (userPin === null) return; // กดยกเลิก
-              
-              if (userPin.trim() !== data.passcode.trim()) {
-                alert('❌ รหัสผ่านไม่ถูกต้อง ลองใหม่อีกครั้งนะจ๊ะ!');
-                return;
-              } else {
-                alert('🔓 รหัสผ่านถูกต้อง เปิดอ่านจดหมายได้เลยจ้า 💕');
-              }
+            const isUnlocked = localStorage.getItem(unlockedKey) === 'true';
+            
+            if (data.passcode && data.passcode.trim() !== '' && !isUnlocked) {
+              showCustomPasscodeModal(data.passcode, data.passcodeHint, () => {
+                localStorage.setItem(unlockedKey, 'true');
+                recipientStage.classList.add('open');
+                recipientStage.classList.remove('closed');
+              });
+            } else {
+              recipientStage.classList.add('open');
+              recipientStage.classList.remove('closed');
             }
-
-            recipientStage.classList.add('open');
-            recipientStage.classList.remove('closed');
           });
         }
 
-        // คลิกจดหมายเพื่อปิดกลับหน้าปก
         if (recipientLetterBoard && recipientStage) {
           recipientLetterBoard.addEventListener('click', () => {
             recipientStage.classList.remove('open');
