@@ -23,66 +23,19 @@ function createFloatingHearts() {
   }, 600);
 }
 
-// ฟังก์ชันช่วยเซ็ตสไตล์ข้อความ Realtime
-function applyStyleToElement(previewEl, text, fontSel, sizeSel, boldBtn, colorSel, defaultText) {
-  if (!previewEl) return;
-  previewEl.textContent = text || defaultText;
-  if (fontSel) previewEl.style.fontFamily = fontSel.value;
-  if (sizeSel) previewEl.style.fontSize = sizeSel.value + 'px';
-  if (boldBtn) {
-    if (boldBtn.classList.contains('active')) {
-      previewEl.style.fontWeight = 'bold';
-    } else {
-      previewEl.style.fontWeight = 'normal';
-    }
-  }
-  if (colorSel) previewEl.style.color = colorSel.value;
-}
-
-// 2. พรีวิวข้อความ Realtime (รองรับ ฟอนต์, ขนาด, สี, ตัวหนา)
+// 2. พรีวิวข้อความ Realtime
 function setupRealtimePreview() {
-  const setupField = (inputId, fontId, sizeId, boldId, colorId, previewId, defaultText) => {
-    const input = document.getElementById(inputId);
-    const font = document.getElementById(fontId);
-    const size = document.getElementById(sizeId);
-    const bold = document.getElementById(boldId);
-    const color = document.getElementById(colorId);
-    const preview = document.getElementById(previewId);
+  const greetingInput = document.getElementById('greetingInput');
+  const messageInput = document.getElementById('messageInput');
+  const signatureInput = document.getElementById('signatureInput');
 
-    if (!preview) return;
+  const previewGreeting = document.getElementById('previewGreeting');
+  const previewMessage = document.getElementById('previewMessage');
+  const previewSignature = document.getElementById('previewSignature');
 
-    const update = () => {
-      applyStyleToElement(
-        preview, 
-        input ? input.value : '', 
-        font, 
-        size, 
-        bold, 
-        color, 
-        defaultText
-      );
-    };
-
-    if (input) input.addEventListener('input', update);
-    if (font) font.addEventListener('change', update);
-    if (size) size.addEventListener('input', update);
-    if (color) color.addEventListener('input', update);
-    if (bold) {
-      bold.addEventListener('click', () => {
-        bold.classList.toggle('active');
-        update();
-      });
-    }
-
-    // รันครั้งแรกเพื่อให้ค่าเริ่มต้นตรงกัน
-    update();
-  };
-
-  setupField('coverTitleInput', 'coverTitleFont', 'coverTitleSize', 'coverTitleBold', 'coverTitleColor', 'coverTitleText', 'มีความรักส่งถึงคุณ 💕');
-  setupField('coverSubtextInput', 'coverSubtextFont', 'coverSubtextSize', 'coverSubtextBold', 'coverSubtextColor', 'coverSubtext', '');
-  setupField('greetingInput', 'greetingFont', 'greetingSize', 'greetingBold', 'greetingColor', 'previewGreeting', 'สวัสดีคุณคนสวย 💖');
-  setupField('messageInput', 'messageFont', 'messageSize', 'messageBold', 'messageColor', 'previewMessage', 'ข้อความบอกรัก...');
-  setupField('signatureInput', 'signatureFont', 'signatureSize', 'signatureBold', 'signatureColor', 'previewSignature', 'ด้วยรักเสมอมา');
+  if (greetingInput) greetingInput.addEventListener('input', (e) => previewGreeting.textContent = e.target.value || 'สวัสดีคุณคนสวย 💖');
+  if (messageInput) messageInput.addEventListener('input', (e) => previewMessage.textContent = e.target.value || 'ข้อความบอกรัก...');
+  if (signatureInput) signatureInput.addEventListener('input', (e) => previewSignature.textContent = e.target.value || 'ด้วยรักเสมอมา');
 }
 
 // 3. ปรับสีธีม & สีปก
@@ -117,8 +70,7 @@ function setupStyleSelector() {
 
       currentCoverStyle = btn.dataset.style;
       customCoverImage = '';
-      const coverLabel = document.getElementById('customCoverLabel');
-      if (coverLabel) coverLabel.textContent = '🖼️ หรืออัปโหลดรูปหน้าปกเอง (คลิก)';
+      document.getElementById('customCoverLabel').textContent = '🖼️ หรืออัปโหลดรูปหน้าปกเอง (คลิก)';
 
       updateCoverDisplay(currentCoverStyle, '', 'coverGraphic', 'coverBadge', 'coverTitleText', currentCoverColor);
     });
@@ -134,8 +86,7 @@ function setupStyleSelector() {
         customCoverImage = evt.target.result;
         currentCoverStyle = 'custom';
         styleBtns.forEach((b) => b.classList.remove('active'));
-        const coverLabel = document.getElementById('customCoverLabel');
-        if (coverLabel) coverLabel.textContent = '✅ เปลี่ยนรูปปกเรียบร้อย!';
+        document.getElementById('customCoverLabel').textContent = '✅ เปลี่ยนรูปปกเรียบร้อย!';
 
         updateCoverDisplay('custom', customCoverImage, 'coverGraphic', 'coverBadge', 'coverTitleText', currentCoverColor);
       };
@@ -188,8 +139,8 @@ function setupMultiPhotoUpload() {
           id: 'p_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
           type: 'photo',
           src: evt.target.result,
-          frameStyle: frameStyleSelect ? frameStyleSelect.value : 'polaroid',
-          x: 50 + Math.random() * 80,
+          frameStyle: frameStyleSelect.value || 'polaroid',
+          x: 50 + Math.random() * 80, // กำหนดตำแหน่งให้อยู่บนกระดาน
           y: 50 + Math.random() * 80,
           width: 120,
           rotation: (Math.random() * 20) - 10
@@ -215,7 +166,7 @@ function setupStickerPalette() {
         id: 's_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
         type: 'sticker',
         emoji: emoji,
-        x: 60 + Math.random() * 100,
+        x: 60 + Math.random() * 100, // สุ่มลงบนกระดาน ไม่ชิดขอบซ้าย
         y: 60 + Math.random() * 100,
         width: 50,
         rotation: (Math.random() * 20) - 10
@@ -227,7 +178,7 @@ function setupStickerPalette() {
   });
 }
 
-// เรนเดอร์ Element
+// เรนเดอร์ Element (ย้าย, ขยาย, หมุนได้ครบถ้วน)
 function renderInteractiveItem(canvas, itemData, isEditable = false) {
   if (!canvas) return;
 
@@ -252,6 +203,7 @@ function renderInteractiveItem(canvas, itemData, isEditable = false) {
     const controls = document.createElement('div');
     controls.className = 'item-controls';
 
+    // ปุ่มลบ
     const btnDel = document.createElement('div');
     btnDel.className = 'btn-delete-item';
     btnDel.textContent = '✕';
@@ -265,9 +217,11 @@ function renderInteractiveItem(canvas, itemData, isEditable = false) {
       item.remove();
     };
 
+    // ปุ่มย่อ-ขยาย
     const handleResize = document.createElement('div');
     handleResize.className = 'handle-resize';
 
+    // ปุ่มหมุน 🔄
     const handleRotate = document.createElement('div');
     handleRotate.className = 'handle-rotate';
     handleRotate.textContent = '🔄';
@@ -283,15 +237,17 @@ function renderInteractiveItem(canvas, itemData, isEditable = false) {
   canvas.appendChild(item);
 }
 
-// ระบบขยับ Drag, ขยาย Resize, หมุน Rotate
+// ระบบขยับ Drag, ย่อขยาย Resize, หมุน Rotate
 function makeElementInteractive(el, itemData, resizeHandle, rotateHandle) {
   let isDragging = false;
   let isResizing = false;
   let isRotating = false;
+
   let startX, startY, startWidth, initialAngle;
 
   el.addEventListener('mousedown', (e) => {
-    e.stopPropagation();
+    e.stopPropagation(); // กันไม่ให้ปิดจดหมายขณะขยับของ
+
     if (e.target === resizeHandle) {
       isResizing = true;
       startX = e.clientX;
@@ -346,7 +302,7 @@ function makeElementInteractive(el, itemData, resizeHandle, rotateHandle) {
   });
 }
 
-// 7. คลิกเปิด-ปิดจดหมาย
+// 7. คลิกเปิด-ปิดจดหมาย (คลิกกระดานจดหมายเพื่อปิด)
 function setupEnvelopeToggle() {
   const previewContainer = document.getElementById('previewContainer');
   const cover = document.getElementById('coverEnvelope');
@@ -361,6 +317,7 @@ function setupEnvelopeToggle() {
 
   if (letterBoard && previewContainer) {
     letterBoard.addEventListener('click', (e) => {
+      // คลิกตรงกระดานจดหมายเพื่อปิด
       if (e.target === letterBoard || e.target.id === 'photosCanvas' || e.target.id === 'stickerCanvas') {
         previewContainer.classList.remove('open');
         previewContainer.classList.add('closed');
@@ -369,24 +326,7 @@ function setupEnvelopeToggle() {
   }
 }
 
-// ฟังก์ชันดึงค่าสไตล์ข้อความทั้งหมดไปเก็บบันทึก
-function getTextConfig(inputId, fontId, sizeId, boldId, colorId) {
-  const input = document.getElementById(inputId);
-  const font = document.getElementById(fontId);
-  const size = document.getElementById(sizeId);
-  const bold = document.getElementById(boldId);
-  const color = document.getElementById(colorId);
-
-  return {
-    text: input ? input.value : '',
-    font: font ? font.value : "'Mali', cursive",
-    size: size ? Number(size.value) : 16,
-    bold: bold ? bold.classList.contains('active') : false,
-    color: color ? color.value : '#000000'
-  };
-}
-
-// 8. บันทึกจดหมาย (ส่งค่าสไตล์ครบถ้วนไปยัง Backend)
+// 8. บันทึกจดหมาย
 function setupSaveButton() {
   const saveBtn = document.getElementById('saveButton');
   const copyBtn = document.getElementById('copyLinkButton');
@@ -399,17 +339,13 @@ function setupSaveButton() {
     saveBtn.textContent = '⏳ กำลังบันทึก...';
 
     const payload = {
+      greeting: document.getElementById('greetingInput')?.value || 'สวัสดีคุณคนสวย 💖',
+      message: document.getElementById('messageInput')?.value || '',
+      signature: document.getElementById('signatureInput')?.value || '',
       coverStyle: currentCoverStyle,
       customCoverImage: customCoverImage,
       coverColor: currentCoverColor,
       themeColor: currentThemeColor,
-      textStyles: {
-        coverTitle: getTextConfig('coverTitleInput', 'coverTitleFont', 'coverTitleSize', 'coverTitleBold', 'coverTitleColor'),
-        coverSubtext: getTextConfig('coverSubtextInput', 'coverSubtextFont', 'coverSubtextSize', 'coverSubtextBold', 'coverSubtextColor'),
-        greeting: getTextConfig('greetingInput', 'greetingFont', 'greetingSize', 'greetingBold', 'greetingColor'),
-        message: getTextConfig('messageInput', 'messageFont', 'messageSize', 'messageBold', 'messageColor'),
-        signature: getTextConfig('signatureInput', 'signatureFont', 'signatureSize', 'signatureBold', 'signatureColor')
-      },
       photos: dynamicPhotos,
       stickers: dynamicStickers
     };
@@ -463,18 +399,6 @@ function setupSaveButton() {
   }
 }
 
-// ฟังก์ชันช่วยแสดงผลฝั่งผู้รับตามสไตล์ที่บันทึกมา
-function applySavedStyle(previewEl, styleObj, defaultText) {
-  if (!previewEl) return;
-  if (styleObj) {
-    previewEl.textContent = styleObj.text || defaultText;
-    if (styleObj.font) previewEl.style.fontFamily = styleObj.font;
-    if (styleObj.size) previewEl.style.fontSize = styleObj.size + 'px';
-    previewEl.style.fontWeight = styleObj.bold ? 'bold' : 'normal';
-    if (styleObj.color) previewEl.style.color = styleObj.color;
-  }
-}
-
 // 9. หน้าผู้รับลิงก์
 async function checkRecipientMode() {
   const path = window.location.pathname;
@@ -497,24 +421,9 @@ async function checkRecipientMode() {
         
         if (data.themeColor) document.body.style.backgroundColor = data.themeColor;
 
-        // รองรับทั้งโครงสร้างข้อมูลแบบใหม่ (textStyles) และแบบเก่า (แยกฟิลด์)
-        if (data.textStyles) {
-          applySavedStyle(document.getElementById('recipientCoverTitle'), data.textStyles.coverTitle, 'มีความรักส่งถึงคุณ 💕');
-          applySavedStyle(document.getElementById('recipientCoverSubtext'), data.textStyles.coverSubtext, '');
-          applySavedStyle(document.getElementById('recipientGreeting'), data.textStyles.greeting, 'สวัสดีคุณคนสวย 💖');
-          applySavedStyle(document.getElementById('recipientMessage'), data.textStyles.message, '');
-          applySavedStyle(document.getElementById('recipientSignature'), data.textStyles.signature, 'ด้วยรักเสมอมา');
-        } else {
-          // รองรับโค้ดรุ่นเก่าเผื่อจดหมายเก่า
-          const setOld = (id, val, def) => {
-            const el = document.getElementById(id);
-            if (el) el.textContent = val || def;
-          };
-          setOld('recipientCoverTitle', data.coverTitle, 'มีความรักส่งถึงคุณ 💕');
-          setOld('recipientGreeting', data.greeting, 'สวัสดีคุณคนสวย 💖');
-          setOld('recipientMessage', data.message, '');
-          setOld('recipientSignature', data.signature, 'ด้วยรักเสมอมา');
-        }
+        document.getElementById('recipientGreeting').textContent = data.greeting;
+        document.getElementById('recipientMessage').textContent = data.message;
+        document.getElementById('recipientSignature').textContent = data.signature;
 
         const coverStyle = data.coverStyle || 'envelope';
         const customImg = data.customCoverImage || '';
@@ -544,7 +453,7 @@ async function checkRecipientMode() {
 
         // คลิกจดหมายเพื่อปิด
         if (recipientLetterBoard && recipientStage) {
-          recipientLetterBoard.addEventListener('click', () => {
+          recipientLetterBoard.addEventListener('click', (e) => {
             recipientStage.classList.remove('open');
             recipientStage.classList.add('closed');
           });
