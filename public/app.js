@@ -597,7 +597,7 @@ function showCustomPasscodeModal(correctPasscode, hint, onSuccess) {
   setTimeout(() => modal.querySelector('#modalPinInput').focus(), 100);
 }
 
-// 10. หน้าผู้รับลิงก์ (เช็ครหัสผ่านครั้งแรก + โหลดข้อมูล)
+// 10. หน้าผู้รับลิงก์ (เช็ครหัสผ่านทันทีแบบไม่ให้เห็นเนื้อหาจดหมายก่อน)
 async function checkRecipientMode() {
   const path = window.location.pathname;
   const match = path.match(/\/letter\/(.+)$/);
@@ -611,6 +611,12 @@ async function checkRecipientMode() {
     const recipientLetterBoard = document.getElementById('recipientLetterBoard');
 
     if (mainApp) mainApp.style.display = 'none';
+
+    // ซ่อนหน้าจดหมายไว้ก่อนจนกว่าจะโหลดข้อมูลเสร็จหรือผ่านรหัสผ่าน
+    if (recipientView) {
+      recipientView.style.opacity = '0';
+      recipientView.style.display = 'flex';
+    }
 
     try {
       const res = await fetch(`/api/letters/${slug}`);
@@ -643,13 +649,26 @@ async function checkRecipientMode() {
           data.stickers.forEach(s => renderInteractiveItem(rStickerCanvas, s, false));
         }
 
-        // ระบบคลิกเปิดจดหมาย (เช็ครหัสผ่านเฉพาะครั้งแรกที่เปิด)
         const unlockedKey = 'unlocked_' + slug;
+        const isUnlocked = localStorage.getItem(unlockedKey) === 'true';
+
+        // 🔒 หากมีรหัสผ่านและยังไม่ปลดล็อก ให้แสดงกล่องรหัสผ่านทันทีก่อนแสดงหน้าจดหมาย
+        if (data.passcode && data.passcode.trim() !== '' && !isUnlocked) {
+          showCustomPasscodeModal(data.passcode, data.passcodeHint, () => {
+            localStorage.setItem(unlockedKey, 'true');
+          });
+        }
+
+        // แสดงหน้าจอผู้รับหลังจากประมวลผลรหัสผ่านเสร็จ
+        setTimeout(() => { 
+          if (recipientView) recipientView.style.opacity = '1'; 
+        }, 50);
+
+        // ระบบคลิกเปิดจดหมาย
         if (recipientCover && recipientStage) {
           recipientCover.addEventListener('click', () => {
-            const isUnlocked = localStorage.getItem(unlockedKey) === 'true';
-            
-            if (data.passcode && data.passcode.trim() !== '' && !isUnlocked) {
+            const currentlyUnlocked = localStorage.getItem(unlockedKey) === 'true';
+            if (data.passcode && data.passcode.trim() !== '' && !currentlyUnlocked) {
               showCustomPasscodeModal(data.passcode, data.passcodeHint, () => {
                 localStorage.setItem(unlockedKey, 'true');
                 recipientStage.classList.add('open');
@@ -667,11 +686,6 @@ async function checkRecipientMode() {
             recipientStage.classList.remove('open');
             recipientStage.classList.add('closed');
           });
-        }
-
-        if (recipientView) {
-          recipientView.style.display = 'flex';
-          setTimeout(() => { recipientView.style.opacity = '1'; }, 50);
         }
       }
     } catch (e) {
