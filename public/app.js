@@ -1,96 +1,791 @@
-﻿const express = require('express');
-const app = express();
+﻿let dynamicPhotos = [];   
+let dynamicStickers = []; 
+let currentCoverStyle = 'envelope';
+let customCoverImage = '';
+let currentCoverColor = '#ff5277';
+let currentThemeColor = '#fdf2f4';
 
-// ต้องมี middleware ตัวนี้เพื่อให้อ่าน req.body แบบ JSON ได้ (รองรับไฟล์รูปภาพ base64 ขนาดใหญ่)
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ limit: '50mb', extended: true }));
+// 1. หัวใจและอิโมจิลอยฟุ้งกระจาย
+function createFloatingHearts() {
+  const container = document.getElementById('floatingHeartsContainer');
+  if (!container) return;
+  const emojis = ['💖', '💗', '💓', '💞', '💕', '✨', '🌸', '🌷', '💘', '💌', '🌟', '🥰', '🐷', '🐽', '🐗', '🐱', '🐶', '🐰', '🦊', '🐼', '🐥'];
 
-// ตัวอย่างที่เก็บข้อมูลชั่วคราวแบบ In-Memory (หรือถ้าใช้ Redis / Database ให้ปรับตรงจุดบันทึกครับ)
-const lettersDB = {};
+  setInterval(() => {
+    const heart = document.createElement('div');
+    heart.className = 'floating-heart';
+    heart.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+    heart.style.left = Math.random() * 100 + 'vw';
+    heart.style.animationDuration = (Math.random() * 2.5 + 3) + 's';
+    heart.style.fontSize = (Math.random() * 16 + 18) + 'px';
+    container.appendChild(heart);
+    setTimeout(() => heart.remove(), 5500);
+  }, 300);
+}
 
-// ==========================================
-// 1. API สำหรับบันทึกจดหมาย (POST)
-// ==========================================
-app.post('/api/letters', async (req, res) => {
-  try {
-    console.log('📥 รับข้อมูลมาจาก Frontend:', req.body);
+function applyStyleToElement(previewEl, text, fontSel, sizeSel, boldBtn, colorSel, defaultText) {
+  if (!previewEl) return;
+  previewEl.textContent = text !== undefined && text !== '' ? text : defaultText;
+  if (fontSel) previewEl.style.fontFamily = fontSel.value;
+  if (sizeSel) previewEl.style.fontSize = sizeSel.value + 'px';
+  if (boldBtn) {
+    if (boldBtn.classList.contains('active')) {
+      previewEl.style.fontWeight = 'bold';
+    } else {
+      previewEl.style.fontWeight = 'normal';
+    }
+  }
+  if (colorSel) previewEl.style.color = colorSel.value;
+}
 
-    const {
-      coverStyle,
-      customCoverImage,
-      coverColor,
-      themeColor,
-      passcode,
-      passcodeHint,
-      textStyles,
-      photos,
-      stickers
-    } = req.body;
+// 2. พรีวิวข้อความ Realtime
+function setupRealtimePreview() {
+  const setupField = (inputId, fontId, sizeId, boldId, colorId, previewId, defaultText) => {
+    const input = document.getElementById(inputId);
+    const font = document.getElementById(fontId);
+    const size = document.getElementById(sizeId);
+    const bold = document.getElementById(boldId);
+    const color = document.getElementById(colorId);
+    const preview = document.getElementById(previewId);
 
-    // สร้าง ID สุ่มแบบสั้น เช่น 'k9x2pL8' สำหรับใช้ใน URL
-    const letterId = Math.random().toString(36).substring(2, 9);
+    if (!preview) return;
 
-    // รวบรวมข้อมูลทั้งหมดที่ส่งมาจาก app.js
-    const newLetter = {
-      id: letterId,
-      coverStyle: coverStyle || 'envelope',
-      customCoverImage: customCoverImage || '',
-      coverColor: coverColor || '#ff5277',
-      themeColor: themeColor || '#fdf2f4',
-      passcode: passcode ? String(passcode).trim() : '',
-      passcodeHint: passcodeHint ? String(passcodeHint).trim() : '',
-      textStyles: textStyles || {},
-      photos: Array.isArray(photos) ? photos : [],
-      stickers: Array.isArray(stickers) ? stickers : [],
-      createdAt: new Date().toISOString()
+    const update = () => {
+      applyStyleToElement(preview, input ? input.value : '', font, size, bold, color, defaultText);
     };
 
-    // 💾 บันทึกลง Database / Memory / Redis
-    lettersDB[letterId] = newLetter;
-    // หากใช้ Redis ให้ใช้: await redis.set(`letter:${letterId}`, JSON.stringify(newLetter));
-
-    // ส่ง Response กลับไปให้ Frontend
-    return res.status(200).json({
-      success: true,
-      id: letterId,
-      shareUrl: `/letter/${letterId}`
-    });
-
-  } catch (error) {
-    console.error('❌ เกิดข้อผิดพลาดในการบันทึก:', error);
-    return res.status(500).json({ 
-      success: false, 
-      message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์' 
-    });
-  }
-});
-
-// ==========================================
-// 2. API สำหรับดึงข้อมูลจดหมายไปแสดงผล (GET)
-// ==========================================
-app.get('/api/letters/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    // ดึงข้อมูลจาก Database / Memory / Redis
-    const letter = lettersDB[id];
-    // หากใช้ Redis ให้ใช้: const letter = JSON.parse(await redis.get(`letter:${id}`));
-
-    if (!letter) {
-      return res.status(404).json({ 
-        success: false, 
-        message: 'ไม่พบจดหมายฉบับนี้' 
+    if (input) input.addEventListener('input', update);
+    if (font) font.addEventListener('change', update);
+    if (size) size.addEventListener('input', update);
+    if (color) color.addEventListener('input', update);
+    if (bold) {
+      bold.addEventListener('click', () => {
+        bold.classList.toggle('active');
+        update();
       });
     }
 
-    // ส่งข้อมูลจดหมายกลับไปให้หน้าจดหมายของผู้รับ
-    return res.status(200).json(letter);
+    update();
+  };
 
-  } catch (error) {
-    console.error('❌ เกิดข้อผิดพลาดในการดึงข้อมูล:', error);
-    return res.status(500).json({ 
-      success: false, 
-      message: 'เกิดข้อผิดพลาดในการโหลดข้อมูล' 
+  setupField('coverTitleInput', 'coverTitleFont', 'coverTitleSize', 'coverTitleBold', 'coverTitleColor', 'coverTitleText', 'มีความรักส่งถึงคุณ 💕');
+  setupField('coverSubtextInput', 'coverSubtextFont', 'coverSubtextSize', 'coverSubtextBold', 'coverSubtextColor', 'coverSubtext', 'แตะเพื่อเปิดดูเซอร์ไพรส์ ✨');
+  setupField('greetingInput', 'greetingFont', 'greetingSize', 'greetingBold', 'greetingColor', 'previewGreeting', 'สวัสดีคุณคนสวย 💖');
+  setupField('messageInput', 'messageFont', 'messageSize', 'messageBold', 'messageColor', 'previewMessage', 'ข้อความบอกรัก...');
+  setupField('signatureInput', 'signatureFont', 'signatureSize', 'signatureBold', 'signatureColor', 'previewSignature', 'ด้วยรักเสมอมา');
+}
+
+// 3. ปรับสีธีม & สีปก
+function setupColorPickers() {
+  const themePicker = document.getElementById('themeColorPicker');
+  const coverPicker = document.getElementById('coverColorPicker');
+
+  if (themePicker) {
+    themePicker.addEventListener('input', (e) => {
+      currentThemeColor = e.target.value;
+      document.body.style.backgroundColor = currentThemeColor;
     });
   }
+
+  if (coverPicker) {
+    coverPicker.addEventListener('input', (e) => {
+      currentCoverColor = e.target.value;
+      updateCoverDisplay(currentCoverStyle, customCoverImage, 'coverGraphic', 'coverBadge', 'coverTitleText', currentCoverColor);
+    });
+  }
+}
+
+// 4. สไตล์ปก
+function setupStyleSelector() {
+  const styleBtns = document.querySelectorAll('.style-btn');
+  const customCoverInput = document.getElementById('customCoverInput');
+
+  styleBtns.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      styleBtns.forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      currentCoverStyle = btn.dataset.style;
+      customCoverImage = '';
+      const coverLabel = document.getElementById('customCoverLabel');
+      if (coverLabel) coverLabel.textContent = '🖼️ หรืออัปโหลดรูปหน้าปกเอง (คลิก)';
+
+      updateCoverDisplay(currentCoverStyle, '', 'coverGraphic', 'coverBadge', 'coverTitleText', currentCoverColor);
+    });
+  });
+
+  if (customCoverInput) {
+    customCoverInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        customCoverImage = evt.target.result;
+        currentCoverStyle = 'custom';
+        styleBtns.forEach((b) => b.classList.remove('active'));
+        const coverLabel = document.getElementById('customCoverLabel');
+        if (coverLabel) coverLabel.textContent = '✅ เปลี่ยนรูปปกเรียบร้อย!';
+
+        updateCoverDisplay('custom', customCoverImage, 'coverGraphic', 'coverBadge', 'coverTitleText', currentCoverColor);
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+}
+
+function updateCoverDisplay(style, customImg, graphicId, badgeId, titleId, color, keepCustomTitle = false) {
+  const graphic = document.getElementById(graphicId);
+  const badge = document.getElementById(badgeId);
+  const title = document.getElementById(titleId);
+
+  if (!graphic) return;
+
+  graphic.style.backgroundImage = '';
+  graphic.className = 'cover-graphic';
+  graphic.style.backgroundColor = color || '#ff5277';
+
+  if (style === 'custom' && customImg) {
+    graphic.style.backgroundImage = `url(${customImg})`;
+    if (badge) badge.style.display = 'none';
+    if (title && !keepCustomTitle) title.textContent = 'มีรูปภาพความทรงจำส่งถึงคุณ 📸';
+  } else {
+    if (badge) badge.style.display = 'block';
+    graphic.classList.add(`${style}-style`);
+
+    if (title && !keepCustomTitle) {
+      if (style === 'envelope') title.textContent = 'มีความรักส่งถึงคุณ 💕';
+      if (style === 'giftbox') title.textContent = 'มีกล่องของขวัญรอเปิดอยู่ 🎁';
+      if (style === 'bear') title.textContent = 'น้องหมีดุ๊กดิ๊กนำความรักมาส่ง 🧸';
+    }
+  }
+}
+
+// 5. อัปโหลดรูปภาพ
+function setupMultiPhotoUpload() {
+  const multiInput = document.getElementById('multiPhotoInput');
+  const frameStyleSelect = document.getElementById('photoFrameStyleSelect');
+  const canvas = document.getElementById('photosCanvas');
+
+  if (!multiInput) return;
+
+  multiInput.addEventListener('change', (e) => {
+    const files = Array.from(e.target.files);
+    files.forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        const photoObj = {
+          id: 'p_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+          type: 'photo',
+          src: evt.target.result,
+          frameStyle: frameStyleSelect ? frameStyleSelect.value : 'polaroid',
+          x: 50 + Math.random() * 80,
+          y: 50 + Math.random() * 80,
+          width: 120,
+          rotation: (Math.random() * 20) - 10
+        };
+
+        dynamicPhotos.push(photoObj);
+        renderInteractiveItem(canvas, photoObj, true);
+      };
+      reader.readAsDataURL(file);
+    });
+  });
+}
+
+// 6. เพิ่มสติ๊กเกอร์
+function setupStickerPalette() {
+  const stickerBtns = document.querySelectorAll('.sticker-add-btn');
+  const stickerCanvas = document.getElementById('stickerCanvas');
+
+  stickerBtns.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const emoji = btn.dataset.emoji;
+      const stickerObj = {
+        id: 's_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+        type: 'sticker',
+        emoji: emoji,
+        x: 60 + Math.random() * 100,
+        y: 60 + Math.random() * 100,
+        width: 50,
+        rotation: (Math.random() * 20) - 10
+      };
+
+      dynamicStickers.push(stickerObj);
+      renderInteractiveItem(stickerCanvas, stickerObj, true);
+    });
+  });
+}
+
+function renderInteractiveItem(canvas, itemData, isEditable = false) {
+  if (!canvas) return;
+
+  const item = document.createElement('div');
+  item.className = `interactive-item ${itemData.type === 'photo' ? 'frame-' + (itemData.frameStyle || 'polaroid') : 'item-sticker'}`;
+  item.id = itemData.id;
+  
+  item.style.position = 'absolute';
+  item.style.left = itemData.x + 'px';
+  item.style.top = itemData.y + 'px';
+  item.style.width = itemData.width + 'px';
+  item.style.transform = `rotate(${itemData.rotation}deg)`;
+  item.style.zIndex = '50';
+
+  if (itemData.type === 'photo') {
+    const img = document.createElement('img');
+    img.src = itemData.src;
+    item.appendChild(img);
+  } else {
+    item.textContent = itemData.emoji;
+    item.style.fontSize = (itemData.width * 0.8) + 'px';
+  }
+
+  if (isEditable) {
+    const controls = document.createElement('div');
+    controls.className = 'item-controls';
+
+    const btnDel = document.createElement('div');
+    btnDel.className = 'btn-delete-item';
+    btnDel.textContent = '✕';
+    btnDel.onclick = (e) => {
+      e.stopPropagation();
+      if (itemData.type === 'photo') {
+        dynamicPhotos = dynamicPhotos.filter(p => p.id !== itemData.id);
+      } else {
+        dynamicStickers = dynamicStickers.filter(s => s.id !== itemData.id);
+      }
+      item.remove();
+    };
+
+    const handleResize = document.createElement('div');
+    handleResize.className = 'handle-resize';
+
+    const handleRotate = document.createElement('div');
+    handleRotate.className = 'handle-rotate';
+    handleRotate.textContent = '🔄';
+
+    controls.appendChild(btnDel);
+    controls.appendChild(handleResize);
+    controls.appendChild(handleRotate);
+    item.appendChild(controls);
+
+    makeElementInteractive(item, itemData, handleResize, handleRotate);
+  }
+
+  canvas.appendChild(item);
+}
+
+// รองรับทั้ง เมาส์ (PC) และการสัมผัส (Mobile Touch)
+function makeElementInteractive(el, itemData, resizeHandle, rotateHandle) {
+  let isDragging = false;
+  let isResizing = false;
+  let isRotating = false;
+  let startX, startY, startWidth, initialAngle;
+
+  const getPos = (e) => {
+    if (e.touches && e.touches.length > 0) {
+      return { clientX: e.touches[0].clientX, clientY: e.touches[0].clientY };
+    }
+    return { clientX: e.clientX, clientY: e.clientY };
+  };
+
+  const handleStart = (e) => {
+    e.stopPropagation();
+    const pos = getPos(e);
+    const target = e.target;
+
+    if (target === resizeHandle) {
+      isResizing = true;
+      startX = pos.clientX;
+      startWidth = el.offsetWidth;
+    } else if (target === rotateHandle) {
+      isRotating = true;
+      const rect = el.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      const radians = Math.atan2(pos.clientY - centerY, pos.clientX - centerX);
+      initialAngle = radians * (180 / Math.PI) - itemData.rotation;
+    } else {
+      isDragging = true;
+      startX = pos.clientX - el.offsetLeft;
+      startY = pos.clientY - el.offsetTop;
+    }
+  };
+
+  const handleMove = (e) => {
+    if (!isDragging && !isResizing && !isRotating) return;
+    const pos = getPos(e);
+
+    if (isDragging) {
+      let newX = pos.clientX - startX;
+      let newY = pos.clientY - startY;
+      el.style.left = newX + 'px';
+      el.style.top = newY + 'px';
+      itemData.x = newX;
+      itemData.y = newY;
+    } else if (isResizing) {
+      let newWidth = startWidth + (pos.clientX - startX);
+      if (newWidth > 30 && newWidth < 350) {
+        el.style.width = newWidth + 'px';
+        itemData.width = newWidth;
+        if (itemData.type === 'sticker') {
+          el.style.fontSize = (newWidth * 0.8) + 'px';
+        }
+      }
+    } else if (isRotating) {
+      const rect = el.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      const radians = Math.atan2(pos.clientY - centerY, pos.clientX - centerX);
+      let degree = radians * (180 / Math.PI) - initialAngle;
+
+      el.style.transform = `rotate(${degree}deg)`;
+      itemData.rotation = degree;
+    }
+  };
+
+  const handleEnd = () => {
+    isDragging = false;
+    isResizing = false;
+    isRotating = false;
+  };
+
+  el.addEventListener('mousedown', handleStart);
+  el.addEventListener('touchstart', handleStart, { passive: false });
+
+  document.addEventListener('mousemove', handleMove);
+  document.addEventListener('touchmove', handleMove, { passive: false });
+
+  document.addEventListener('mouseup', handleEnd);
+  document.addEventListener('touchend', handleEnd);
+}
+
+function setupEnvelopeToggle() {
+  const previewContainer = document.getElementById('previewContainer');
+  const cover = document.getElementById('coverEnvelope');
+  const letterBoard = document.getElementById('letterBoard');
+
+  if (cover && previewContainer) {
+    cover.addEventListener('click', () => {
+      previewContainer.classList.add('open');
+      previewContainer.classList.remove('closed');
+    });
+  }
+
+  if (letterBoard && previewContainer) {
+    letterBoard.addEventListener('click', (e) => {
+      if (e.target === letterBoard || e.target.id === 'photosCanvas' || e.target.id === 'stickerCanvas') {
+        previewContainer.classList.remove('open');
+        previewContainer.classList.add('closed');
+      }
+    });
+  }
+}
+
+function getTextConfig(inputId, fontId, sizeId, boldId, colorId) {
+  const input = document.getElementById(inputId);
+  const font = document.getElementById(fontId);
+  const size = document.getElementById(sizeId);
+  const bold = document.getElementById(boldId);
+  const color = document.getElementById(colorId);
+
+  return {
+    text: input ? input.value : '',
+    font: font ? font.value : "'Mali', cursive",
+    size: size ? Number(size.value) : 16,
+    bold: bold ? bold.classList.contains('active') : false,
+    color: color ? color.value : '#000000'
+  };
+}
+
+function setupSaveButton() {
+  const saveBtn = document.getElementById('saveButton');
+
+  if (!saveBtn) return;
+
+  saveBtn.addEventListener('click', async () => {
+    const passcodeInput = document.getElementById('passcodeInput');
+    const passcodeHintInput = document.getElementById('passcodeHintInput');
+
+    const passcode = passcodeInput ? passcodeInput.value.trim() : '';
+    const passcodeHint = passcodeHintInput ? passcodeHintInput.value.trim() : '';
+
+    if (passcode && !/^\d{6}$/.test(passcode)) {
+      alert('⚠️ กรุณากำหนดรหัสผ่านเป็นตัวเลข 6 หลักเท่านั้น หรือเว้นว่างไว้หากไม่ต้องการล็อกครับ');
+      if (passcodeInput) passcodeInput.focus();
+      return;
+    }
+
+    saveBtn.disabled = true;
+    saveBtn.textContent = '⏳ กำลังสร้างความหวาน...';
+
+    const payload = {
+      coverStyle: currentCoverStyle,
+      customCoverImage: customCoverImage,
+      coverColor: currentCoverColor,
+      themeColor: currentThemeColor,
+      passcode: passcode,
+      passcodeHint: passcodeHint,
+      textStyles: {
+        coverTitle: getTextConfig('coverTitleInput', 'coverTitleFont', 'coverTitleSize', 'coverTitleBold', 'coverTitleColor'),
+        coverSubtext: getTextConfig('coverSubtextInput', 'coverSubtextFont', 'coverSubtextSize', 'coverSubtextBold', 'coverSubtextColor'),
+        greeting: getTextConfig('greetingInput', 'greetingFont', 'greetingSize', 'greetingBold', 'greetingColor'),
+        message: getTextConfig('messageInput', 'messageFont', 'messageSize', 'messageBold', 'messageColor'),
+        signature: getTextConfig('signatureInput', 'signatureFont', 'signatureSize', 'signatureBold', 'signatureColor')
+      },
+      photos: dynamicPhotos,
+      stickers: dynamicStickers
+    };
+
+    try {
+      const response = await fetch('/api/letters', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        const fullShareUrl = window.location.origin + data.shareUrl;
+        showSuccessModal(fullShareUrl);
+      } else {
+        alert('เกิดข้อผิดพลาดในการบันทึก กรุณาลองใหม่อีกครั้ง');
+        saveBtn.disabled = false;
+        saveBtn.textContent = '💖 สร้างจดหมาย & รับลิงก์ส่งแฟน';
+      }
+    } catch (err) {
+      alert('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
+      saveBtn.disabled = false;
+      saveBtn.textContent = '💖 สร้างจดหมาย & รับลิงก์ส่งแฟน';
+    }
+  });
+}
+
+function showSuccessModal(url) {
+  let modalOverlay = document.getElementById('successModalOverlay');
+  if (!modalOverlay) {
+    modalOverlay = document.createElement('div');
+    modalOverlay.id = 'successModalOverlay';
+    modalOverlay.style.cssText = `
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(5px);
+      display: flex; justify-content: center; align-items: center; z-index: 9999;
+    `;
+    document.body.appendChild(modalOverlay);
+  }
+
+  modalOverlay.innerHTML = `
+    <div style="
+      background: #ffffff; padding: 30px; border-radius: 24px; width: 90%; max-width: 480px;
+      text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.2); font-family: 'Mali', cursive;
+    ">
+      <div style="font-size: 50px; margin-bottom: 10px;">🔒🎉</div>
+      <h2 style="color: #ff5277; margin-bottom: 8px; font-size: 1.5rem;">สร้างจดหมายสำเร็จแล้ว!</h2>
+      <p style="color: #666; font-size: 0.9rem; margin-bottom: 20px;">คัดลอกลิงก์นี้ส่งให้คนพิเศษของคุณได้เลย ❤️</p>
+      
+      <div style="
+        background: #fdf2f4; border: 2px dashed #ffb6c1; padding: 12px; border-radius: 12px;
+        word-break: break-all; color: #333; font-size: 0.85rem; margin-bottom: 20px; user-select: all;
+      ">
+        ${url}
+      </div>
+
+      <div style="display: flex; gap: 10px; flex-direction: column;">
+        <button id="modalCopyBtn" style="
+          background: linear-gradient(135deg, #ff5277, #ff758c); color: white; border: none;
+          padding: 12px; border-radius: 12px; font-weight: bold; font-size: 1rem; cursor: pointer;
+          box-shadow: 0 4px 15px rgba(255,82,119,0.4);
+        ">📋 คัดลอกลิงก์จดหมาย</button>
+        
+        <a href="${url}" target="_blank" style="
+          background: #fff; color: #ff5277; border: 2px solid #ff5277; text-decoration: none;
+          padding: 10px; border-radius: 12px; font-weight: bold; font-size: 0.95rem; display: block;
+        ">👀 เปิดดูจดหมายของคุณ</a>
+        
+        <button id="modalCloseBtn" style="
+          background: transparent; color: #888; border: none; padding: 8px; margin-top: 5px;
+          font-size: 0.85rem; cursor: pointer;
+        ">← กลับไปแก้ไขจดหมายต่อ</button>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('modalCopyBtn').addEventListener('click', () => {
+    navigator.clipboard.writeText(url).then(() => {
+      const btn = document.getElementById('modalCopyBtn');
+      btn.textContent = '✨ คัดลอกลิงก์สำเร็จแล้ว!';
+      btn.style.background = '#38b2ac';
+      setTimeout(() => {
+        btn.textContent = '📋 คัดลอกลิงก์จดหมาย';
+        btn.style.background = 'linear-gradient(135deg, #ff5277, #ff758c)';
+      }, 2500);
+    });
+  });
+
+  document.getElementById('modalCloseBtn').addEventListener('click', () => {
+    modalOverlay.remove();
+    const saveBtn = document.getElementById('saveButton');
+    if (saveBtn) {
+      saveBtn.disabled = false;
+      saveBtn.textContent = '💖 สร้างจดหมาย & รับลิงก์ส่งแฟน';
+    }
+  });
+}
+
+// 8. ฟังก์ชันดึงข้อความให้รองรับรูปแบบข้อมูลที่หลากหลายขึ้น
+function applySavedStyle(previewEl, styleObj, defaultText) {
+  if (!previewEl) return;
+  
+  if (typeof styleObj === 'string') {
+    previewEl.textContent = styleObj || defaultText;
+    return;
+  }
+
+  if (styleObj && typeof styleObj === 'object') {
+    const textVal = (styleObj.text !== undefined && styleObj.text !== null && styleObj.text !== '') ? styleObj.text : defaultText;
+    previewEl.textContent = textVal;
+    if (styleObj.font) previewEl.style.fontFamily = styleObj.font;
+    if (styleObj.size) previewEl.style.fontSize = styleObj.size + 'px';
+    previewEl.style.fontWeight = styleObj.bold ? 'bold' : 'normal';
+    if (styleObj.color) previewEl.style.color = styleObj.color;
+  } else {
+    previewEl.textContent = defaultText;
+  }
+}
+
+// 9. ตรวจสอบโหมดผู้รับและแสดงผล
+async function checkRecipientMode() {
+  const path = window.location.pathname;
+  const match = path.match(/\/letter\/(.+)$/);
+
+  if (match) {
+    const slug = match[1];
+    const mainApp = document.getElementById('mainApp');
+    let recipientView = document.getElementById('recipientView');
+
+    if (mainApp) mainApp.style.display = 'none';
+
+    if (!recipientView) {
+      recipientView = document.createElement('div');
+      recipientView.id = 'recipientView';
+      document.body.appendChild(recipientView);
+    }
+
+    recipientView.style.cssText = 'display:flex; justify-content:center; align-items:center; width:100vw; height:100vh; position:fixed; top:0; left:0; z-index:99999; overflow:hidden;';
+
+    try {
+      const res = await fetch(`/api/letters/${slug}`);
+      if (res.ok) {
+        const data = await res.json();
+        renderLetterContent(data, recipientView);
+      } else {
+        recipientView.innerHTML = `<div style="text-align:center; font-family:'Mali',cursive; color:#ff5277; background:white; padding:30px; border-radius:20px;"><h2>❌ ไม่พบจดหมายฉบับนี้ หรือลิงก์อาจไม่ถูกต้อง</h2></div>`;
+      }
+    } catch (e) {
+      console.error('Fetch Error:', e);
+      recipientView.innerHTML = `<div style="text-align:center; font-family:'Mali',cursive; color:#ff5277; background:white; padding:30px; border-radius:20px;"><h2>⚠️ ไม่สามารถโหลดข้อมูลจดหมายได้</h2></div>`;
+    }
+  }
+}
+
+// 10. ป๊อบอัพกรอกรหัสผ่านก่อนเปิดจดหมาย
+function showPasscodeModal(data, correctPasscode, onUnlocked) {
+  let modal = document.getElementById('passcodeModalOverlay');
+  if (modal) modal.remove();
+
+  modal = document.createElement('div');
+  modal.id = 'passcodeModalOverlay';
+  modal.style.cssText = `
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    background: rgba(0, 0, 0, 0.65); backdrop-filter: blur(8px);
+    display: flex; justify-content: center; align-items: center; z-index: 999999;
+  `;
+
+  const hintText = data.passcodeHint || data.hint || '';
+
+  modal.innerHTML = `
+    <div style="
+      background: #ff5277; padding: 35px 25px; border-radius: 28px; width: 88%; max-width: 380px;
+      text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.3); font-family: 'Mali', cursive;
+      color: white; position: relative; overflow: hidden;
+    ">
+      <div style="font-size: 45px; margin-bottom: 8px;">🔒💖</div>
+      <h3 style="color: white; margin-bottom: 6px; font-size: 1.4rem; font-weight: bold;">กรอกรหัสผ่านเพื่อเปิดดูจดหมาย</h3>
+      
+      ${hintText ? `<p style="color: #ffe6eb; font-size: 0.85rem; margin-bottom: 20px;">💡 คำใบ้ : ${hintText}</p>` : '<div style="margin-bottom: 20px;"></div>'}
+
+      <div style="position: relative; display: inline-block; width: 100%; margin-bottom: 20px;">
+        <div style="display: flex; justify-content: center; gap: 8px;" id="pinBoxesContainer">
+          <div class="pin-box" style="width: 40px; height: 46px; background: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; color: #ff5277; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.15);"></div>
+          <div class="pin-box" style="width: 40px; height: 46px; background: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; color: #ff5277; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.15);"></div>
+          <div class="pin-box" style="width: 40px; height: 46px; background: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; color: #ff5277; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.15);"></div>
+          <div class="pin-box" style="width: 40px; height: 46px; background: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; color: #ff5277; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.15);"></div>
+          <div class="pin-box" style="width: 40px; height: 46px; background: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; color: #ff5277; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.15);"></div>
+          <div class="pin-box" style="width: 40px; height: 46px; background: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; color: #ff5277; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.15);"></div>
+        </div>
+        <input type="tel" id="realPinInput" pattern="[0-9]*" inputmode="numeric" maxlength="6" style="
+          position: absolute; top:0; left:0; width: 100%; height: 100%; opacity: 0.01; cursor: pointer; z-index: 10;
+        " autofocus>
+      </div>
+
+      <button id="submitPasscodeBtn" style="
+        width: 75%; background: white; color: #ff5277; border: none;
+        padding: 11px; border-radius: 18px; font-weight: bold; font-size: 1.05rem; cursor: pointer;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.15); transition: transform 0.2s;
+      ">ปลดล็อกจดหมาย ✨</button>
+      
+      <div id="passcodeError" style="color: #ffffff; background: rgba(0,0,0,0.2); border-radius: 8px; padding: 6px; font-size: 0.85rem; margin-top: 12px; display: none; font-weight: bold;">
+        ❌ รหัสผ่านไม่ถูกต้อง ลองใหม่อีกครั้งนะ
+      </div>
+      
+      <button id="closePasscodeModalBtn" style="
+        background: transparent; color: #ffe6eb; border: none; padding: 6px; margin-top: 10px;
+        font-size: 0.8rem; cursor: pointer; text-decoration: underline;
+      ">ยกเลิก</button>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  const realInput = document.getElementById('realPinInput');
+  const pinBoxes = modal.querySelectorAll('.pin-box');
+  const errEl = document.getElementById('passcodeError');
+  const submitBtn = document.getElementById('submitPasscodeBtn');
+  const cancelBtn = document.getElementById('closePasscodeModalBtn');
+
+  setTimeout(() => realInput.focus(), 150);
+
+  const checkCode = () => {
+    const val = realInput.value.trim();
+    if (val === String(correctPasscode).trim()) {
+      modal.remove();
+      if (typeof onUnlocked === 'function') onUnlocked();
+    } else {
+      errEl.style.display = 'block';
+      realInput.value = '';
+      pinBoxes.forEach(box => box.textContent = '');
+      setTimeout(() => realInput.focus(), 150);
+    }
+  };
+
+  realInput.addEventListener('input', () => {
+    const val = realInput.value;
+    pinBoxes.forEach((box, idx) => {
+      box.textContent = val[idx] ? '●' : '';
+    });
+    if (val.length === String(correctPasscode).trim().length) {
+      checkCode();
+    } else {
+      errEl.style.display = 'none';
+    }
+  });
+
+  submitBtn.addEventListener('click', checkCode);
+  cancelBtn.addEventListener('click', () => modal.remove());
+}
+
+// 11. ฟังก์ชันจัดหน้าจดหมายสำหรับผู้รับ
+function renderLetterContent(data, recipientView) {
+  if (data.themeColor) document.body.style.backgroundColor = data.themeColor;
+
+  recipientView.innerHTML = `
+    <div id="recipientStage" class="scrapbook-stage closed" style="position: relative; width: 100%; max-width: 800px; height: 90vh;">
+      <div id="recipientCover" class="cover-center-wrapper" style="cursor: pointer;">
+        <div class="cover-icon-box">
+          <div id="recipientCoverGraphic" class="cover-graphic envelope-style">
+            <span class="cover-badge" id="recipientCoverBadge">💖</span>
+            <div class="bear-ears" id="recipientBearEars"></div>
+          </div>
+        </div>
+        <h3 id="recipientCoverTitle" class="cover-title"></h3>
+        <p id="recipientCoverSubtext" class="cover-subtext"></p>
+      </div>
+
+      <div id="recipientLetterBoard" class="letter-board" style="position: relative; width: 100%; height: 100%; overflow: hidden;">
+        <div id="recipientStickerCanvas" class="sticker-canvas" style="position: absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:10;"></div>
+        <div id="recipientPhotosCanvas" class="photos-canvas" style="position: absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:5;"></div>
+
+        <div class="main-card" style="position: relative; z-index: 1;">
+          <h3 id="recipientGreeting" class="handwritten-title"></h3>
+          <p id="recipientMessage" class="handwritten-body"></p>
+          <p id="recipientSignature" class="handwritten-sig"></p>
+        </div>
+      </div>
+    </div>
+  `;
+
+  const styles = data.textStyles || data.styles || {};
+  
+  applySavedStyle(document.getElementById('recipientCoverTitle'), styles.coverTitle || data.coverTitle, 'มีความรักส่งถึงคุณ 💕');
+  applySavedStyle(document.getElementById('recipientCoverSubtext'), styles.coverSubtext || data.coverSubtext, 'แตะเพื่อเปิดดูเซอร์ไพรส์ ✨');
+  applySavedStyle(document.getElementById('recipientGreeting'), styles.greeting || data.greeting, 'สวัสดีคุณคนสวย 💖');
+  
+  const messageData = styles.message ? styles.message : { text: data.message };
+  applySavedStyle(document.getElementById('recipientMessage'), messageData, 'ข้อความบอกรัก...');
+  
+  applySavedStyle(document.getElementById('recipientSignature'), styles.signature || data.signature, 'ด้วยรักเสมอมา');
+
+  const coverStyle = data.coverStyle || 'envelope';
+  const customImg = data.customCoverImage || '';
+  const coverColor = data.coverColor || '#ff5277';
+  
+  // อัปเดตการแสดงผลหน้าปก (รักษาข้อความปกที่กำหนดเองไว้)
+  updateCoverDisplay(coverStyle, customImg, 'recipientCoverGraphic', 'recipientCoverBadge', 'recipientCoverTitle', coverColor, true);
+
+  const rPhotosCanvas = document.getElementById('recipientPhotosCanvas');
+  if (data.photos && Array.isArray(data.photos)) {
+    data.photos.forEach(p => renderInteractiveItem(rPhotosCanvas, p, false));
+  }
+
+  const rStickerCanvas = document.getElementById('recipientStickerCanvas');
+  if (data.stickers && Array.isArray(data.stickers)) {
+    data.stickers.forEach(s => renderInteractiveItem(rStickerCanvas, s, false));
+  }
+
+  const recipientStage = document.getElementById('recipientStage');
+  const recipientCover = document.getElementById('recipientCover');
+  const recipientLetterBoard = document.getElementById('recipientLetterBoard');
+
+  let isUnlocked = false;
+  const rawPasscode = data.passcode || data.password || data.pin;
+  const passcodeStr = rawPasscode ? String(rawPasscode).trim() : '';
+
+  if (recipientCover && recipientStage) {
+    recipientCover.addEventListener('click', () => {
+      // หากมีการตั้งรหัสผ่าน 6 หลักและยังไม่ได้ปลดล็อก ให้แสดงหน้าต่างใส่รหัสก่อน
+      if (passcodeStr && passcodeStr.length === 6 && !isUnlocked) {
+        showPasscodeModal(data, passcodeStr, () => {
+          isUnlocked = true;
+          recipientStage.classList.add('open');
+          recipientStage.classList.remove('closed');
+        });
+      } else {
+        recipientStage.classList.add('open');
+        recipientStage.classList.remove('closed');
+      }
+    });
+  }
+
+  // แตะที่การ์ดจดหมายเพื่อพับกลับเป็นซอง
+  if (recipientLetterBoard && recipientStage) {
+    recipientLetterBoard.addEventListener('click', (e) => {
+      if (e.target === recipientLetterBoard || e.target.id === 'recipientPhotosCanvas' || e.target.id === 'recipientStickerCanvas') {
+        recipientStage.classList.remove('open');
+        recipientStage.classList.add('closed');
+      }
+    });
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  createFloatingHearts();
+  setupRealtimePreview();
+  setupColorPickers();
+  setupStyleSelector();
+  setupMultiPhotoUpload();
+  setupStickerPalette();
+  setupEnvelopeToggle();
+  setupSaveButton();
+  checkRecipientMode();
 });
