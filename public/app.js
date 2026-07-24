@@ -527,12 +527,12 @@ async function checkRecipientMode() {
         
         if (data.themeColor) document.body.style.backgroundColor = data.themeColor;
 
-        // โหลดข้อความและการปรับแต่งฟอนต์/สี/ขนาด
+        // โหลดข้อความและการปรับแต่งฟอนต์/สี/ขนาด (แก้ไขชื่อฟังก์ชันให้ถูกต้อง)
         applyTextConfigToRecipient('coverTitle', data.coverTitle, 'recipientCoverTitle');
-        applyTextConfig('coverSubtext', data.coverSubtext, 'recipientCoverSubtext');
-        applyTextConfig('greeting', data.greeting, 'recipientGreeting');
-        applyTextConfig('message', data.message, 'recipientMessage');
-        applyTextConfig('signature', data.signature, 'recipientSignature');
+        applyTextConfigToRecipient('coverSubtext', data.coverSubtext, 'recipientCoverSubtext');
+        applyTextConfigToRecipient('greeting', data.greeting, 'recipientGreeting');
+        applyTextConfigToRecipient('message', data.message, 'recipientMessage');
+        applyTextConfigToRecipient('signature', data.signature, 'recipientSignature');
 
         // กรณีข้อมูลเก่าที่เป็นสตริงธรรมดา
         if (typeof data.greeting === 'string') document.getElementById('recipientGreeting').textContent = data.greeting;
