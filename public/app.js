@@ -630,28 +630,34 @@ function showPasscodeLockScreen(data, recipientView) {
 function renderLetterContent(data, recipientView) {
   if (data.themeColor) document.body.style.backgroundColor = data.themeColor;
 
+  recipientView.style.display = 'block';
+  recipientView.style.opacity = '1';
+
   recipientView.innerHTML = `
-    <div id="recipientStage" class="envelope-stage closed">
-      <div id="recipientCover" class="envelope-cover">
-        <div id="recipientCoverGraphic" class="cover-graphic">
-          <div id="recipientCoverBadge" class="cover-badge">💌</div>
+    <div id="recipientStage" class="scrapbook-stage closed">
+      
+      <div id="recipientCover" class="cover-center-wrapper">
+        <div class="cover-icon-box">
+          <div id="recipientCoverGraphic" class="cover-graphic envelope-style">
+            <span class="cover-badge" id="recipientCoverBadge">💖</span>
+            <div class="bear-ears" id="recipientBearEars"></div>
+          </div>
         </div>
-        <div class="cover-text-box">
-          <h1 id="recipientCoverTitle">มีความรักส่งถึงคุณ 💕</h1>
-          <p id="recipientCoverSubtext">แตะเพื่อเปิดดูเซอร์ไพรส์ ✨</p>
-        </div>
+        <h3 id="recipientCoverTitle" class="cover-title"></h3>
+        <p id="recipientCoverSubtext" class="cover-subtext"></p>
       </div>
 
       <div id="recipientLetterBoard" class="letter-board">
-        <div id="recipientPhotosCanvas" style="position: absolute; width:100%; height:100%; pointer-events:none;"></div>
-        <div id="recipientStickerCanvas" style="position: absolute; width:100%; height:100%; pointer-events:none;"></div>
-        
-        <div class="letter-paper">
-          <h2 id="recipientGreeting">สวัสดีคุณคนสวย 💖</h2>
-          <div id="recipientMessage" class="letter-message-body"></div>
-          <div id="recipientSignature" class="letter-signature">ด้วยรักเสมอมา</div>
+        <div id="recipientStickerCanvas" class="sticker-canvas"></div>
+        <div id="recipientPhotosCanvas" class="photos-canvas"></div>
+
+        <div class="main-card">
+          <h3 id="recipientGreeting" class="handwritten-title"></h3>
+          <p id="recipientMessage" class="handwritten-body"></p>
+          <p id="recipientSignature" class="handwritten-sig"></p>
         </div>
       </div>
+
     </div>
   `;
 
@@ -690,9 +696,11 @@ function renderLetterContent(data, recipientView) {
   }
 
   if (recipientLetterBoard && recipientStage) {
-    recipientLetterBoard.addEventListener('click', () => {
-      recipientStage.classList.remove('open');
-      recipientStage.classList.add('closed');
+    recipientLetterBoard.addEventListener('click', (e) => {
+      if (e.target === recipientLetterBoard || e.target.id === 'recipientPhotosCanvas' || e.target.id === 'recipientStickerCanvas') {
+        recipientStage.classList.remove('open');
+        recipientStage.classList.add('closed');
+      }
     });
   }
 }
