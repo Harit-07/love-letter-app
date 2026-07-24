@@ -70,6 +70,22 @@
           </div>
         </div>
 
+        <!-- 🔒 เพิ่มส่วนตั้งค่ารหัสผ่านและคำใบ้ -->
+        <div class="field-group section-divider" style="background: #fff5f7; border: 2px dashed #ffb6c1; padding: 15px; border-radius: 16px;">
+          <span class="field-label-main" style="color: #ff5277; margin-bottom: 8px;">🔒 ตั้งรหัสผ่านล็อกจดหมาย (ไม่บังคับ)</span>
+          <p style="font-size: 0.85rem; color: #666; margin-bottom: 12px;">หากต้องการให้ผู้รับต้องกรอกรหัสก่อนเปิดอ่าน สามารถตั้งค่าได้ที่นี่:</p>
+          
+          <div style="margin-bottom: 10px;">
+            <label style="font-size: 0.85rem; display: block; margin-bottom: 4px; color: #444;">รหัสผ่าน (ตัวเลข 6 หลัก):</label>
+            <input type="password" id="passcodeInput" maxlength="6" placeholder="เว้นว่างไว้ถ้าไม่ต้องการล็อก" style="width: 100%; padding: 10px; border: 1px solid #cbd5e0; border-radius: 10px; font-size: 1rem; outline: none; background: #fff;">
+          </div>
+
+          <div>
+            <label style="font-size: 0.85rem; display: block; margin-bottom: 4px; color: #444;">คำใบ้รหัสผ่าน (ให้ผู้รับทาย):</label>
+            <input type="text" id="passcodeHintInput" placeholder="เช่น วันเกิดเรา, เลขห้อง..." style="width: 100%; padding: 10px; border: 1px solid #cbd5e0; border-radius: 10px; font-size: 0.9rem; outline: none; background: #fff;">
+          </div>
+        </div>
+
         <div class="field-group section-divider">
           <span class="field-label-main">💌 แก้ไขข้อความหน้าปก (นอกจดหมาย)</span>
           
@@ -170,9 +186,12 @@
           </label>
         </div>
 
+        <!-- 🐷 เพิ่มสติกเกอร์น้องหมูและผองเพื่อน -->
         <div class="field-group">
           <span class="field-label">✨ เพิ่มสติกเกอร์</span>
           <div class="sticker-palette">
+            <button type="button" class="sticker-add-btn" data-emoji="🐷">🐷</button>
+            <button type="button" class="sticker-add-btn" data-emoji="🐽">🐽</button>
             <button type="button" class="sticker-add-btn" data-emoji="💖">💖</button>
             <button type="button" class="sticker-add-btn" data-emoji="🌹">🌹</button>
             <button type="button" class="sticker-add-btn" data-emoji="🎀">🎀</button>
