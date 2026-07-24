@@ -122,7 +122,7 @@ function updateCoverDisplay(style, customImg, graphicId, badgeId, titleId, color
   }
 }
 
-// 5. อัปโหลดรูปภาพ
+// 5. อัปโหลดรูปภาพ (บันทึกตำแหน่งเป็น %)
 function setupMultiPhotoUpload() {
   const multiInput = document.getElementById('multiPhotoInput');
   const frameStyleSelect = document.getElementById('photoFrameStyleSelect');
@@ -135,14 +135,18 @@ function setupMultiPhotoUpload() {
     files.forEach((file) => {
       const reader = new FileReader();
       reader.onload = (evt) => {
+        const canvasRect = canvas.getBoundingClientRect();
+        const startX = canvasRect.width ? (canvasRect.width / 2 - 60) : 50;
+        const startY = canvasRect.height ? (canvasRect.height / 2 - 60) : 50;
+
         const photoObj = {
           id: 'p_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
           type: 'photo',
           src: evt.target.result,
           frameStyle: frameStyleSelect.value || 'polaroid',
-          x: 50 + Math.random() * 80, // กำหนดตำแหน่งให้อยู่บนกระดาน
-          y: 50 + Math.random() * 80,
-          width: 120,
+          x: canvasRect.width ? ((startX / canvasRect.width) * 100).toFixed(2) + '%' : '40%',
+          y: canvasRect.height ? ((startY / canvasRect.height) * 100).toFixed(2) + '%' : '40%',
+          width: '30%',
           rotation: (Math.random() * 20) - 10
         };
 
@@ -154,7 +158,7 @@ function setupMultiPhotoUpload() {
   });
 }
 
-// 6. เพิ่มสติ๊กเกอร์
+// 6. เพิ่มสติ๊กเกอร์ (บันทึกตำแหน่งเป็น %)
 function setupStickerPalette() {
   const stickerBtns = document.querySelectorAll('.sticker-add-btn');
   const stickerCanvas = document.getElementById('stickerCanvas');
@@ -162,13 +166,17 @@ function setupStickerPalette() {
   stickerBtns.forEach((btn) => {
     btn.addEventListener('click', () => {
       const emoji = btn.dataset.emoji;
+      const canvasRect = stickerCanvas.getBoundingClientRect();
+      const startX = canvasRect.width ? (canvasRect.width / 2 - 25) : 50;
+      const startY = canvasRect.height ? (canvasRect.height / 2 - 25) : 50;
+
       const stickerObj = {
         id: 's_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
         type: 'sticker',
         emoji: emoji,
-        x: 60 + Math.random() * 100, // สุ่มลงบนกระดาน ไม่ชิดขอบซ้าย
-        y: 60 + Math.random() * 100,
-        width: 50,
+        x: canvasRect.width ? ((startX / canvasRect.width) * 100).toFixed(2) + '%' : '45%',
+        y: canvasRect.height ? ((startY / canvasRect.height) * 100).toFixed(2) + '%' : '45%',
+        width: '15%',
         rotation: (Math.random() * 20) - 10
       };
 
@@ -178,32 +186,37 @@ function setupStickerPalette() {
   });
 }
 
-// เรนเดอร์ Element (ย้าย, ขยาย, หมุนได้ครบถ้วน)
+// เรนเดอร์ Element (รองรับทั้ง % และ px)
 function renderInteractiveItem(canvas, itemData, isEditable = false) {
   if (!canvas) return;
 
   const item = document.createElement('div');
-  item.className = `interactive-item ${itemData.type === 'photo' ? 'frame-' + itemData.frameStyle : 'item-sticker'}`;
+  item.className = `interactive-item ${itemData.type === 'photo' ? 'frame-' + (itemData.frameStyle || 'polaroid') : 'item-sticker'}`;
   item.id = itemData.id;
-  item.style.left = itemData.x + 'px';
-  item.style.top = itemData.y + 'px';
-  item.style.width = itemData.width + 'px';
-  item.style.transform = `rotate(${itemData.rotation}deg)`;
+  
+  item.style.position = 'absolute';
+  item.style.left = typeof itemData.x === 'string' && itemData.x.includes('%') ? itemData.x : itemData.x + 'px';
+  item.style.top = typeof itemData.y === 'string' && itemData.y.includes('%') ? itemData.y : itemData.y + 'px';
+  item.style.width = typeof itemData.width === 'string' && itemData.width.includes('%') ? itemData.width : itemData.width + 'px';
+  item.style.transform = `rotate(${itemData.rotation || 0}deg)`;
+  item.style.zIndex = '50';
 
   if (itemData.type === 'photo') {
     const img = document.createElement('img');
     img.src = itemData.src;
+    img.style.width = '100%';
+    img.style.display = 'block';
     item.appendChild(img);
   } else {
     item.textContent = itemData.emoji;
-    item.style.fontSize = (itemData.width * 0.8) + 'px';
+    const numericWidth = parseFloat(itemData.width);
+    item.style.fontSize = (itemData.width + '').includes('%') ? `${numericWidth * 2.5}vw` : (numericWidth * 0.8) + 'px';
   }
 
   if (isEditable) {
     const controls = document.createElement('div');
     controls.className = 'item-controls';
 
-    // ปุ่มลบ
     const btnDel = document.createElement('div');
     btnDel.className = 'btn-delete-item';
     btnDel.textContent = '✕';
@@ -217,11 +230,9 @@ function renderInteractiveItem(canvas, itemData, isEditable = false) {
       item.remove();
     };
 
-    // ปุ่มย่อ-ขยาย
     const handleResize = document.createElement('div');
     handleResize.className = 'handle-resize';
 
-    // ปุ่มหมุน 🔄
     const handleRotate = document.createElement('div');
     handleRotate.className = 'handle-rotate';
     handleRotate.textContent = '🔄';
@@ -231,54 +242,73 @@ function renderInteractiveItem(canvas, itemData, isEditable = false) {
     controls.appendChild(handleRotate);
     item.appendChild(controls);
 
-    makeElementInteractive(item, itemData, handleResize, handleRotate);
+    makeElementInteractive(item, itemData, handleResize, handleRotate, canvas);
   }
 
   canvas.appendChild(item);
 }
 
-// ระบบขยับ Drag, ย่อขยาย Resize, หมุน Rotate
-function makeElementInteractive(el, itemData, resizeHandle, rotateHandle) {
-  let isDragging = false;
-  let isResizing = false;
-  let isRotating = false;
-
+// ระบบขยับ Drag, ย่อขยาย Resize, หมุน Rotate (แปลงพิกัดเป็น %)
+function makeElementInteractive(el, itemData, resizeHandle, rotateHandle, canvas) {
+  let isDragging = false, isResizing = false, isRotating = false;
   let startX, startY, startWidth, initialAngle;
 
-  el.addEventListener('mousedown', (e) => {
-    e.stopPropagation(); // กันไม่ให้ปิดจดหมายขณะขยับของ
+  const getPos = (e) => {
+    if (e.touches && e.touches.length > 0) {
+      return { clientX: e.touches[0].clientX, clientY: e.touches[0].clientY };
+    }
+    return { clientX: e.clientX, clientY: e.clientY };
+  };
 
-    if (e.target === resizeHandle) {
+  const updatePercentages = () => {
+    const canvasRect = canvas.getBoundingClientRect();
+    if (canvasRect.width > 0 && canvasRect.height > 0) {
+      const leftPx = el.offsetLeft;
+      const topPx = el.offsetTop;
+      const widthPx = el.offsetWidth;
+
+      itemData.x = ((leftPx / canvasRect.width) * 100).toFixed(2) + '%';
+      itemData.y = ((topPx / canvasRect.height) * 100).toFixed(2) + '%';
+      itemData.width = ((widthPx / canvasRect.width) * 100).toFixed(2) + '%';
+    }
+  };
+
+  const handleStart = (e) => {
+    e.stopPropagation();
+    const pos = getPos(e);
+    const target = e.target;
+
+    if (target === resizeHandle) {
       isResizing = true;
-      startX = e.clientX;
+      startX = pos.clientX;
       startWidth = el.offsetWidth;
-    } else if (e.target === rotateHandle) {
+    } else if (target === rotateHandle) {
       isRotating = true;
       const rect = el.getBoundingClientRect();
       const centerX = rect.left + rect.width / 2;
       const centerY = rect.top + rect.height / 2;
-      const radians = Math.atan2(e.clientY - centerY, e.clientX - centerX);
-      initialAngle = radians * (180 / Math.PI) - itemData.rotation;
+      const radians = Math.atan2(pos.clientY - centerY, pos.clientX - centerX);
+      initialAngle = radians * (180 / Math.PI) - (itemData.rotation || 0);
     } else {
       isDragging = true;
-      startX = e.clientX - el.offsetLeft;
-      startY = e.clientY - el.offsetTop;
+      startX = pos.clientX - el.offsetLeft;
+      startY = pos.clientY - el.offsetTop;
     }
-  });
+  };
 
-  document.addEventListener('mousemove', (e) => {
+  const handleMove = (e) => {
+    if (!isDragging && !isResizing && !isRotating) return;
+    const pos = getPos(e);
+
     if (isDragging) {
-      let newX = e.clientX - startX;
-      let newY = e.clientY - startY;
+      let newX = pos.clientX - startX;
+      let newY = pos.clientY - startY;
       el.style.left = newX + 'px';
       el.style.top = newY + 'px';
-      itemData.x = newX;
-      itemData.y = newY;
     } else if (isResizing) {
-      let newWidth = startWidth + (e.clientX - startX);
+      let newWidth = startWidth + (pos.clientX - startX);
       if (newWidth > 30 && newWidth < 350) {
         el.style.width = newWidth + 'px';
-        itemData.width = newWidth;
         if (itemData.type === 'sticker') {
           el.style.fontSize = (newWidth * 0.8) + 'px';
         }
@@ -287,22 +317,34 @@ function makeElementInteractive(el, itemData, resizeHandle, rotateHandle) {
       const rect = el.getBoundingClientRect();
       const centerX = rect.left + rect.width / 2;
       const centerY = rect.top + rect.height / 2;
-      const radians = Math.atan2(e.clientY - centerY, e.clientX - centerX);
+      const radians = Math.atan2(pos.clientY - centerY, pos.clientX - centerX);
       let degree = radians * (180 / Math.PI) - initialAngle;
-      
+
       el.style.transform = `rotate(${degree}deg)`;
       itemData.rotation = degree;
     }
-  });
+  };
 
-  document.addEventListener('mouseup', () => {
+  const handleEnd = () => {
+    if (isDragging || isResizing) {
+      updatePercentages();
+    }
     isDragging = false;
     isResizing = false;
     isRotating = false;
-  });
+  };
+
+  el.addEventListener('mousedown', handleStart);
+  el.addEventListener('touchstart', handleStart, { passive: false });
+
+  document.addEventListener('mousemove', handleMove);
+  document.addEventListener('touchmove', handleMove, { passive: false });
+
+  document.addEventListener('mouseup', handleEnd);
+  document.addEventListener('touchend', handleEnd);
 }
 
-// 7. คลิกเปิด-ปิดจดหมาย (คลิกกระดานจดหมายเพื่อปิด)
+// 7. คลิกเปิด-ปิดจดหมายฝั่งตัวอย่าง (Editor)
 function setupEnvelopeToggle() {
   const previewContainer = document.getElementById('previewContainer');
   const cover = document.getElementById('coverEnvelope');
@@ -317,7 +359,6 @@ function setupEnvelopeToggle() {
 
   if (letterBoard && previewContainer) {
     letterBoard.addEventListener('click', (e) => {
-      // คลิกตรงกระดานจดหมายเพื่อปิด
       if (e.target === letterBoard || e.target.id === 'photosCanvas' || e.target.id === 'stickerCanvas') {
         previewContainer.classList.remove('open');
         previewContainer.classList.add('closed');
@@ -326,7 +367,7 @@ function setupEnvelopeToggle() {
   }
 }
 
-// 8. บันทึกจดหมาย
+// 8. บันทึกจดหมาย (รวมรหัสผ่าน)
 function setupSaveButton() {
   const saveBtn = document.getElementById('saveButton');
   const copyBtn = document.getElementById('copyLinkButton');
@@ -347,7 +388,9 @@ function setupSaveButton() {
       coverColor: currentCoverColor,
       themeColor: currentThemeColor,
       photos: dynamicPhotos,
-      stickers: dynamicStickers
+      stickers: dynamicStickers,
+      passcode: document.getElementById('passcodeInput')?.value || '',
+      passcodeHint: document.getElementById('passcodeHintInput')?.value || ''
     };
 
     try {
@@ -399,7 +442,7 @@ function setupSaveButton() {
   }
 }
 
-// 9. หน้าผู้รับลิงก์
+// 9. หน้าผู้รับลิงก์ (ตรวจสอบรหัสผ่าน + ป้องกันตำแหน่งเพี้ยน)
 async function checkRecipientMode() {
   const path = window.location.pathname;
   const match = path.match(/\/letter\/(.+)$/);
@@ -443,9 +486,23 @@ async function checkRecipientMode() {
           data.stickers.forEach(s => renderInteractiveItem(rStickerCanvas, s, false));
         }
 
-        // คลิกเปิด
+        // ระบบคลิกเปิดพร้อมระบบเช็ครหัสผ่าน
         if (recipientCover && recipientStage) {
           recipientCover.addEventListener('click', () => {
+            if (data.passcode && data.passcode.trim() !== '') {
+              let hintText = data.passcodeHint ? `\n(คำใบ้: ${data.passcodeHint})` : '';
+              let userPin = prompt(`🔒 จดหมายฉบับนี้ถูกล็อครหัสผ่านไว้ กรุณากรอกรหัสผ่าน:${hintText}`);
+              
+              if (userPin === null) return; // กดยกเลิก
+              
+              if (userPin.trim() !== data.passcode.trim()) {
+                alert('❌ รหัสผ่านไม่ถูกต้อง ลองใหม่อีกครั้งนะจ๊ะ!');
+                return;
+              } else {
+                alert('🔓 รหัสผ่านถูกต้อง เปิดอ่านจดหมายได้เลยจ้า 💕');
+              }
+            }
+
             recipientStage.classList.add('open');
             recipientStage.classList.remove('closed');
           });
