@@ -157,7 +157,7 @@ function updateCoverDisplay(style, customImg, graphicId, badgeId, titleId, color
   }
 }
 
-// 5. อัปโหลดรูปภาพ
+// 5. อัปโหลดรูปภาพ (ใช้สัดส่วนความกว้างอ้างอิงเพื่อป้องกันการเบี้ยว)
 function setupMultiPhotoUpload() {
   const multiInput = document.getElementById('multiPhotoInput');
   const frameStyleSelect = document.getElementById('photoFrameStyleSelect');
@@ -170,18 +170,18 @@ function setupMultiPhotoUpload() {
     files.forEach((file) => {
       const reader = new FileReader();
       reader.onload = (evt) => {
-        const canvasRect = canvas.getBoundingClientRect();
-        const startX = canvasRect.width ? (canvasRect.width / 2 - 60) : 50;
-        const startY = canvasRect.height ? (canvasRect.height / 2 - 60) : 50;
+        const canvasWidth = canvas.clientWidth || 300;
+        const startX = canvasWidth * 0.35;
+        const startY = canvasWidth * 0.35;
 
         const photoObj = {
           id: 'p_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
           type: 'photo',
           src: evt.target.result,
           frameStyle: frameStyleSelect.value || 'polaroid',
-          x: canvasRect.width ? ((startX / canvasRect.width) * 100).toFixed(2) + '%' : '40%',
-          y: canvasRect.height ? ((startY / canvasRect.height) * 100).toFixed(2) + '%' : '40%',
-          width: '30%',
+          xRatio: startX / canvasWidth,
+          yRatio: startY / canvasWidth,
+          widthRatio: 0.3,
           rotation: (Math.random() * 20) - 10
         };
 
@@ -193,7 +193,7 @@ function setupMultiPhotoUpload() {
   });
 }
 
-// 6. เพิ่มสติ๊กเกอร์
+// 6. เพิ่มสติ๊กเกอร์ (ใช้สัดส่วนความกว้างอ้างอิงเพื่อป้องกันการเบี้ยว)
 function setupStickerPalette() {
   const stickerBtns = document.querySelectorAll('.sticker-add-btn');
   const stickerCanvas = document.getElementById('stickerCanvas');
@@ -201,17 +201,17 @@ function setupStickerPalette() {
   stickerBtns.forEach((btn) => {
     btn.addEventListener('click', () => {
       const emoji = btn.dataset.emoji;
-      const canvasRect = stickerCanvas.getBoundingClientRect();
-      const startX = canvasRect.width ? (canvasRect.width / 2 - 25) : 50;
-      const startY = canvasRect.height ? (canvasRect.height / 2 - 25) : 50;
+      const canvasWidth = stickerCanvas.clientWidth || 300;
+      const startX = canvasWidth * 0.4;
+      const startY = canvasWidth * 0.4;
 
       const stickerObj = {
         id: 's_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
         type: 'sticker',
         emoji: emoji,
-        x: canvasRect.width ? ((startX / canvasRect.width) * 100).toFixed(2) + '%' : '45%',
-        y: canvasRect.height ? ((startY / canvasRect.height) * 100).toFixed(2) + '%' : '45%',
-        width: '15%',
+        xRatio: startX / canvasWidth,
+        yRatio: startY / canvasWidth,
+        widthRatio: 0.15,
         rotation: (Math.random() * 20) - 10
       };
 
@@ -224,65 +224,85 @@ function setupStickerPalette() {
 function renderInteractiveItem(canvas, itemData, isEditable = false) {
   if (!canvas) return;
 
-  const item = document.createElement('div');
-  item.className = `interactive-item ${itemData.type === 'photo' ? 'frame-' + (itemData.frameStyle || 'polaroid') : 'item-sticker'}`;
-  item.id = itemData.id;
-  
-  item.style.position = 'absolute';
-  item.style.left = itemData.x;
-  item.style.top = itemData.y;
-  item.style.width = itemData.width;
-  item.style.transform = `rotate(${itemData.rotation || 0}deg)`;
-  item.style.zIndex = '50';
+  const renderIt = () => {
+    const canvasWidth = canvas.clientWidth || 300;
 
-  if (itemData.type === 'photo') {
-    const img = document.createElement('img');
-    img.src = itemData.src;
-    img.style.width = '100%';
-    img.style.display = 'block';
-    item.appendChild(img);
+    const item = document.createElement('div');
+    item.className = `interactive-item ${itemData.type === 'photo' ? 'frame-' + (itemData.frameStyle || 'polaroid') : 'item-sticker'}`;
+    item.id = itemData.id;
+    
+    item.style.position = 'absolute';
+
+    let leftVal, topVal, widthVal;
+    if (itemData.xRatio !== undefined && itemData.yRatio !== undefined) {
+      leftVal = itemData.xRatio * canvasWidth;
+      topVal = itemData.yRatio * canvasWidth; // ใช้ width เป็นฐานคำนวณทั้ง X และ Y เพื่อป้องกันภาพเบี้ยว
+      widthVal = itemData.widthRatio * canvasWidth;
+    } else {
+      // Backward compatibility หากข้อมูลเก่าเก็บเป็นเปอร์เซ็นต์แบบเดิม
+      const parsePct = (str) => parseFloat(str) / 100 || 0;
+      leftVal = parsePct(itemData.x) * canvasWidth;
+      topVal = parsePct(itemData.y) * canvasWidth;
+      widthVal = parsePct(itemData.width) * canvasWidth;
+    }
+
+    item.style.left = leftVal + 'px';
+    item.style.top = topVal + 'px';
+    item.style.width = widthVal + 'px';
+    item.style.transform = `rotate(${itemData.rotation || 0}deg)`;
+    item.style.zIndex = '50';
+
+    if (itemData.type === 'photo') {
+      const img = document.createElement('img');
+      img.src = itemData.src;
+      img.style.width = '100%';
+      img.style.display = 'block';
+      item.appendChild(img);
+    } else {
+      item.textContent = itemData.emoji;
+      item.style.fontSize = (widthVal * 0.8) + 'px';
+    }
+
+    if (isEditable) {
+      const controls = document.createElement('div');
+      controls.className = 'item-controls';
+
+      const btnDel = document.createElement('div');
+      btnDel.className = 'btn-delete-item';
+      btnDel.textContent = '✕';
+      btnDel.onclick = (e) => {
+        e.stopPropagation();
+        if (itemData.type === 'photo') {
+          dynamicPhotos = dynamicPhotos.filter(p => p.id !== itemData.id);
+        } else {
+          dynamicStickers = dynamicStickers.filter(s => s.id !== itemData.id);
+        }
+        item.remove();
+      };
+
+      const handleResize = document.createElement('div');
+      handleResize.className = 'handle-resize';
+
+      const handleRotate = document.createElement('div');
+      handleRotate.className = 'handle-rotate';
+      handleRotate.textContent = '🔄';
+
+      controls.appendChild(btnDel);
+      controls.appendChild(handleResize);
+      controls.appendChild(handleRotate);
+      item.appendChild(controls);
+
+      makeElementInteractive(item, itemData, handleResize, handleRotate, canvas);
+    }
+
+    canvas.appendChild(item);
+  };
+
+  if (canvas.clientWidth > 0) {
+    renderIt();
   } else {
-    item.textContent = itemData.emoji;
-    setTimeout(() => {
-      if (item.offsetWidth) {
-        item.style.fontSize = (item.offsetWidth * 0.8) + 'px';
-      }
-    }, 20);
+    setTimeout(renderIt, 50);
   }
-
-  if (isEditable) {
-    const controls = document.createElement('div');
-    controls.className = 'item-controls';
-
-    const btnDel = document.createElement('div');
-    btnDel.className = 'btn-delete-item';
-    btnDel.textContent = '✕';
-    btnDel.onclick = (e) => {
-      e.stopPropagation();
-      if (itemData.type === 'photo') {
-        dynamicPhotos = dynamicPhotos.filter(p => p.id !== itemData.id);
-      } else {
-        dynamicStickers = dynamicStickers.filter(s => s.id !== itemData.id);
-      }
-      item.remove();
-    };
-
-    const handleResize = document.createElement('div');
-    handleResize.className = 'handle-resize';
-
-    const handleRotate = document.createElement('div');
-    handleRotate.className = 'handle-rotate';
-    handleRotate.textContent = '🔄';
-
-    controls.appendChild(btnDel);
-    controls.appendChild(handleResize);
-    controls.appendChild(handleRotate);
-    item.appendChild(controls);
-
-    makeElementInteractive(item, itemData, handleResize, handleRotate, canvas);
-  }
-
-  canvas.appendChild(item);
 }
 
 function makeElementInteractive(el, itemData, resizeHandle, rotateHandle, canvas) {
@@ -296,16 +316,18 @@ function makeElementInteractive(el, itemData, resizeHandle, rotateHandle, canvas
     return { clientX: e.clientX, clientY: e.clientY };
   };
 
-  const updatePercentages = () => {
-    const canvasRect = canvas.getBoundingClientRect();
-    if (canvasRect.width > 0 && canvasRect.height > 0) {
+  const updateRatios = () => {
+    const canvasWidth = canvas.clientWidth;
+    if (canvasWidth > 0) {
       const leftPx = el.offsetLeft;
       const topPx = el.offsetTop;
       const widthPx = el.offsetWidth;
 
-      itemData.x = ((leftPx / canvasRect.width) * 100).toFixed(2) + '%';
-      itemData.y = ((topPx / canvasRect.height) * 100).toFixed(2) + '%';
-      itemData.width = ((widthPx / canvasRect.width) * 100).toFixed(2) + '%';
+      // บันทึกสัดส่วนเทียบกับความกว้าง (Width-based ratio) เพื่อความเสถียรทุกหน้าจอ
+      itemData.xRatio = leftPx / canvasWidth;
+      itemData.yRatio = topPx / canvasWidth;
+      itemData.widthRatio = widthPx / canvasWidth;
+
       if (itemData.type === 'sticker') {
         el.style.fontSize = (widthPx * 0.8) + 'px';
       }
@@ -366,7 +388,7 @@ function makeElementInteractive(el, itemData, resizeHandle, rotateHandle, canvas
 
   const handleEnd = () => {
     if (isDragging || isResizing) {
-      updatePercentages();
+      updateRatios();
     }
     isDragging = false;
     isResizing = false;
@@ -542,7 +564,7 @@ function applyTextConfigToRecipient(config, targetId) {
   }
 }
 
-// 9. ดีไซน์หน้าล็อกรหัสผ่านใหม่แบบ Full-Screen สุดพรีเมียม
+// 9. หน้าต่างกรอกรหัสผ่านแบบพรีเมียม
 function showCustomPasscodeModal(correctPasscode, hint, onSuccess) {
   let modal = document.getElementById('customPasscodeModal');
   if (!modal) {
@@ -659,7 +681,7 @@ function showCustomPasscodeModal(correctPasscode, hint, onSuccess) {
   setTimeout(() => modal.querySelector('#modalPinInput').focus(), 150);
 }
 
-// 10. หน้าผู้รับลิงก์ (เช็ครหัสผ่านทันทีแบบแยกตามลิงก์ slug ใครลิงก์มัน)
+// 10. หน้าผู้รับลิงก์ (เช็ครหัสผ่านแยกอิสระตามแต่ละลิงก์ slug)
 async function checkRecipientMode() {
   const path = window.location.pathname;
   const match = path.match(/\/letter\/(.+)$/);
@@ -708,11 +730,11 @@ async function checkRecipientMode() {
           data.stickers.forEach(s => renderInteractiveItem(rStickerCanvas, s, false));
         }
 
-        // คีย์แยกตามลิงก์ (Slug) แต่ละลิงก์จะมีสถานะปลดล็อกแยกจากกันเด็ดขาด
+        // คีย์แยกตามลิงก์ (Slug) แต่ละลิงก์จะมีสถานะปลดล็อกแยกกันเด็ดขาด
         const unlockedKey = 'unlocked_' + slug;
         const isUnlocked = localStorage.getItem(unlockedKey) === 'true';
 
-        // 🔒 หากมีรหัสผ่านและยังไม่เคยปลดล็อกของลิงก์นี้ ให้บังคับขึ้นหน้ากรอกรหัสแบบเต็มจอก่อน
+        // 🔒 หากมีรหัสผ่านและยังไม่เคยปลดล็อกของลิงก์นี้ ให้ขึ้นหน้ากรอกรหัส
         if (data.passcode && data.passcode.trim() !== '' && !isUnlocked) {
           showCustomPasscodeModal(data.passcode, data.passcodeHint, () => {
             localStorage.setItem(unlockedKey, 'true');
