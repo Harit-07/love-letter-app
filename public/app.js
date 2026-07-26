@@ -4,6 +4,7 @@ let currentCoverStyle = 'envelope';
 let customCoverImage = '';
 let currentCoverColor = '#ff5277';
 let currentThemeColor = '#fdf2f4';
+let isLetterUnlocked = false; // จำสถานะการปลดล็อกในแท็บนี้ (รีเฟรชหรือเปิดแท็บใหม่ถึงจะถามรหัสอีกครั้ง)
 
 // 1. หัวใจลอย
 function createFloatingHearts() {
@@ -170,18 +171,14 @@ function setupMultiPhotoUpload() {
     files.forEach((file) => {
       const reader = new FileReader();
       reader.onload = (evt) => {
-        const canvasWidth = canvas.clientWidth || 300;
-        const startX = canvasWidth * 0.35;
-        const startY = canvasWidth * 0.35;
-
         const photoObj = {
           id: 'p_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
           type: 'photo',
           src: evt.target.result,
           frameStyle: frameStyleSelect.value || 'polaroid',
-          xRatio: startX / canvasWidth,
-          yRatio: startY / canvasWidth,
-          widthRatio: 0.3,
+          xPct: 35,
+          yPct: 35,
+          widthPct: 30,
           rotation: (Math.random() * 20) - 10
         };
 
@@ -201,17 +198,13 @@ function setupStickerPalette() {
   stickerBtns.forEach((btn) => {
     btn.addEventListener('click', () => {
       const emoji = btn.dataset.emoji;
-      const canvasWidth = stickerCanvas.clientWidth || 300;
-      const startX = canvasWidth * 0.4;
-      const startY = canvasWidth * 0.4;
-
       const stickerObj = {
         id: 's_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
         type: 'sticker',
         emoji: emoji,
-        xRatio: startX / canvasWidth,
-        yRatio: startY / canvasWidth,
-        widthRatio: 0.15,
+        xPct: 40,
+        yPct: 40,
+        widthPct: 15,
         rotation: (Math.random() * 20) - 10
       };
 
@@ -225,8 +218,6 @@ function renderInteractiveItem(canvas, itemData, isEditable = false) {
   if (!canvas) return;
 
   const renderIt = () => {
-    const canvasWidth = canvas.clientWidth || (canvas.parentElement ? canvas.parentElement.clientWidth : 300);
-
     const item = document.createElement('div');
     item.className = `interactive-item ${itemData.type === 'photo' ? 'frame-' + (itemData.frameStyle || 'polaroid') : 'item-sticker'}`;
     item.id = itemData.id;
@@ -234,21 +225,24 @@ function renderInteractiveItem(canvas, itemData, isEditable = false) {
     item.style.position = 'absolute';
     item.style.pointerEvents = isEditable ? 'auto' : 'none';
 
-    let leftVal, topVal, widthVal;
-    if (itemData.xRatio !== undefined && itemData.yRatio !== undefined) {
-      leftVal = itemData.xRatio * canvasWidth;
-      topVal = itemData.yRatio * canvasWidth;
-      widthVal = itemData.widthRatio * canvasWidth;
+    let leftCss, topCss, widthCss;
+    if (itemData.xPct !== undefined && itemData.yPct !== undefined) {
+      leftCss = itemData.xPct + '%';
+      topCss = itemData.yPct + '%';
+      widthCss = itemData.widthPct + '%';
+    } else if (itemData.xRatio !== undefined) {
+      leftCss = (itemData.xRatio * 100) + '%';
+      topCss = (itemData.yRatio * 100) + '%';
+      widthCss = (itemData.widthRatio * 100) + '%';
     } else {
-      const parsePct = (str) => parseFloat(str) / 100 || 0;
-      leftVal = parsePct(itemData.x) * canvasWidth;
-      topVal = parsePct(itemData.y) * canvasWidth;
-      widthVal = parsePct(itemData.width) * canvasWidth;
+      leftCss = '35%';
+      topCss = '35%';
+      widthCss = '30%';
     }
 
-    item.style.left = leftVal + 'px';
-    item.style.top = topVal + 'px';
-    item.style.width = widthVal + 'px';
+    item.style.left = leftCss;
+    item.style.top = topCss;
+    item.style.width = widthCss;
     item.style.transform = `rotate(${itemData.rotation || 0}deg)`;
     item.style.zIndex = '50';
 
@@ -260,7 +254,13 @@ function renderInteractiveItem(canvas, itemData, isEditable = false) {
       item.appendChild(img);
     } else {
       item.textContent = itemData.emoji;
-      item.style.fontSize = (widthVal * 0.8) + 'px';
+      const updateFontSize = () => {
+        item.style.fontSize = (item.offsetWidth * 0.8) + 'px';
+      };
+      setTimeout(updateFontSize, 10);
+      if (window.ResizeObserver) {
+        new ResizeObserver(updateFontSize).observe(item);
+      }
     }
 
     if (isEditable) {
@@ -318,14 +318,15 @@ function makeElementInteractive(el, itemData, resizeHandle, rotateHandle, canvas
 
   const updateRatios = () => {
     const canvasWidth = canvas.clientWidth;
-    if (canvasWidth > 0) {
+    const canvasHeight = canvas.clientHeight;
+    if (canvasWidth > 0 && canvasHeight > 0) {
       const leftPx = el.offsetLeft;
       const topPx = el.offsetTop;
       const widthPx = el.offsetWidth;
 
-      itemData.xRatio = leftPx / canvasWidth;
-      itemData.yRatio = topPx / canvasWidth;
-      itemData.widthRatio = widthPx / canvasWidth;
+      itemData.xPct = (leftPx / canvasWidth) * 100;
+      itemData.yPct = (topPx / canvasHeight) * 100;
+      itemData.widthPct = (widthPx / canvasWidth) * 100;
 
       if (itemData.type === 'sticker') {
         el.style.fontSize = (widthPx * 0.8) + 'px';
@@ -680,7 +681,7 @@ function showCustomPasscodeModal(correctPasscode, hint, onSuccess) {
   setTimeout(() => modal.querySelector('#modalPinInput').focus(), 150);
 }
 
-// 10. หน้าผู้รับลิงก์ (จัดการแคนวาสและบังคับกรอกรหัสทุกครั้ง)
+// 10. หน้าผู้รับลิงก์ (จัดการแคนวาสเปอร์เซ็นต์และการจดจำรหัสเฉพาะในแท็บ)
 async function checkRecipientMode() {
   const path = window.location.pathname;
   const match = path.match(/\/letter\/(.+)$/);
@@ -719,7 +720,7 @@ async function checkRecipientMode() {
 
         updateCoverDisplay(coverStyle, customImg, 'recipientCoverGraphic', 'recipientCoverBadge', 'recipientCoverTitle', coverColor);
 
-        // 🛠️ รับประกันขนาดและสร้างแคนวาสฝั่งผู้รับให้ตรงกับหน้าสร้าง 100% ป้องกันรูปเบี้ยวหรือตำแหน่งเลื่อน
+        // 🛠️ สร้างแคนวาสฝั่งผู้รับแบบเปอร์เซ็นต์ (Responsive Position 100%)
         if (recipientLetterBoard) {
           recipientLetterBoard.style.position = 'relative';
 
@@ -752,30 +753,27 @@ async function checkRecipientMode() {
           }
         }
 
-        // 🔐 บังคับถามรหัสผ่านทุกครั้งที่เปิดหน้าเว็บ (เอาการจำรหัสออก)
-        if (data.passcode && data.passcode.trim() !== '') {
-          showCustomPasscodeModal(data.passcode, data.passcodeHint, () => {
-            if (recipientStage) {
-              recipientStage.classList.add('open');
-              recipientStage.classList.remove('closed');
-            }
-          });
-        }
-
         setTimeout(() => { 
           if (recipientView) recipientView.style.opacity = '1'; 
         }, 50);
 
+        // 🔐 จัดการการเปิดจดหมายและเช็ครหัสผ่านเฉพาะครั้งแรกในแท็บนี้
+        const openLetterAction = () => {
+          if (recipientStage) {
+            recipientStage.classList.add('open');
+            recipientStage.classList.remove('closed');
+          }
+        };
+
         if (recipientCover && recipientStage) {
           recipientCover.addEventListener('click', () => {
-            if (data.passcode && data.passcode.trim() !== '') {
+            if (data.passcode && data.passcode.trim() !== '' && !isLetterUnlocked) {
               showCustomPasscodeModal(data.passcode, data.passcodeHint, () => {
-                recipientStage.classList.add('open');
-                recipientStage.classList.remove('closed');
+                isLetterUnlocked = true; // ปลดล็อกแล้ว จะจำไว้ตลอดจนกว่าจะรีเฟรชหน้าเว็บหรือเปิดแท็บใหม่
+                openLetterAction();
               });
             } else {
-              recipientStage.classList.add('open');
-              recipientStage.classList.remove('closed');
+              openLetterAction();
             }
           });
         }
