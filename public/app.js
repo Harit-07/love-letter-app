@@ -6,7 +6,7 @@ let currentCoverColor = '#ff5277';
 let currentThemeColor = '#fdf2f4';
 let isLetterUnlocked = false; // จำสถานะการปลดล็อกในแท็บนี้ (รีเฟรชหรือเปิดแท็บใหม่ถึงจะถามรหัสอีกครั้ง)
 
-// 1. หัวใจลอย (ปรับปรุงใหม่: สร้างคอนเทนเนอร์และ Keyframes อัตโนมัติ ป้องกันปัญหาหา DOM ไม่เจอหรือไม่มี CSS)
+// 1. หัวใจลอย
 function createFloatingHearts() {
   let container = document.getElementById('floatingHeartsContainer');
   if (!container) {
@@ -16,7 +16,6 @@ function createFloatingHearts() {
     document.body.appendChild(container);
   }
 
-  // สร้างอนิเมชันลอยตัวผ่าน JS หากในไฟล์ CSS ยังไม่ได้กำหนดคลาส .floating-heart
   if (!document.getElementById('dynamicFloatKeyframes')) {
     const style = document.createElement('style');
     style.id = 'dynamicFloatKeyframes';
@@ -102,7 +101,7 @@ function getTextConfig(idPrefix) {
   };
 }
 
-// 3. ปรับสีธีม & สีปก (แก้ไขให้บังคับเปลี่ยนสีพื้นหลังทั้ง Body และ DocumentElement ด้วย !important)
+// 3. ปรับสีธีม & สีปก
 function setupColorPickers() {
   const themePicker = document.getElementById('themeColorPicker');
   const coverPicker = document.getElementById('coverColorPicker');
@@ -524,6 +523,7 @@ function setupSaveButton() {
   }
 }
 
+// ปรับปรุงฟังก์ชันแสดงผลข้อความฝั่งผู้รับให้สร้าง/จัดวางใต้กล่องทันที
 function applyTextConfigToRecipient(config, targetId) {
   let possibleIds = [targetId];
   if (targetId === 'recipientCoverTitle') {
@@ -545,25 +545,17 @@ function applyTextConfigToRecipient(config, targetId) {
   }
 
   if (!el) {
-    if (targetId.includes('Title')) {
-      el = document.querySelector('.cover-title, .recipient-title, h2, h3');
-    } else if (targetId.includes('Subtext')) {
-      el = document.querySelector('.cover-subtext, .recipient-subtext, p');
-    }
-  }
-
-  if (!el) {
     const coverEl = document.getElementById('recipientCover') || document.querySelector('.recipient-cover') || document.querySelector('.cover-container') || document.getElementById('recipientStage');
     if (coverEl) {
       el = document.createElement('div');
       if (targetId.includes('Title')) {
         el.id = 'recipientCoverTitle';
         el.className = 'cover-title';
-        el.style.cssText = 'font-size: 1.4rem; font-weight: bold; color: #ff5277; margin-top: 15px; text-align: center;';
+        el.style.cssText = 'font-size: 1.4rem; font-weight: bold; color: #ff5277; margin-top: 15px; text-align: center; display: block;';
       } else {
         el.id = 'recipientCoverSubtext';
         el.className = 'cover-subtext';
-        el.style.cssText = 'font-size: 0.9rem; color: #666; margin-top: 5px; text-align: center;';
+        el.style.cssText = 'font-size: 0.9rem; color: #666; margin-top: 5px; text-align: center; display: block;';
       }
       coverEl.appendChild(el);
     }
@@ -698,7 +690,7 @@ function showCustomPasscodeModal(correctPasscode, hint, onSuccess) {
   modal.querySelector('#modalPinInput').focus();
 }
 
-// 10. หน้าผู้รับลิงก์ (รองรับการเปลี่ยนสีพื้นหลังตามธีมที่บันทึกไว้)
+// 10. หน้าผู้รับลิงก์ (เปิดป๊อปอัพทันทีเมื่อคลิกหน้าปก และแสดงข้อความใต้กล่องทันที)
 async function checkRecipientMode() {
   const path = window.location.pathname;
   const match = path.match(/\/letter\/(.+)$/);
@@ -723,7 +715,6 @@ async function checkRecipientMode() {
       if (res.ok) {
         const data = await res.json();
         
-        // กำหนดสีพื้นหลังในหน้าผู้รับด้วย !important ให้ถูกต้อง
         if (data.themeColor) {
           document.body.style.setProperty('background-color', data.themeColor, 'important');
           document.documentElement.style.setProperty('background-color', data.themeColor, 'important');
@@ -793,7 +784,9 @@ async function checkRecipientMode() {
         };
 
         if (recipientCover && recipientStage) {
-          recipientCover.onclick = () => {
+          // ทำให้หน้าล็อคเด้งขึ้นมาทันทีเมื่อคลิก (ถ้ามีรหัสผ่านและยังไม่ปลดล็อก)
+          recipientCover.onclick = (e) => {
+            e.stopPropagation();
             if (data.passcode && data.passcode.trim() !== '' && !isLetterUnlocked) {
               showCustomPasscodeModal(data.passcode, data.passcodeHint, () => {
                 isLetterUnlocked = true;
