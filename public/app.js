@@ -715,10 +715,11 @@ async function checkRecipientMode() {
         const customImg = data.customCoverImage || '';
         const coverColor = data.coverColor || '#ff5277';
 
-        updateCoverDisplay(coverStyle, customImg, 'recipientCoverGraphic', 'recipientCoverBadge', 'recipientCoverTitleText', coverColor);
+        updateCoverDisplay(coverStyle, customImg, 'recipientCoverGraphic', 'recipientCoverBadge', 'recipientCoverTitle', coverColor);
 
         // จัดการแสดงผลข้อความใต้กล่องในหน้าผู้รับ
-        applyTextConfigToRecipient(data.coverTitle, 'recipientCoverTitleText');
+        // ✅ FIXED: ID ใน HTML คือ "recipientCoverTitle" ไม่ใช่ "recipientCoverTitleText"
+        applyTextConfigToRecipient(data.coverTitle, 'recipientCoverTitle');
         applyTextConfigToRecipient(data.coverSubtext, 'recipientCoverSubtext');
 
         applyTextConfigToRecipient(data.greeting, 'recipientGreeting');
