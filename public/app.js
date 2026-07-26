@@ -564,7 +564,7 @@ function applyTextConfigToRecipient(config, targetId) {
   }
 }
 
-// 9. หน้าต่างกรอกรหัสผ่านแบบพรีเมียม
+// 9. หน้าต่างกรอกรหัสผ่านแบบพรีเมียม (แสดงผลทันที ไม่มีดีเลย์)
 function showCustomPasscodeModal(correctPasscode, hint, onSuccess) {
   let modal = document.getElementById('customPasscodeModal');
   if (!modal) {
@@ -647,12 +647,8 @@ function showCustomPasscodeModal(correctPasscode, hint, onSuccess) {
     const handleVerify = () => {
       const entered = pinInput.value.trim();
       if (entered === correctPasscode.trim()) {
-        modal.style.opacity = '0';
-        modal.style.transition = 'opacity 0.3s ease';
-        setTimeout(() => {
-          modal.style.display = 'none';
-          pinInput.value = '';
-        }, 300);
+        modal.style.display = 'none';
+        pinInput.value = '';
         onSuccess();
       } else {
         alert('❌ รหัสผ่านไม่ถูกต้อง ลองใหม่อีกครั้งนะจ๊ะ!');
@@ -678,10 +674,10 @@ function showCustomPasscodeModal(correctPasscode, hint, onSuccess) {
 
   modal.style.display = 'flex';
   modal.style.opacity = '1';
-  setTimeout(() => modal.querySelector('#modalPinInput').focus(), 150);
+  modal.querySelector('#modalPinInput').focus();
 }
 
-// 10. หน้าผู้รับลิงก์ (จัดการแคนวาสเปอร์เซ็นต์และการจดจำรหัสเฉพาะในแท็บ)
+// 10. หน้าผู้รับลิงก์ (แก้ปัญหารอบที่ 2 และรอบถัดไปให้หน้าปกและสถานะกลับมาแสดงผลปกติ)
 async function checkRecipientMode() {
   const path = window.location.pathname;
   const match = path.match(/\/letter\/(.+)$/);
@@ -697,7 +693,7 @@ async function checkRecipientMode() {
     if (mainApp) mainApp.style.display = 'none';
 
     if (recipientView) {
-      recipientView.style.opacity = '0';
+      recipientView.style.opacity = '1';
       recipientView.style.display = 'flex';
     }
 
@@ -720,7 +716,6 @@ async function checkRecipientMode() {
 
         updateCoverDisplay(coverStyle, customImg, 'recipientCoverGraphic', 'recipientCoverBadge', 'recipientCoverTitle', coverColor);
 
-        // 🛠️ สร้างแคนวาสฝั่งผู้รับแบบเปอร์เซ็นต์ (Responsive Position 100%)
         if (recipientLetterBoard) {
           recipientLetterBoard.style.position = 'relative';
 
@@ -753,11 +748,12 @@ async function checkRecipientMode() {
           }
         }
 
-        setTimeout(() => { 
-          if (recipientView) recipientView.style.opacity = '1'; 
-        }, 50);
+        // กำหนดสถานะเริ่มต้นให้เป็นปิด (แสดงหน้าปก/หน้าล็อก) เสมอ
+        if (recipientStage) {
+          recipientStage.classList.remove('open');
+          recipientStage.classList.add('closed');
+        }
 
-        // 🔐 จัดการการเปิดจดหมายและเช็ครหัสผ่านเฉพาะครั้งแรกในแท็บนี้
         const openLetterAction = () => {
           if (recipientStage) {
             recipientStage.classList.add('open');
@@ -765,26 +761,33 @@ async function checkRecipientMode() {
           }
         };
 
+        const closeLetterAction = () => {
+          if (recipientStage) {
+            recipientStage.classList.remove('open');
+            recipientStage.classList.add('closed');
+          }
+        };
+
         if (recipientCover && recipientStage) {
-          recipientCover.addEventListener('click', () => {
+          // ใช้ .onclick แทนเพื่อป้องกันการสร้าง Listener ซ้อนทับกันในรอบถัดไป
+          recipientCover.onclick = () => {
             if (data.passcode && data.passcode.trim() !== '' && !isLetterUnlocked) {
               showCustomPasscodeModal(data.passcode, data.passcodeHint, () => {
-                isLetterUnlocked = true; // ปลดล็อกแล้ว จะจำไว้ตลอดจนกว่าจะรีเฟรชหน้าเว็บหรือเปิดแท็บใหม่
+                isLetterUnlocked = true;
                 openLetterAction();
               });
             } else {
               openLetterAction();
             }
-          });
+          };
         }
 
         if (recipientLetterBoard && recipientStage) {
-          recipientLetterBoard.addEventListener('click', (e) => {
+          recipientLetterBoard.onclick = (e) => {
             if (e.target === recipientLetterBoard || e.target.id === 'recipientPhotosCanvas' || e.target.id === 'recipientStickerCanvas') {
-              recipientStage.classList.remove('open');
-              recipientStage.classList.add('closed');
+              closeLetterAction();
             }
-          });
+          };
         }
       }
     } catch (e) {
