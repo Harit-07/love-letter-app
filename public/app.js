@@ -4,25 +4,48 @@ let currentCoverStyle = 'envelope';
 let customCoverImage = '';
 let currentCoverColor = '#ff5277';
 let currentThemeColor = '#fdf2f4';
-let isLetterUnlocked = false; // จำสถานะการปลดล็อกในแท็บนี้ (รีเฟรชหรือเปิดแท็บใหม่ถึงจะถามรหัสอีกครั้ง)
+let isLetterUnlocked = false; // จำสถานะการปลดล็อกในแท็บนี้
 
-// 1. หัวใจลอย
+// 1. หัวใจลอย (ปรับปรุงให้สร้าง Container อัตโนมัติหากไม่มี)
 function createFloatingHearts() {
-  const container = document.getElementById('floatingHeartsContainer');
-  if (!container) return;
+  let container = document.getElementById('floatingHeartsContainer');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'floatingHeartsContainer';
+    container.style.cssText = 'position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 1;';
+    document.body.appendChild(container);
+  }
+
   const emojis = ['💖', '💗', '✨', '🌸', '💕'];
 
   setInterval(() => {
     const heart = document.createElement('div');
     heart.className = 'floating-heart';
     heart.textContent = emojis[Math.floor(Math.random() * emojis.length)];
-    heart.style.left = Math.random() * 100 + 'vw';
-    heart.style.animationDuration = (Math.random() * 3 + 4) + 's';
-    heart.style.fontSize = (Math.random() * 12 + 16) + 'px';
+    heart.style.cssText = `
+      position: absolute;
+      left: ${Math.random() * 100}vw;
+      bottom: -40px;
+      font-size: ${Math.random() * 12 + 16}px;
+      animation: floatUpAnim ${Math.random() * 3 + 4}s linear infinite;
+      z-index: 1;
+      opacity: 0.8;
+    `;
     container.appendChild(heart);
-    setTimeout(() => heart.remove(), 6000);
+    setTimeout(() => heart.remove(), 7000);
   }, 600);
 }
+
+// ฉีด CSS Animation สำหรับหัวใจลอยเผื่อไว้ในระบบ
+const styleSheet = document.createElement('style');
+styleSheet.textContent = `
+  @keyframes floatUpAnim {
+    0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+    20% { opacity: 0.8; }
+    100% { transform: translateY(-105vh) rotate(360deg); opacity: 0; }
+  }
+`;
+document.head.appendChild(styleSheet);
 
 // 2. ระบบควบคุมและพรีวิวข้อความทุกจุดแบบ Realtime
 function setupTextEditor(idPrefix, previewId) {
@@ -91,6 +114,8 @@ function setupColorPickers() {
     themePicker.addEventListener('input', (e) => {
       currentThemeColor = e.target.value;
       document.body.style.backgroundColor = currentThemeColor;
+      const recipientView = document.getElementById('recipientView');
+      if (recipientView) recipientView.style.backgroundColor = currentThemeColor;
     });
   }
 
@@ -564,7 +589,7 @@ function applyTextConfigToRecipient(config, targetId) {
   }
 }
 
-// 9. หน้าต่างกรอกรหัสผ่านแบบพรีเมียม (แสดงผลทันที ไม่มีดีเลย์)
+// 9. หน้าต่างกรอกรหัสผ่านแบบพรีเมียม
 function showCustomPasscodeModal(correctPasscode, hint, onSuccess) {
   let modal = document.getElementById('customPasscodeModal');
   if (!modal) {
@@ -649,7 +674,7 @@ function showCustomPasscodeModal(correctPasscode, hint, onSuccess) {
       if (entered === correctPasscode.trim()) {
         modal.style.display = 'none';
         pinInput.value = '';
-        onSuccess();
+        if (onSuccess) onSuccess();
       } else {
         alert('❌ รหัสผ่านไม่ถูกต้อง ลองใหม่อีกครั้งนะจ๊ะ!');
         pinInput.value = '';
@@ -677,7 +702,7 @@ function showCustomPasscodeModal(correctPasscode, hint, onSuccess) {
   modal.querySelector('#modalPinInput').focus();
 }
 
-// 10. หน้าผู้รับลิงก์ (แก้ปัญหารอบที่ 2 และรอบถัดไปให้หน้าปกและสถานะกลับมาแสดงผลปกติ)
+// 10. หน้าผู้รับลิงก์ (แก้ไขการเปลี่ยนสีพื้นหลังให้ทำงานสมบูรณ์ทั้ง Body และ View)
 async function checkRecipientMode() {
   const path = window.location.pathname;
   const match = path.match(/\/letter\/(.+)$/);
@@ -702,7 +727,11 @@ async function checkRecipientMode() {
       if (res.ok) {
         const data = await res.json();
         
-        if (data.themeColor) document.body.style.backgroundColor = data.themeColor;
+        // กำหนดสีพื้นหลังให้เปลี่ยนทั้ง Body และ RecipientView
+        if (data.themeColor) {
+          document.body.style.backgroundColor = data.themeColor;
+          if (recipientView) recipientView.style.backgroundColor = data.themeColor;
+        }
 
         applyTextConfigToRecipient(data.coverTitle, 'recipientCoverTitle');
         applyTextConfigToRecipient(data.coverSubtext, 'recipientCoverSubtext');
@@ -716,8 +745,20 @@ async function checkRecipientMode() {
 
         updateCoverDisplay(coverStyle, customImg, 'recipientCoverGraphic', 'recipientCoverBadge', 'recipientCoverTitle', coverColor);
 
+        if (recipientCover) {
+          recipientCover.style.position = 'relative';
+          recipientCover.style.width = '100%';
+          recipientCover.style.maxWidth = '420px';
+          recipientCover.style.aspectRatio = '3 / 4';
+          recipientCover.style.margin = '0 auto';
+        }
+
         if (recipientLetterBoard) {
           recipientLetterBoard.style.position = 'relative';
+          recipientLetterBoard.style.width = '100%';
+          recipientLetterBoard.style.maxWidth = '420px';
+          recipientLetterBoard.style.aspectRatio = '3 / 4';
+          recipientLetterBoard.style.margin = '0 auto';
 
           let rPhotosCanvas = document.getElementById('recipientPhotosCanvas');
           if (!rPhotosCanvas) {
@@ -748,7 +789,6 @@ async function checkRecipientMode() {
           }
         }
 
-        // กำหนดสถานะเริ่มต้นให้เป็นปิด (แสดงหน้าปก/หน้าล็อก) เสมอ
         if (recipientStage) {
           recipientStage.classList.remove('open');
           recipientStage.classList.add('closed');
@@ -768,8 +808,13 @@ async function checkRecipientMode() {
           }
         };
 
+        if (data.passcode && data.passcode.trim() !== '' && !isLetterUnlocked) {
+          showCustomPasscodeModal(data.passcode, data.passcodeHint, () => {
+            isLetterUnlocked = true;
+          });
+        }
+
         if (recipientCover && recipientStage) {
-          // ใช้ .onclick แทนเพื่อป้องกันการสร้าง Listener ซ้อนทับกันในรอบถัดไป
           recipientCover.onclick = () => {
             if (data.passcode && data.passcode.trim() !== '' && !isLetterUnlocked) {
               showCustomPasscodeModal(data.passcode, data.passcodeHint, () => {
