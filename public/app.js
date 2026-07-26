@@ -4,7 +4,7 @@ let currentCoverStyle = 'envelope';
 let customCoverImage = '';
 let currentCoverColor = '#ff5277';
 let currentThemeColor = '#fdf2f4';
-let isLetterUnlocked = false; // จำสถานะการปลดล็อกในแท็บนี้ (รีเฟรชหรือเปิดแท็บใหม่ถึงจะถามรหัสอีกครั้ง)
+let isLetterUnlocked = false; 
 
 // 1. หัวใจลอย
 function createFloatingHearts() {
@@ -250,10 +250,6 @@ function renderInteractiveItem(canvas, itemData, isEditable = false) {
       leftCss = itemData.xPct + '%';
       topCss = itemData.yPct + '%';
       widthCss = itemData.widthPct + '%';
-    } else if (itemData.xRatio !== undefined) {
-      leftCss = (itemData.xRatio * 100) + '%';
-      topCss = (itemData.yRatio * 100) + '%';
-      widthCss = (itemData.widthRatio * 100) + '%';
     } else {
       leftCss = '35%';
       topCss = '35%';
@@ -523,50 +519,32 @@ function setupSaveButton() {
   }
 }
 
-// ปรับปรุงฟังก์ชันแสดงผลข้อความฝั่งผู้รับให้สร้าง/จัดวางใต้กล่องทันที
+// ฟังก์ชันสร้างและจัดวางข้อความใต้กล่องในหน้าผู้รับอย่างแม่นยำ
 function applyTextConfigToRecipient(config, targetId) {
-  let possibleIds = [targetId];
-  if (targetId === 'recipientCoverTitle') {
-    possibleIds = ['recipientCoverTitle', 'recipientCoverTitleText', 'recipientTitle', 'coverTitleText', 'recipientCoverTitleDisplay'];
-  } else if (targetId === 'recipientCoverSubtext') {
-    possibleIds = ['recipientCoverSubtext', 'recipientCoverSub', 'recipientSubtext', 'coverSubtext', 'recipientCoverSubtextDisplay'];
-  } else if (targetId === 'recipientGreeting') {
-    possibleIds = ['recipientGreeting', 'recipientGreetingText', 'previewGreeting', 'recipientGreetingDisplay'];
-  } else if (targetId === 'recipientMessage') {
-    possibleIds = ['recipientMessage', 'recipientMessageText', 'previewMessage', 'recipientMessageDisplay'];
-  } else if (targetId === 'recipientSignature') {
-    possibleIds = ['recipientSignature', 'recipientSignatureText', 'previewSignature', 'recipientSignatureDisplay'];
-  }
-
-  let el = null;
-  for (let id of possibleIds) {
-    el = document.getElementById(id);
-    if (el) break;
-  }
-
+  let el = document.getElementById(targetId);
+  
   if (!el) {
-    const coverEl = document.getElementById('recipientCover') || document.querySelector('.recipient-cover') || document.querySelector('.cover-container') || document.getElementById('recipientStage');
-    if (coverEl) {
+    const coverContainer = document.getElementById('recipientCover') || document.querySelector('.cover-container') || document.querySelector('.recipient-cover');
+    if (coverContainer) {
       el = document.createElement('div');
+      el.id = targetId;
       if (targetId.includes('Title')) {
-        el.id = 'recipientCoverTitle';
-        el.className = 'cover-title';
-        el.style.cssText = 'font-size: 1.4rem; font-weight: bold; color: #ff5277; margin-top: 15px; text-align: center; display: block;';
+        el.style.cssText = 'font-size: 1.4rem; font-weight: bold; color: #ff5277; margin-top: 15px; text-align: center; display: block; width: 100%;';
       } else {
-        el.id = 'recipientCoverSubtext';
-        el.className = 'cover-subtext';
-        el.style.cssText = 'font-size: 0.9rem; color: #666; margin-top: 5px; text-align: center; display: block;';
+        el.style.cssText = 'font-size: 0.9rem; color: #666; margin-top: 5px; text-align: center; display: block; width: 100%;';
       }
-      coverEl.appendChild(el);
+      coverContainer.appendChild(el);
     }
   }
 
   if (!el) return;
 
   const textVal = (config && typeof config === 'object') ? (config.text || '') : (config || '');
-  if (textVal !== undefined) {
+  if (textVal !== undefined && textVal !== '') {
     el.textContent = textVal;
     el.style.display = 'block';
+  } else {
+    el.style.display = 'none';
   }
 
   if (config && typeof config === 'object') {
@@ -662,7 +640,7 @@ function showCustomPasscodeModal(correctPasscode, hint, onSuccess) {
       if (entered === correctPasscode.trim()) {
         modal.style.display = 'none';
         pinInput.value = '';
-        onSuccess();
+        if (onSuccess) onSuccess();
       } else {
         alert('❌ รหัสผ่านไม่ถูกต้อง ลองใหม่อีกครั้งนะจ๊ะ!');
         pinInput.value = '';
@@ -690,7 +668,7 @@ function showCustomPasscodeModal(correctPasscode, hint, onSuccess) {
   modal.querySelector('#modalPinInput').focus();
 }
 
-// 10. หน้าผู้รับลิงก์ (เปิดป๊อปอัพทันทีเมื่อคลิกหน้าปก และแสดงข้อความใต้กล่องทันที)
+// 10. หน้าผู้รับลิงก์ (เด้งหน้าล็อกทันทีที่โหลดหน้าเว็บ และแสดงข้อความใต้กล่องทันที)
 async function checkRecipientMode() {
   const path = window.location.pathname;
   const match = path.match(/\/letter\/(.+)$/);
@@ -731,6 +709,13 @@ async function checkRecipientMode() {
         const coverColor = data.coverColor || '#ff5277';
 
         updateCoverDisplay(coverStyle, customImg, 'recipientCoverGraphic', 'recipientCoverBadge', 'recipientCoverTitle', coverColor);
+
+        // 🌟 เด้งหน้าล็อกขึ้นมาทันทีเมื่อเปิดลิงก์ (ถ้าจดหมายมีการตั้งรหัสผ่านไว้)
+        if (data.passcode && data.passcode.trim() !== '' && !isLetterUnlocked) {
+          showCustomPasscodeModal(data.passcode, data.passcodeHint, () => {
+            isLetterUnlocked = true;
+          });
+        }
 
         if (recipientLetterBoard) {
           recipientLetterBoard.style.position = 'relative';
@@ -784,7 +769,6 @@ async function checkRecipientMode() {
         };
 
         if (recipientCover && recipientStage) {
-          // ทำให้หน้าล็อคเด้งขึ้นมาทันทีเมื่อคลิก (ถ้ามีรหัสผ่านและยังไม่ปลดล็อก)
           recipientCover.onclick = (e) => {
             e.stopPropagation();
             if (data.passcode && data.passcode.trim() !== '' && !isLetterUnlocked) {
