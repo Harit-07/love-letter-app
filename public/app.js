@@ -519,32 +519,15 @@ function setupSaveButton() {
   }
 }
 
-// ฟังก์ชันสร้างและจัดวางข้อความใต้กล่องในหน้าผู้รับอย่างแม่นยำ
+// ฟังก์ชันสร้างและจัดวางข้อความใต้กล่องในหน้าผู้รับให้ตรงตำแหน่งเป๊ะๆ เหมือนตอนสร้าง
 function applyTextConfigToRecipient(config, targetId) {
   let el = document.getElementById(targetId);
   const recipientCover = document.getElementById('recipientCover');
   
-  if (!el && recipientCover && recipientCover.parentNode) {
+  if (!el && recipientCover) {
     el = document.createElement('div');
     el.id = targetId;
-    if (targetId.includes('Title')) {
-      el.style.cssText = 'font-size: 1.4rem; font-weight: bold; color: #ff5277; margin-top: 15px; text-align: center; display: block; width: 100%; z-index: 30; position: relative;';
-      if (recipientCover.nextSibling) {
-        recipientCover.parentNode.insertBefore(el, recipientCover.nextSibling);
-      } else {
-        recipientCover.parentNode.appendChild(el);
-      }
-    } else {
-      el.style.cssText = 'font-size: 0.9rem; color: #666; margin-top: 5px; text-align: center; display: block; width: 100%; z-index: 30; position: relative;';
-      const titleEl = document.getElementById('recipientCoverTitle');
-      if (titleEl && titleEl.nextSibling) {
-        titleEl.parentNode.insertBefore(el, titleEl.nextSibling);
-      } else if (recipientCover.nextSibling) {
-        recipientCover.parentNode.insertBefore(el, recipientCover.nextSibling.nextSibling || recipientCover.nextSibling);
-      } else {
-        recipientCover.parentNode.appendChild(el);
-      }
-    }
+    recipientCover.appendChild(el);
   }
 
   if (!el) return;
@@ -678,7 +661,7 @@ function showCustomPasscodeModal(correctPasscode, hint, onSuccess) {
   modal.querySelector('#modalPinInput').focus();
 }
 
-// 10. หน้าผู้รับลิงก์ (เด้งหน้าล็อกทันทีที่เปิดลิงก์ และแสดงข้อความใต้กล่องเรียบร้อย)
+// 10. หน้าผู้รับลิงก์ (เด้งหน้าล็อกทันทีที่เปิดลิงก์ และแสดงข้อความใต้กล่องอย่างสมบูรณ์)
 async function checkRecipientMode() {
   const path = window.location.pathname;
   const match = path.match(/\/letter\/(.+)$/);
@@ -696,13 +679,6 @@ async function checkRecipientMode() {
     if (recipientView) {
       recipientView.style.opacity = '1';
       recipientView.style.display = 'flex';
-      // จัดรูปแบบคอนเทนต์หน้าปกให้เรียงต่อกันในแนวตั้ง
-      if (recipientCover && recipientCover.parentNode) {
-        recipientCover.parentNode.style.display = 'flex';
-        recipientCover.parentNode.style.flexDirection = 'column';
-        recipientCover.parentNode.style.alignItems = 'center';
-        recipientCover.parentNode.style.justifyContent = 'center';
-      }
     }
 
     try {
@@ -719,10 +695,10 @@ async function checkRecipientMode() {
         const customImg = data.customCoverImage || '';
         const coverColor = data.coverColor || '#ff5277';
 
-        updateCoverDisplay(coverStyle, customImg, 'recipientCoverGraphic', 'recipientCoverBadge', 'recipientCoverTitle', coverColor);
+        updateCoverDisplay(coverStyle, customImg, 'recipientCoverGraphic', 'recipientCoverBadge', 'recipientCoverTitleText', coverColor);
 
-        // แทรกข้อความชื่อและคำใต้กล่องทันทีหลังจากอัปเดตกล่องปก
-        applyTextConfigToRecipient(data.coverTitle, 'recipientCoverTitle');
+        // จัดการแสดงผลข้อความใต้กล่องในหน้าผู้รับ
+        applyTextConfigToRecipient(data.coverTitle, 'recipientCoverTitleText');
         applyTextConfigToRecipient(data.coverSubtext, 'recipientCoverSubtext');
 
         applyTextConfigToRecipient(data.greeting, 'recipientGreeting');
