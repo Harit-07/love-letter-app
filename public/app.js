@@ -1,51 +1,48 @@
-﻿let dynamicPhotos = [];   
+﻿let dynamicPhotos = [];    
 let dynamicStickers = []; 
 let currentCoverStyle = 'envelope';
 let customCoverImage = '';
 let currentCoverColor = '#ff5277';
 let currentThemeColor = '#fdf2f4';
-let isLetterUnlocked = false; // จำสถานะการปลดล็อกในแท็บนี้
+let isLetterUnlocked = false; // จำสถานะการปลดล็อกในแท็บนี้ (รีเฟรชหรือเปิดแท็บใหม่ถึงจะถามรหัสอีกครั้ง)
 
-// 1. หัวใจลอย (ปรับปรุงให้สร้าง Container อัตโนมัติหากไม่มี)
+// 1. หัวใจลอย (ปรับปรุงใหม่: สร้างคอนเทนเนอร์และ Keyframes อัตโนมัติ ป้องกันปัญหาหา DOM ไม่เจอหรือไม่มี CSS)
 function createFloatingHearts() {
   let container = document.getElementById('floatingHeartsContainer');
   if (!container) {
     container = document.createElement('div');
     container.id = 'floatingHeartsContainer';
-    container.style.cssText = 'position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 1;';
+    container.style.cssText = 'position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 1000;';
     document.body.appendChild(container);
+  }
+
+  // สร้างอนิเมชันลอยตัวผ่าน JS หากในไฟล์ CSS ยังไม่ได้กำหนดคลาส .floating-heart
+  if (!document.getElementById('dynamicFloatKeyframes')) {
+    const style = document.createElement('style');
+    style.id = 'dynamicFloatKeyframes';
+    style.innerHTML = `
+      @keyframes floatUpEmoji {
+        0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+        100% { transform: translateY(-105vh) rotate(360deg); opacity: 0; }
+      }
+    `;
+    document.head.appendChild(style);
   }
 
   const emojis = ['💖', '💗', '✨', '🌸', '💕'];
 
   setInterval(() => {
     const heart = document.createElement('div');
-    heart.className = 'floating-heart';
     heart.textContent = emojis[Math.floor(Math.random() * emojis.length)];
-    heart.style.cssText = `
-      position: absolute;
-      left: ${Math.random() * 100}vw;
-      bottom: -40px;
-      font-size: ${Math.random() * 12 + 16}px;
-      animation: floatUpAnim ${Math.random() * 3 + 4}s linear infinite;
-      z-index: 1;
-      opacity: 0.8;
-    `;
+    heart.style.position = 'absolute';
+    heart.style.left = Math.random() * 100 + 'vw';
+    heart.style.bottom = '-40px';
+    heart.style.fontSize = (Math.random() * 12 + 16) + 'px';
+    heart.style.animation = `floatUpEmoji ${(Math.random() * 3 + 4)}s linear forwards`;
     container.appendChild(heart);
     setTimeout(() => heart.remove(), 7000);
   }, 600);
 }
-
-// ฉีด CSS Animation สำหรับหัวใจลอยเผื่อไว้ในระบบ
-const styleSheet = document.createElement('style');
-styleSheet.textContent = `
-  @keyframes floatUpAnim {
-    0% { transform: translateY(0) rotate(0deg); opacity: 0; }
-    20% { opacity: 0.8; }
-    100% { transform: translateY(-105vh) rotate(360deg); opacity: 0; }
-  }
-`;
-document.head.appendChild(styleSheet);
 
 // 2. ระบบควบคุมและพรีวิวข้อความทุกจุดแบบ Realtime
 function setupTextEditor(idPrefix, previewId) {
@@ -105,7 +102,7 @@ function getTextConfig(idPrefix) {
   };
 }
 
-// 3. ปรับสีธีม & สีปก
+// 3. ปรับสีธีม & สีปก (แก้ไขให้บังคับเปลี่ยนสีพื้นหลังทั้ง Body และ DocumentElement ด้วย !important)
 function setupColorPickers() {
   const themePicker = document.getElementById('themeColorPicker');
   const coverPicker = document.getElementById('coverColorPicker');
@@ -113,9 +110,8 @@ function setupColorPickers() {
   if (themePicker) {
     themePicker.addEventListener('input', (e) => {
       currentThemeColor = e.target.value;
-      document.body.style.backgroundColor = currentThemeColor;
-      const recipientView = document.getElementById('recipientView');
-      if (recipientView) recipientView.style.backgroundColor = currentThemeColor;
+      document.body.style.setProperty('background-color', currentThemeColor, 'important');
+      document.documentElement.style.setProperty('background-color', currentThemeColor, 'important');
     });
   }
 
@@ -674,7 +670,7 @@ function showCustomPasscodeModal(correctPasscode, hint, onSuccess) {
       if (entered === correctPasscode.trim()) {
         modal.style.display = 'none';
         pinInput.value = '';
-        if (onSuccess) onSuccess();
+        onSuccess();
       } else {
         alert('❌ รหัสผ่านไม่ถูกต้อง ลองใหม่อีกครั้งนะจ๊ะ!');
         pinInput.value = '';
@@ -702,7 +698,7 @@ function showCustomPasscodeModal(correctPasscode, hint, onSuccess) {
   modal.querySelector('#modalPinInput').focus();
 }
 
-// 10. หน้าผู้รับลิงก์ (แก้ไขการเปลี่ยนสีพื้นหลังให้ทำงานสมบูรณ์ทั้ง Body และ View)
+// 10. หน้าผู้รับลิงก์ (รองรับการเปลี่ยนสีพื้นหลังตามธีมที่บันทึกไว้)
 async function checkRecipientMode() {
   const path = window.location.pathname;
   const match = path.match(/\/letter\/(.+)$/);
@@ -727,10 +723,10 @@ async function checkRecipientMode() {
       if (res.ok) {
         const data = await res.json();
         
-        // กำหนดสีพื้นหลังให้เปลี่ยนทั้ง Body และ RecipientView
+        // กำหนดสีพื้นหลังในหน้าผู้รับด้วย !important ให้ถูกต้อง
         if (data.themeColor) {
-          document.body.style.backgroundColor = data.themeColor;
-          if (recipientView) recipientView.style.backgroundColor = data.themeColor;
+          document.body.style.setProperty('background-color', data.themeColor, 'important');
+          document.documentElement.style.setProperty('background-color', data.themeColor, 'important');
         }
 
         applyTextConfigToRecipient(data.coverTitle, 'recipientCoverTitle');
@@ -745,20 +741,8 @@ async function checkRecipientMode() {
 
         updateCoverDisplay(coverStyle, customImg, 'recipientCoverGraphic', 'recipientCoverBadge', 'recipientCoverTitle', coverColor);
 
-        if (recipientCover) {
-          recipientCover.style.position = 'relative';
-          recipientCover.style.width = '100%';
-          recipientCover.style.maxWidth = '420px';
-          recipientCover.style.aspectRatio = '3 / 4';
-          recipientCover.style.margin = '0 auto';
-        }
-
         if (recipientLetterBoard) {
           recipientLetterBoard.style.position = 'relative';
-          recipientLetterBoard.style.width = '100%';
-          recipientLetterBoard.style.maxWidth = '420px';
-          recipientLetterBoard.style.aspectRatio = '3 / 4';
-          recipientLetterBoard.style.margin = '0 auto';
 
           let rPhotosCanvas = document.getElementById('recipientPhotosCanvas');
           if (!rPhotosCanvas) {
@@ -807,12 +791,6 @@ async function checkRecipientMode() {
             recipientStage.classList.add('closed');
           }
         };
-
-        if (data.passcode && data.passcode.trim() !== '' && !isLetterUnlocked) {
-          showCustomPasscodeModal(data.passcode, data.passcodeHint, () => {
-            isLetterUnlocked = true;
-          });
-        }
 
         if (recipientCover && recipientStage) {
           recipientCover.onclick = () => {
