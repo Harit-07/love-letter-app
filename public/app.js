@@ -649,7 +649,7 @@ function showCustomPasscodeModal(correctPasscode, hint, onSuccess) {
       if (entered === correctPasscode.trim()) {
         modal.style.display = 'none';
         pinInput.value = '';
-        onSuccess();
+        if (onSuccess) onSuccess();
       } else {
         alert('❌ รหัสผ่านไม่ถูกต้อง ลองใหม่อีกครั้งนะจ๊ะ!');
         pinInput.value = '';
@@ -677,7 +677,7 @@ function showCustomPasscodeModal(correctPasscode, hint, onSuccess) {
   modal.querySelector('#modalPinInput').focus();
 }
 
-// 10. หน้าผู้รับลิงก์ (แก้ปัญหารอบที่ 2 และรอบถัดไปให้หน้าปกและสถานะกลับมาแสดงผลปกติ)
+// 10. หน้าผู้รับลิงก์ (แก้ให้จอล็อคเด้งขึ้นทันทีเมื่อเข้าเว็บ + ล็อคสัดส่วนการแสดงผลป้องกันตำแหน่งเพี้ยน)
 async function checkRecipientMode() {
   const path = window.location.pathname;
   const match = path.match(/\/letter\/(.+)$/);
@@ -716,8 +716,21 @@ async function checkRecipientMode() {
 
         updateCoverDisplay(coverStyle, customImg, 'recipientCoverGraphic', 'recipientCoverBadge', 'recipientCoverTitle', coverColor);
 
+        // กำหนดสัดส่วนโครงสร้างการแสดงผลฝั่งผู้รับให้คงที่ ป้องกันตำแหน่งภาพ/สติ๊กเกอร์เพี้ยน
+        if (recipientCover) {
+          recipientCover.style.position = 'relative';
+          recipientCover.style.width = '100%';
+          recipientCover.style.maxWidth = '420px';
+          recipientCover.style.aspectRatio = '3 / 4';
+          recipientCover.style.margin = '0 auto';
+        }
+
         if (recipientLetterBoard) {
           recipientLetterBoard.style.position = 'relative';
+          recipientLetterBoard.style.width = '100%';
+          recipientLetterBoard.style.maxWidth = '420px';
+          recipientLetterBoard.style.aspectRatio = '3 / 4';
+          recipientLetterBoard.style.margin = '0 auto';
 
           let rPhotosCanvas = document.getElementById('recipientPhotosCanvas');
           if (!rPhotosCanvas) {
@@ -748,7 +761,7 @@ async function checkRecipientMode() {
           }
         }
 
-        // กำหนดสถานะเริ่มต้นให้เป็นปิด (แสดงหน้าปก/หน้าล็อก) เสมอ
+        // ตั้งค่าสถานะเริ่มต้นเป็นปิด (แสดงหน้าปก)
         if (recipientStage) {
           recipientStage.classList.remove('open');
           recipientStage.classList.add('closed');
@@ -768,8 +781,14 @@ async function checkRecipientMode() {
           }
         };
 
+        // หากจดหมายมีรหัสผ่านและยังไม่ได้ปลดล็อก ให้แสดงหน้าต่างรหัสผ่านทันทีเมื่อเข้าเว็บ
+        if (data.passcode && data.passcode.trim() !== '' && !isLetterUnlocked) {
+          showCustomPasscodeModal(data.passcode, data.passcodeHint, () => {
+            isLetterUnlocked = true;
+          });
+        }
+
         if (recipientCover && recipientStage) {
-          // ใช้ .onclick แทนเพื่อป้องกันการสร้าง Listener ซ้อนทับกันในรอบถัดไป
           recipientCover.onclick = () => {
             if (data.passcode && data.passcode.trim() !== '' && !isLetterUnlocked) {
               showCustomPasscodeModal(data.passcode, data.passcodeHint, () => {
