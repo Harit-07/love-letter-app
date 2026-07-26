@@ -520,10 +520,12 @@ function setupSaveButton() {
 }
 
 // ฟังก์ชันสร้างและจัดวางข้อความใต้กล่องในหน้าผู้รับให้ตรงตำแหน่งเป๊ะๆ เหมือนตอนสร้าง
+// ✅ FIXED: รองรับกรณี config เป็น JSON string ซ้อน (double-encoded), ไม่ซ่อน element ผิดพลาดจากการเช็คแบบเดิม,
+//    และมี console.log ไว้ debug ว่าค่าที่ได้จาก backend หน้าตาเป็นอย่างไร
 function applyTextConfigToRecipient(config, targetId) {
   let el = document.getElementById(targetId);
   const recipientCover = document.getElementById('recipientCover');
-  
+
   if (!el && recipientCover) {
     el = document.createElement('div');
     el.id = targetId;
@@ -532,19 +534,34 @@ function applyTextConfigToRecipient(config, targetId) {
 
   if (!el) return;
 
-  const textVal = (config && typeof config === 'object') ? (config.text || '') : (config || '');
-  if (textVal !== undefined && textVal !== '') {
-    el.textContent = textVal;
-    el.style.display = 'block';
-  } else {
-    el.style.display = 'none';
+  // เผื่อกรณี backend คืนค่ามาเป็น string ที่จริง ๆ แล้วเป็น JSON ซ้อนอยู่ข้างใน
+  let cfg = config;
+  if (typeof cfg === 'string') {
+    try {
+      const parsed = JSON.parse(cfg);
+      if (parsed && typeof parsed === 'object') cfg = parsed;
+    } catch (e) {
+      // ไม่ใช่ JSON ก็ปล่อยเป็น string ปกติ ใช้เป็นข้อความตรง ๆ ต่อไป
+    }
   }
 
-  if (config && typeof config === 'object') {
-    if (config.font) el.style.fontFamily = config.font;
-    if (config.size) el.style.fontSize = config.size + 'px';
-    el.style.fontWeight = config.bold ? 'bold' : 'normal';
-    if (config.color) el.style.color = config.color;
+  // Debug: เปิดดูใน Console ของหน้า /letter/<slug> เพื่อตรวจสอบรูปแบบข้อมูลจริงที่ได้จาก API
+  console.log('[applyTextConfigToRecipient]', targetId, cfg);
+
+  const textVal = (cfg && typeof cfg === 'object') ? (cfg.text ?? '') : (cfg ?? '');
+
+  if (textVal !== undefined && textVal !== null && textVal !== '') {
+    el.textContent = textVal;
+    el.style.display = 'block';
+
+    if (cfg && typeof cfg === 'object') {
+      if (cfg.font) el.style.fontFamily = cfg.font;
+      if (cfg.size) el.style.fontSize = cfg.size + 'px';
+      el.style.fontWeight = cfg.bold ? 'bold' : 'normal';
+      if (cfg.color) el.style.color = cfg.color;
+    }
+  } else {
+    el.style.display = 'none';
   }
 }
 
@@ -685,7 +702,10 @@ async function checkRecipientMode() {
       const res = await fetch(`/api/letters/${slug}`);
       if (res.ok) {
         const data = await res.json();
-        
+
+        // Debug: ดูโครงสร้างข้อมูลทั้งหมดที่ backend ส่งกลับมา
+        console.log('[checkRecipientMode] data from API:', data);
+
         if (data.themeColor) {
           document.body.style.setProperty('background-color', data.themeColor, 'important');
           document.documentElement.style.setProperty('background-color', data.themeColor, 'important');
