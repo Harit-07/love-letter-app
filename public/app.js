@@ -157,7 +157,7 @@ function updateCoverDisplay(style, customImg, graphicId, badgeId, titleId, color
   }
 }
 
-// 5. อัปโหลดรูปภาพ (ใช้สัดส่วนความกว้างอ้างอิงเพื่อป้องกันการเบี้ยว)
+// 5. อัปโหลดรูปภาพ
 function setupMultiPhotoUpload() {
   const multiInput = document.getElementById('multiPhotoInput');
   const frameStyleSelect = document.getElementById('photoFrameStyleSelect');
@@ -193,7 +193,7 @@ function setupMultiPhotoUpload() {
   });
 }
 
-// 6. เพิ่มสติ๊กเกอร์ (ใช้สัดส่วนความกว้างอ้างอิงเพื่อป้องกันการเบี้ยว)
+// 6. เพิ่มสติ๊กเกอร์
 function setupStickerPalette() {
   const stickerBtns = document.querySelectorAll('.sticker-add-btn');
   const stickerCanvas = document.getElementById('stickerCanvas');
@@ -225,21 +225,21 @@ function renderInteractiveItem(canvas, itemData, isEditable = false) {
   if (!canvas) return;
 
   const renderIt = () => {
-    const canvasWidth = canvas.clientWidth || 300;
+    const canvasWidth = canvas.clientWidth || (canvas.parentElement ? canvas.parentElement.clientWidth : 300);
 
     const item = document.createElement('div');
     item.className = `interactive-item ${itemData.type === 'photo' ? 'frame-' + (itemData.frameStyle || 'polaroid') : 'item-sticker'}`;
     item.id = itemData.id;
     
     item.style.position = 'absolute';
+    item.style.pointerEvents = isEditable ? 'auto' : 'none';
 
     let leftVal, topVal, widthVal;
     if (itemData.xRatio !== undefined && itemData.yRatio !== undefined) {
       leftVal = itemData.xRatio * canvasWidth;
-      topVal = itemData.yRatio * canvasWidth; // ใช้ width เป็นฐานคำนวณทั้ง X และ Y เพื่อป้องกันภาพเบี้ยว
+      topVal = itemData.yRatio * canvasWidth;
       widthVal = itemData.widthRatio * canvasWidth;
     } else {
-      // Backward compatibility หากข้อมูลเก่าเก็บเป็นเปอร์เซ็นต์แบบเดิม
       const parsePct = (str) => parseFloat(str) / 100 || 0;
       leftVal = parsePct(itemData.x) * canvasWidth;
       topVal = parsePct(itemData.y) * canvasWidth;
@@ -298,7 +298,7 @@ function renderInteractiveItem(canvas, itemData, isEditable = false) {
     canvas.appendChild(item);
   };
 
-  if (canvas.clientWidth > 0) {
+  if (canvas.clientWidth > 0 || (canvas.parentElement && canvas.parentElement.clientWidth > 0)) {
     renderIt();
   } else {
     setTimeout(renderIt, 50);
@@ -323,7 +323,6 @@ function makeElementInteractive(el, itemData, resizeHandle, rotateHandle, canvas
       const topPx = el.offsetTop;
       const widthPx = el.offsetWidth;
 
-      // บันทึกสัดส่วนเทียบกับความกว้าง (Width-based ratio) เพื่อความเสถียรทุกหน้าจอ
       itemData.xRatio = leftPx / canvasWidth;
       itemData.yRatio = topPx / canvasWidth;
       itemData.widthRatio = widthPx / canvasWidth;
@@ -403,7 +402,7 @@ function makeElementInteractive(el, itemData, resizeHandle, rotateHandle, canvas
   document.addEventListener('touchend', handleEnd);
 }
 
-// 7. คลิกเปิด-ปิดจดหมายฝั่งตัวอย่าง (Editor)
+// 7. คลิกเปิด-ปิดจดหมายฝั่งตัวอย่าง
 function setupEnvelopeToggle() {
   const previewContainer = document.getElementById('previewContainer');
   const cover = document.getElementById('coverEnvelope');
@@ -681,7 +680,7 @@ function showCustomPasscodeModal(correctPasscode, hint, onSuccess) {
   setTimeout(() => modal.querySelector('#modalPinInput').focus(), 150);
 }
 
-// 10. หน้าผู้รับลิงก์ (เช็ครหัสผ่านแยกอิสระตามแต่ละลิงก์ slug)
+// 10. หน้าผู้รับลิงก์ (จัดการแคนวาสและบังคับกรอกรหัสทุกครั้ง)
 async function checkRecipientMode() {
   const path = window.location.pathname;
   const match = path.match(/\/letter\/(.+)$/);
@@ -720,24 +719,46 @@ async function checkRecipientMode() {
 
         updateCoverDisplay(coverStyle, customImg, 'recipientCoverGraphic', 'recipientCoverBadge', 'recipientCoverTitle', coverColor);
 
-        const rPhotosCanvas = document.getElementById('recipientPhotosCanvas');
-        if (data.photos && Array.isArray(data.photos)) {
-          data.photos.forEach(p => renderInteractiveItem(rPhotosCanvas, p, false));
+        // 🛠️ รับประกันขนาดและสร้างแคนวาสฝั่งผู้รับให้ตรงกับหน้าสร้าง 100% ป้องกันรูปเบี้ยวหรือตำแหน่งเลื่อน
+        if (recipientLetterBoard) {
+          recipientLetterBoard.style.position = 'relative';
+
+          let rPhotosCanvas = document.getElementById('recipientPhotosCanvas');
+          if (!rPhotosCanvas) {
+            rPhotosCanvas = document.createElement('div');
+            rPhotosCanvas.id = 'recipientPhotosCanvas';
+            rPhotosCanvas.style.cssText = 'position: absolute; inset: 0; pointer-events: none; z-index: 10; overflow: hidden;';
+            recipientLetterBoard.appendChild(rPhotosCanvas);
+          } else {
+            rPhotosCanvas.innerHTML = '';
+          }
+
+          let rStickerCanvas = document.getElementById('recipientStickerCanvas');
+          if (!rStickerCanvas) {
+            rStickerCanvas = document.createElement('div');
+            rStickerCanvas.id = 'recipientStickerCanvas';
+            rStickerCanvas.style.cssText = 'position: absolute; inset: 0; pointer-events: none; z-index: 20; overflow: hidden;';
+            recipientLetterBoard.appendChild(rStickerCanvas);
+          } else {
+            rStickerCanvas.innerHTML = '';
+          }
+
+          if (data.photos && Array.isArray(data.photos)) {
+            data.photos.forEach(p => renderInteractiveItem(rPhotosCanvas, p, false));
+          }
+
+          if (data.stickers && Array.isArray(data.stickers)) {
+            data.stickers.forEach(s => renderInteractiveItem(rStickerCanvas, s, false));
+          }
         }
 
-        const rStickerCanvas = document.getElementById('recipientStickerCanvas');
-        if (data.stickers && Array.isArray(data.stickers)) {
-          data.stickers.forEach(s => renderInteractiveItem(rStickerCanvas, s, false));
-        }
-
-        // คีย์แยกตามลิงก์ (Slug) แต่ละลิงก์จะมีสถานะปลดล็อกแยกกันเด็ดขาด
-        const unlockedKey = 'unlocked_' + slug;
-        const isUnlocked = localStorage.getItem(unlockedKey) === 'true';
-
-        // 🔒 หากมีรหัสผ่านและยังไม่เคยปลดล็อกของลิงก์นี้ ให้ขึ้นหน้ากรอกรหัส
-        if (data.passcode && data.passcode.trim() !== '' && !isUnlocked) {
+        // 🔐 บังคับถามรหัสผ่านทุกครั้งที่เปิดหน้าเว็บ (เอาการจำรหัสออก)
+        if (data.passcode && data.passcode.trim() !== '') {
           showCustomPasscodeModal(data.passcode, data.passcodeHint, () => {
-            localStorage.setItem(unlockedKey, 'true');
+            if (recipientStage) {
+              recipientStage.classList.add('open');
+              recipientStage.classList.remove('closed');
+            }
           });
         }
 
@@ -747,10 +768,8 @@ async function checkRecipientMode() {
 
         if (recipientCover && recipientStage) {
           recipientCover.addEventListener('click', () => {
-            const currentlyUnlocked = localStorage.getItem(unlockedKey) === 'true';
-            if (data.passcode && data.passcode.trim() !== '' && !currentlyUnlocked) {
+            if (data.passcode && data.passcode.trim() !== '') {
               showCustomPasscodeModal(data.passcode, data.passcodeHint, () => {
-                localStorage.setItem(unlockedKey, 'true');
                 recipientStage.classList.add('open');
                 recipientStage.classList.remove('closed');
               });
@@ -762,9 +781,11 @@ async function checkRecipientMode() {
         }
 
         if (recipientLetterBoard && recipientStage) {
-          recipientLetterBoard.addEventListener('click', () => {
-            recipientStage.classList.remove('open');
-            recipientStage.classList.add('closed');
+          recipientLetterBoard.addEventListener('click', (e) => {
+            if (e.target === recipientLetterBoard || e.target.id === 'recipientPhotosCanvas' || e.target.id === 'recipientStickerCanvas') {
+              recipientStage.classList.remove('open');
+              recipientStage.classList.add('closed');
+            }
           });
         }
       }
