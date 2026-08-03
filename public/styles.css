@@ -7,7 +7,7 @@
 
 body {
   min-height: 100vh;
-  background: #fdf2f4;
+  background-color: #fdf2f4;
   color: #4a2831;
   overflow-x: hidden;
   position: relative;
@@ -161,7 +161,7 @@ input[type="text"], textarea {
 /* ========================================= */
 
 .scrapbook-stage {
-  position: relative; /* สำคัญมาก: เป็นกรอบอ้างอิงพิกัด % ของสติ๊กเกอร์ทั้งหมด */
+  position: relative;
   width: 100%;
   height: 540px;
   background: rgba(255, 255, 255, 0.6);
@@ -274,7 +274,6 @@ input[type="text"], textarea {
   transform: scale(1);
 }
 
-/* ปรับปรุง Container สำหรับวาง Layer ของรูปภาพและสติ๊กเกอร์ */
 .sticker-canvas, .photos-canvas {
   position: absolute;
   top: 0;
@@ -327,7 +326,6 @@ input[type="text"], textarea {
   display: block;
 }
 
-/* สติ๊กเกอร์ */
 .interactive-item.item-sticker {
   display: flex;
   align-items: center;
@@ -337,7 +335,6 @@ input[type="text"], textarea {
   height: auto;
 }
 
-/* กรอบโพลารอยด์ */
 .interactive-item.frame-polaroid {
   background: #fff;
   padding: 8px 8px 24px 8px;
@@ -345,7 +342,6 @@ input[type="text"], textarea {
   border-radius: 6px;
 }
 
-/* กรอบมินิมอล */
 .interactive-item.frame-border {
   background: #fff;
   padding: 6px;
@@ -354,7 +350,6 @@ input[type="text"], textarea {
   border-radius: 10px;
 }
 
-/* ไม่ใส่กรอบ */
 .interactive-item.frame-none {
   padding: 0;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
@@ -362,19 +357,16 @@ input[type="text"], textarea {
   overflow: hidden;
 }
 
-/* ปุ่มควบคุม Delete / Resize / Rotate */
 .item-controls { display: none; }
 .interactive-item:hover .item-controls,
 .interactive-item.active .item-controls {
   display: block;
 }
 
-/* ซ่อนปุ่มควบคุมทั้งหมดเมื่ออยู่ในโหมดผู้รับ (Recipient View) */
 .recipient-mode .item-controls {
   display: none !important;
 }
 
-/* ปุ่มลบ ✕ */
 .btn-delete-item {
   position: absolute;
   top: -10px;
@@ -393,7 +385,6 @@ input[type="text"], textarea {
   box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 }
 
-/* ปุ่มย่อ-ขยาย (ขวาล่าง) */
 .handle-resize {
   position: absolute;
   bottom: -8px;
@@ -408,7 +399,6 @@ input[type="text"], textarea {
   box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 }
 
-/* ปุ่มหมุน 🔄 (ซ้ายบน) */
 .handle-rotate {
   position: absolute;
   top: -10px;
@@ -428,6 +418,7 @@ input[type="text"], textarea {
   box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 }
 
+/* ปรับแต่งส่วนแสดงผลของหน้าผู้รับ */
 .recipient-standalone-view {
   position: fixed;
   inset: 0;
@@ -436,8 +427,8 @@ input[type="text"], textarea {
   align-items: center;
   justify-content: center;
   padding: 16px;
-  transition: opacity 0.4s ease;
-  background: rgba(253, 242, 244, 0.95);
+  transition: opacity 0.4s ease, background-color 0.3s ease;
+  background-color: transparent; /* ให้โปรแกรมแสดงสีตาม body */
 }
 
 .recipient-standalone-view .scrapbook-stage {

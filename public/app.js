@@ -109,8 +109,7 @@ function setupColorPickers() {
   if (themePicker) {
     themePicker.addEventListener('input', (e) => {
       currentThemeColor = e.target.value;
-      document.body.style.setProperty('background-color', currentThemeColor, 'important');
-      document.documentElement.style.setProperty('background-color', currentThemeColor, 'important');
+      applyThemeColor(currentThemeColor);
     });
   }
 
@@ -119,6 +118,18 @@ function setupColorPickers() {
       currentCoverColor = e.target.value;
       updateCoverDisplay(currentCoverStyle, customCoverImage, 'coverGraphic', 'coverBadge', 'coverTitleText', currentCoverColor);
     });
+  }
+}
+
+// ฟังก์ชันสำหรับใช้ปรับสีธีมพื้นหลัง
+function applyThemeColor(color) {
+  if (!color) return;
+  document.body.style.setProperty('background-color', color, 'important');
+  document.documentElement.style.setProperty('background-color', color, 'important');
+  
+  const recipientView = document.getElementById('recipientView');
+  if (recipientView) {
+    recipientView.style.setProperty('background-color', color, 'important');
   }
 }
 
@@ -134,7 +145,8 @@ function setupStyleSelector() {
 
       currentCoverStyle = btn.dataset.style;
       customCoverImage = '';
-      document.getElementById('customCoverLabel').textContent = '🖼️ หรืออัปโหลดรูปหน้าปกเอง (คลิก)';
+      const customLabel = document.getElementById('customCoverLabel');
+      if (customLabel) customLabel.textContent = '🖼️ หรืออัปโหลดรูปหน้าปกเอง (คลิก)';
 
       updateCoverDisplay(currentCoverStyle, '', 'coverGraphic', 'coverBadge', 'coverTitleText', currentCoverColor);
     });
@@ -150,7 +162,8 @@ function setupStyleSelector() {
         customCoverImage = evt.target.result;
         currentCoverStyle = 'custom';
         styleBtns.forEach((b) => b.classList.remove('active'));
-        document.getElementById('customCoverLabel').textContent = '✅ เปลี่ยนรูปปกเรียบร้อย!';
+        const customLabel = document.getElementById('customCoverLabel');
+        if (customLabel) customLabel.textContent = '✅ เปลี่ยนรูปปกเรียบร้อย!';
 
         updateCoverDisplay('custom', customCoverImage, 'coverGraphic', 'coverBadge', 'coverTitleText', currentCoverColor);
       };
@@ -195,7 +208,7 @@ function setupMultiPhotoUpload() {
           id: 'p_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
           type: 'photo',
           src: evt.target.result,
-          frameStyle: frameStyleSelect.value || 'polaroid',
+          frameStyle: frameStyleSelect ? frameStyleSelect.value : 'polaroid',
           xPct: 35,
           yPct: 35,
           widthPct: 30,
@@ -519,9 +532,7 @@ function setupSaveButton() {
   }
 }
 
-// ฟังก์ชันสร้างและจัดวางข้อความใต้กล่องในหน้าผู้รับให้ตรงตำแหน่งเป๊ะๆ เหมือนตอนสร้าง
-// ✅ FIXED: รองรับกรณี config เป็น JSON string ซ้อน (double-encoded), ไม่ซ่อน element ผิดพลาดจากการเช็คแบบเดิม,
-//    และมี console.log ไว้ debug ว่าค่าที่ได้จาก backend หน้าตาเป็นอย่างไร
+// ฟังก์ชันสร้างและจัดวางข้อความใต้กล่องในหน้าผู้รับให้ตรงตำแหน่ง
 function applyTextConfigToRecipient(config, targetId) {
   let el = document.getElementById(targetId);
   const recipientCover = document.getElementById('recipientCover');
@@ -534,18 +545,16 @@ function applyTextConfigToRecipient(config, targetId) {
 
   if (!el) return;
 
-  // เผื่อกรณี backend คืนค่ามาเป็น string ที่จริง ๆ แล้วเป็น JSON ซ้อนอยู่ข้างใน
   let cfg = config;
   if (typeof cfg === 'string') {
     try {
       const parsed = JSON.parse(cfg);
       if (parsed && typeof parsed === 'object') cfg = parsed;
     } catch (e) {
-      // ไม่ใช่ JSON ก็ปล่อยเป็น string ปกติ ใช้เป็นข้อความตรง ๆ ต่อไป
+      // ไม่ใช่ JSON ใช้เป็นข้อความปกติ
     }
   }
 
-  // Debug: เปิดดูใน Console ของหน้า /letter/<slug> เพื่อตรวจสอบรูปแบบข้อมูลจริงที่ได้จาก API
   console.log('[applyTextConfigToRecipient]', targetId, cfg);
 
   const textVal = (cfg && typeof cfg === 'object') ? (cfg.text ?? '') : (cfg ?? '');
@@ -565,7 +574,7 @@ function applyTextConfigToRecipient(config, targetId) {
   }
 }
 
-// 9. หน้าต่างกรอกรหัสผ่านแบบพรีเมียม
+// 9. หน้าต่างกรอกรหัสผ่าน
 function showCustomPasscodeModal(correctPasscode, hint, onSuccess) {
   let modal = document.getElementById('customPasscodeModal');
   if (!modal) {
@@ -678,7 +687,7 @@ function showCustomPasscodeModal(correctPasscode, hint, onSuccess) {
   modal.querySelector('#modalPinInput').focus();
 }
 
-// 10. หน้าผู้รับลิงก์ (เด้งหน้าล็อกทันทีที่เปิดลิงก์ และแสดงข้อความใต้กล่องอย่างสมบูรณ์)
+// 10. หน้าผู้รับลิงก์
 async function checkRecipientMode() {
   const path = window.location.pathname;
   const match = path.match(/\/letter\/(.+)$/);
@@ -703,12 +712,12 @@ async function checkRecipientMode() {
       if (res.ok) {
         const data = await res.json();
 
-        // Debug: ดูโครงสร้างข้อมูลทั้งหมดที่ backend ส่งกลับมา
         console.log('[checkRecipientMode] data from API:', data);
 
+        // ✅ อัปเดตสีพื้นหลังของหน้าผู้รับทันที
         if (data.themeColor) {
-          document.body.style.setProperty('background-color', data.themeColor, 'important');
-          document.documentElement.style.setProperty('background-color', data.themeColor, 'important');
+          currentThemeColor = data.themeColor;
+          applyThemeColor(data.themeColor);
         }
 
         const coverStyle = data.coverStyle || 'envelope';
@@ -717,8 +726,7 @@ async function checkRecipientMode() {
 
         updateCoverDisplay(coverStyle, customImg, 'recipientCoverGraphic', 'recipientCoverBadge', 'recipientCoverTitle', coverColor);
 
-        // จัดการแสดงผลข้อความใต้กล่องในหน้าผู้รับ
-        // ✅ FIXED: ID ใน HTML คือ "recipientCoverTitle" ไม่ใช่ "recipientCoverTitleText"
+        // ✅ แสดงผลข้อความใต้กล่องในหน้าผู้รับ
         applyTextConfigToRecipient(data.coverTitle, 'recipientCoverTitle');
         applyTextConfigToRecipient(data.coverSubtext, 'recipientCoverSubtext');
 
@@ -726,7 +734,7 @@ async function checkRecipientMode() {
         applyTextConfigToRecipient(data.message, 'recipientMessage');
         applyTextConfigToRecipient(data.signature, 'recipientSignature');
 
-        // 🌟 เด้งหน้าล็อกขึ้นมาทันทีเมื่อเปิดลิงก์ (ถ้าจดหมายมีการตั้งรหัสผ่านไว้)
+        // เด้งหน้าล็อกทันทีเมื่อเปิดลิงก์ (ถ้ามีรหัสผ่าน)
         if (data.passcode && data.passcode.trim() !== '' && !isLetterUnlocked) {
           showCustomPasscodeModal(data.passcode, data.passcodeHint, () => {
             isLetterUnlocked = true;
