@@ -107,34 +107,18 @@ function setupColorPickers() {
   const coverPicker = document.getElementById('coverColorPicker');
 
   if (themePicker) {
-    // กำหนดค่าเริ่มต้นถ้าสีเลือกถูกตั้งไว้แล้ว
-    if (themePicker.value) currentThemeColor = themePicker.value;
-
     themePicker.addEventListener('input', (e) => {
       currentThemeColor = e.target.value;
-      applyThemeColor(currentThemeColor);
+      document.body.style.setProperty('background-color', currentThemeColor, 'important');
+      document.documentElement.style.setProperty('background-color', currentThemeColor, 'important');
     });
   }
 
   if (coverPicker) {
-    if (coverPicker.value) currentCoverColor = coverPicker.value;
-
     coverPicker.addEventListener('input', (e) => {
       currentCoverColor = e.target.value;
       updateCoverDisplay(currentCoverStyle, customCoverImage, 'coverGraphic', 'coverBadge', 'coverTitleText', currentCoverColor);
     });
-  }
-}
-
-// ฟังก์ชันสำหรับใช้ปรับสีธีมพื้นหลัง (บังคับใช้ !important ทั้ง body และตัวเลือกอื่นๆ)
-function applyThemeColor(color) {
-  if (!color) return;
-  document.body.style.setProperty('background-color', color, 'important');
-  document.documentElement.style.setProperty('background-color', color, 'important');
-  
-  const recipientView = document.getElementById('recipientView');
-  if (recipientView) {
-    recipientView.style.setProperty('background-color', color, 'important');
   }
 }
 
@@ -150,8 +134,7 @@ function setupStyleSelector() {
 
       currentCoverStyle = btn.dataset.style;
       customCoverImage = '';
-      const customLabel = document.getElementById('customCoverLabel');
-      if (customLabel) customLabel.textContent = '🖼️ หรืออัปโหลดรูปหน้าปกเอง (คลิก)';
+      document.getElementById('customCoverLabel').textContent = '🖼️ หรืออัปโหลดรูปหน้าปกเอง (คลิก)';
 
       updateCoverDisplay(currentCoverStyle, '', 'coverGraphic', 'coverBadge', 'coverTitleText', currentCoverColor);
     });
@@ -167,8 +150,7 @@ function setupStyleSelector() {
         customCoverImage = evt.target.result;
         currentCoverStyle = 'custom';
         styleBtns.forEach((b) => b.classList.remove('active'));
-        const customLabel = document.getElementById('customCoverLabel');
-        if (customLabel) customLabel.textContent = '✅ เปลี่ยนรูปปกเรียบร้อย!';
+        document.getElementById('customCoverLabel').textContent = '✅ เปลี่ยนรูปปกเรียบร้อย!';
 
         updateCoverDisplay('custom', customCoverImage, 'coverGraphic', 'coverBadge', 'coverTitleText', currentCoverColor);
       };
@@ -213,7 +195,7 @@ function setupMultiPhotoUpload() {
           id: 'p_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
           type: 'photo',
           src: evt.target.result,
-          frameStyle: frameStyleSelect ? frameStyleSelect.value : 'polaroid',
+          frameStyle: frameStyleSelect.value || 'polaroid',
           xPct: 35,
           yPct: 35,
           widthPct: 30,
@@ -261,7 +243,6 @@ function renderInteractiveItem(canvas, itemData, isEditable = false) {
     item.id = itemData.id;
     
     item.style.position = 'absolute';
-    // ป้องกันไม่ให้ไอเท็มปิดกั้นการคลิกเปิด/ปิดเมื่อไม่ได้อยู่ในโหมดแก้ไข
     item.style.pointerEvents = isEditable ? 'auto' : 'none';
 
     let leftCss, topCss, widthCss;
@@ -279,7 +260,7 @@ function renderInteractiveItem(canvas, itemData, isEditable = false) {
     item.style.top = topCss;
     item.style.width = widthCss;
     item.style.transform = `rotate(${itemData.rotation || 0}deg)`;
-    item.style.zIndex = '5';
+    item.style.zIndex = '50';
 
     if (itemData.type === 'photo') {
       const img = document.createElement('img');
@@ -438,7 +419,7 @@ function makeElementInteractive(el, itemData, resizeHandle, rotateHandle, canvas
   document.addEventListener('touchend', handleEnd);
 }
 
-// 7. คลิกเปิด-ปิดจดหมายฝั่งตัวอย่าง (Preview)
+// 7. คลิกเปิด-ปิดจดหมายฝั่งตัวอย่าง
 function setupEnvelopeToggle() {
   const previewContainer = document.getElementById('previewContainer');
   const cover = document.getElementById('coverEnvelope');
@@ -453,8 +434,10 @@ function setupEnvelopeToggle() {
 
   if (letterBoard && previewContainer) {
     letterBoard.addEventListener('click', (e) => {
-      previewContainer.classList.remove('open');
-      previewContainer.classList.add('closed');
+      if (e.target === letterBoard || e.target.id === 'photosCanvas' || e.target.id === 'stickerCanvas') {
+        previewContainer.classList.remove('open');
+        previewContainer.classList.add('closed');
+      }
     });
   }
 }
@@ -536,7 +519,9 @@ function setupSaveButton() {
   }
 }
 
-// ฟังก์ชันสร้างและจัดวางข้อความใต้กล่องในหน้าผู้รับให้ตรงตำแหน่ง
+// ฟังก์ชันสร้างและจัดวางข้อความใต้กล่องในหน้าผู้รับให้ตรงตำแหน่งเป๊ะๆ เหมือนตอนสร้าง
+// ✅ FIXED: รองรับกรณี config เป็น JSON string ซ้อน (double-encoded), ไม่ซ่อน element ผิดพลาดจากการเช็คแบบเดิม,
+//    และมี console.log ไว้ debug ว่าค่าที่ได้จาก backend หน้าตาเป็นอย่างไร
 function applyTextConfigToRecipient(config, targetId) {
   let el = document.getElementById(targetId);
   const recipientCover = document.getElementById('recipientCover');
@@ -549,15 +534,19 @@ function applyTextConfigToRecipient(config, targetId) {
 
   if (!el) return;
 
+  // เผื่อกรณี backend คืนค่ามาเป็น string ที่จริง ๆ แล้วเป็น JSON ซ้อนอยู่ข้างใน
   let cfg = config;
   if (typeof cfg === 'string') {
     try {
       const parsed = JSON.parse(cfg);
       if (parsed && typeof parsed === 'object') cfg = parsed;
     } catch (e) {
-      // ไม่ใช่ JSON ใช้เป็นข้อความปกติ
+      // ไม่ใช่ JSON ก็ปล่อยเป็น string ปกติ ใช้เป็นข้อความตรง ๆ ต่อไป
     }
   }
+
+  // Debug: เปิดดูใน Console ของหน้า /letter/<slug> เพื่อตรวจสอบรูปแบบข้อมูลจริงที่ได้จาก API
+  console.log('[applyTextConfigToRecipient]', targetId, cfg);
 
   const textVal = (cfg && typeof cfg === 'object') ? (cfg.text ?? '') : (cfg ?? '');
 
@@ -576,7 +565,7 @@ function applyTextConfigToRecipient(config, targetId) {
   }
 }
 
-// 9. หน้าต่างกรอกรหัสผ่าน
+// 9. หน้าต่างกรอกรหัสผ่านแบบพรีเมียม
 function showCustomPasscodeModal(correctPasscode, hint, onSuccess) {
   let modal = document.getElementById('customPasscodeModal');
   if (!modal) {
@@ -689,7 +678,7 @@ function showCustomPasscodeModal(correctPasscode, hint, onSuccess) {
   modal.querySelector('#modalPinInput').focus();
 }
 
-// 10. หน้าผู้รับลิงก์ (Recipient Page)
+// 10. หน้าผู้รับลิงก์ (เด้งหน้าล็อกทันทีที่เปิดลิงก์ และแสดงข้อความใต้กล่องอย่างสมบูรณ์)
 async function checkRecipientMode() {
   const path = window.location.pathname;
   const match = path.match(/\/letter\/(.+)$/);
@@ -698,9 +687,9 @@ async function checkRecipientMode() {
     const slug = match[1];
     const mainApp = document.getElementById('mainApp');
     const recipientView = document.getElementById('recipientView');
-    const recipientStage = document.getElementById('recipientStage') || document.getElementById('previewContainer');
-    const recipientCover = document.getElementById('recipientCover') || document.getElementById('coverEnvelope');
-    const recipientLetterBoard = document.getElementById('recipientLetterBoard') || document.getElementById('letterBoard');
+    const recipientStage = document.getElementById('recipientStage');
+    const recipientCover = document.getElementById('recipientCover');
+    const recipientLetterBoard = document.getElementById('recipientLetterBoard');
 
     if (mainApp) mainApp.style.display = 'none';
 
@@ -714,43 +703,58 @@ async function checkRecipientMode() {
       if (res.ok) {
         const data = await res.json();
 
-        // 1. อัปเดตสีพื้นหลัง
+        // Debug: ดูโครงสร้างข้อมูลทั้งหมดที่ backend ส่งกลับมา
+        console.log('[checkRecipientMode] data from API:', data);
+
         if (data.themeColor) {
-          currentThemeColor = data.themeColor;
-          applyThemeColor(data.themeColor);
+          document.body.style.setProperty('background-color', data.themeColor, 'important');
+          document.documentElement.style.setProperty('background-color', data.themeColor, 'important');
         }
 
-        // 2. อัปเดตสไตล์และสีหน้าปก
         const coverStyle = data.coverStyle || 'envelope';
         const customImg = data.customCoverImage || '';
         const coverColor = data.coverColor || '#ff5277';
 
-        updateCoverDisplay(
-          coverStyle, 
-          customImg, 
-          document.getElementById('recipientCoverGraphic') ? 'recipientCoverGraphic' : 'coverGraphic', 
-          document.getElementById('recipientCoverBadge') ? 'recipientCoverBadge' : 'coverBadge', 
-          'recipientCoverTitle', 
-          coverColor
-        );
+        updateCoverDisplay(coverStyle, customImg, 'recipientCoverGraphic', 'recipientCoverBadge', 'recipientCoverTitle', coverColor);
 
-        // 3. แสดงผลข้อความต่างๆ
-        applyTextConfigToRecipient(data.coverTitle, document.getElementById('recipientCoverTitle') ? 'recipientCoverTitle' : 'coverTitleText');
-        applyTextConfigToRecipient(data.coverSubtext, document.getElementById('recipientCoverSubtext') ? 'recipientCoverSubtext' : 'coverSubtext');
+        // จัดการแสดงผลข้อความใต้กล่องในหน้าผู้รับ
+        // ✅ FIXED: ID ใน HTML คือ "recipientCoverTitle" ไม่ใช่ "recipientCoverTitleText"
+        applyTextConfigToRecipient(data.coverTitle, 'recipientCoverTitle');
+        applyTextConfigToRecipient(data.coverSubtext, 'recipientCoverSubtext');
 
-        applyTextConfigToRecipient(data.greeting, document.getElementById('recipientGreeting') ? 'recipientGreeting' : 'previewGreeting');
-        applyTextConfigToRecipient(data.message, document.getElementById('recipientMessage') ? 'recipientMessage' : 'previewMessage');
-        applyTextConfigToRecipient(data.signature, document.getElementById('recipientSignature') ? 'recipientSignature' : 'previewSignature');
+        applyTextConfigToRecipient(data.greeting, 'recipientGreeting');
+        applyTextConfigToRecipient(data.message, 'recipientMessage');
+        applyTextConfigToRecipient(data.signature, 'recipientSignature');
 
-        // 4. วาดรูปภาพและสติ๊กเกอร์
+        // 🌟 เด้งหน้าล็อกขึ้นมาทันทีเมื่อเปิดลิงก์ (ถ้าจดหมายมีการตั้งรหัสผ่านไว้)
+        if (data.passcode && data.passcode.trim() !== '' && !isLetterUnlocked) {
+          showCustomPasscodeModal(data.passcode, data.passcodeHint, () => {
+            isLetterUnlocked = true;
+          });
+        }
+
         if (recipientLetterBoard) {
           recipientLetterBoard.style.position = 'relative';
 
-          let rPhotosCanvas = document.getElementById('recipientPhotosCanvas') || document.getElementById('photosCanvas');
-          if (rPhotosCanvas) rPhotosCanvas.innerHTML = '';
+          let rPhotosCanvas = document.getElementById('recipientPhotosCanvas');
+          if (!rPhotosCanvas) {
+            rPhotosCanvas = document.createElement('div');
+            rPhotosCanvas.id = 'recipientPhotosCanvas';
+            rPhotosCanvas.style.cssText = 'position: absolute; inset: 0; pointer-events: none; z-index: 10; overflow: hidden;';
+            recipientLetterBoard.appendChild(rPhotosCanvas);
+          } else {
+            rPhotosCanvas.innerHTML = '';
+          }
 
-          let rStickerCanvas = document.getElementById('recipientStickerCanvas') || document.getElementById('stickerCanvas');
-          if (rStickerCanvas) rStickerCanvas.innerHTML = '';
+          let rStickerCanvas = document.getElementById('recipientStickerCanvas');
+          if (!rStickerCanvas) {
+            rStickerCanvas = document.createElement('div');
+            rStickerCanvas.id = 'recipientStickerCanvas';
+            rStickerCanvas.style.cssText = 'position: absolute; inset: 0; pointer-events: none; z-index: 20; overflow: hidden;';
+            recipientLetterBoard.appendChild(rStickerCanvas);
+          } else {
+            rStickerCanvas.innerHTML = '';
+          }
 
           if (data.photos && Array.isArray(data.photos)) {
             data.photos.forEach(p => renderInteractiveItem(rPhotosCanvas, p, false));
@@ -761,13 +765,11 @@ async function checkRecipientMode() {
           }
         }
 
-        // 5. ปรับสถานะเริ่มต้นของจดหมายให้ปิดอยู่
         if (recipientStage) {
           recipientStage.classList.remove('open');
           recipientStage.classList.add('closed');
         }
 
-        // 6. ฟังก์ชันสำหรับการเปิดและปิดจดหมาย
         const openLetterAction = () => {
           if (recipientStage) {
             recipientStage.classList.add('open');
@@ -782,8 +784,7 @@ async function checkRecipientMode() {
           }
         };
 
-        // ผูกการคลิกที่หน้าปก เพื่อเปิดจดหมาย
-        if (recipientCover) {
+        if (recipientCover && recipientStage) {
           recipientCover.onclick = (e) => {
             e.stopPropagation();
             if (data.passcode && data.passcode.trim() !== '' && !isLetterUnlocked) {
@@ -797,22 +798,16 @@ async function checkRecipientMode() {
           };
         }
 
-        // ผูกการคลิกที่กระดาน/ตัวจดหมาย เพื่อปิดจดหมาย
-        if (recipientLetterBoard) {
+        if (recipientLetterBoard && recipientStage) {
           recipientLetterBoard.onclick = (e) => {
-            closeLetterAction();
+            if (e.target === recipientLetterBoard || e.target.id === 'recipientPhotosCanvas' || e.target.id === 'recipientStickerCanvas') {
+              closeLetterAction();
+            }
           };
-        }
-
-        // เด้งหน้าล็อกทันทีเมื่อเปิดลิงก์ (ถ้าจดหมายมีรหัสผ่าน)
-        if (data.passcode && data.passcode.trim() !== '' && !isLetterUnlocked) {
-          showCustomPasscodeModal(data.passcode, data.passcodeHint, () => {
-            isLetterUnlocked = true;
-          });
         }
       }
     } catch (e) {
-      console.error('Error loading recipient letter:', e);
+      console.error('Error:', e);
     }
   }
 }
